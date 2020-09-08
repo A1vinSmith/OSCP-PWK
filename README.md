@@ -1,1 +1,1 @@
-### TryHackMe is the main material for practing. Notes and cheetsheet are in Wiki pages. Repo is mostly filled with writeups.
+### TryHackMe is the main material for practicing. Notes and cheetsheet are in Wiki pages. Repo is mostly filled with writeups and binaries.
