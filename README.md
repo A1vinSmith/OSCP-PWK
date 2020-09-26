@@ -11,6 +11,6 @@ ohmyzsh + powerlevel10K + tmux
 4. Should all working now. Either use mate-terminal or do it with GUI editor. 
 
 ### .zshrc
-`unsetopt PROMPT_SP`
+`unsetopt PROMPT_SP` remove the %(percent sign) when starting a terminal
 
-`alias tmux='TERM=xterm-256color tmux -2'`
+`alias tmux='TERM=xterm-256color tmux -2'` make tmux support 256 color
