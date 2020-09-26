@@ -7,6 +7,9 @@
 # Kali Config
 ohmyzsh + powerlevel10K + tmux
 
+### Set root
+`sudo dpkg-reconfigure kali-grant-root`
+
 ### font
 1. Goto `~/.config/qterminal.org` folder
 2. Change fontFamily to Fira Code or somethingelse and save exit.
@@ -17,3 +20,5 @@ ohmyzsh + powerlevel10K + tmux
 `unsetopt PROMPT_SP` remove the %(percent sign) when starting a terminal
 
 `alias tmux='TERM=xterm-256color tmux -2'` make tmux support 256 color
+
+`alias apt-get='sudo apt-get'` you know the drill
