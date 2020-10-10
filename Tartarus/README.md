@@ -24,7 +24,7 @@ sudo -u d4rckh /usrbin/git help cofig
 ```
 
 ### Confirm the successful
-python -c 'import pty; pty.spawn("/bin/bash")'
+`python -c 'import pty; pty.spawn("/bin/bash")'`
 
 ### Check the cleanup.py
 ```
