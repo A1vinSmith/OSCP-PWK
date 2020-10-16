@@ -1,0 +1,6 @@
+SuperSecretPassword
+SuperPasswordSecret
+SecretSuperPassword
+SecretPasswordSuper
+PasswordSuperSecret
+PasswordSecretSuper
