@@ -5,8 +5,8 @@ Use `joomscan` which is pre-installed in kali
 [Hint](https://github.com/XiphosResearch/exploits) if feel needed: 
 
 # 3 user flag
-After get the Joomla administrator password, we could get a [reverse shell](https://laptrinhx.com/joomla-reverse-shell-503628992/) now. 
-Adapt to [stable shell](https://github.com/A1vinSmith/OSCP-PWK/wiki/Python) with python.
+After getting the Joomla administrator password, we could get a [reverse shell](https://laptrinhx.com/joomla-reverse-shell-503628992/) now. 
+Adapt to a [stable shell](https://github.com/A1vinSmith/OSCP-PWK/wiki/Python) with python.
 
 Then `linpeas`, `linEnum` or whatever you prefer.
 Suppose to get a hash for the horizontal escalation.
