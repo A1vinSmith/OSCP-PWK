@@ -1,8 +1,5 @@
 # OSCP
-### Notes and cheetsheets are in Wiki pages. Repo is mostly filled with writeups and binaries.
-
-# TryHackMe
-### Most of the writeups are for THM
+### Notes and cheetsheets are in Wiki pages. Repo is mostly filled with writeups and binaries. Most of the writeups are for TryHackMe
 
 # Kali Config
 ohmyzsh + powerlevel10K + tmux
