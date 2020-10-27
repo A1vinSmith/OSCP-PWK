@@ -85,7 +85,7 @@ Checking [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content
 This one is the hardest and the best.
 1. The 404 pages will show up whatever you put in. means this one match `can be problematic if you host JSONP, Angular or user uploaded files.`
 2. Need to understand how `script-src 'self';` works. It means something like `ip:3008/defend-1.js` will be executed.
-3. Then try to close the tag with `'`
+3. Then try to close the tag with `'`. `<script src="/'; alert(1); '"></script>` alert should just work.
 4. What to do after fetch, window.open, document.location are blocked by CSP? The answer is `media-src` `new Audio`
 5. Use relative path for the 404 page, also a browser won't block your input for `Phishing`
 6. final answer is 
