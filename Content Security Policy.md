@@ -2,10 +2,14 @@
 ### Tools
 ###### Blue Team
 [Evaluator](https://csp-evaluator.withgoogle.com/)
+
 [Hasher](https://report-uri.com/home/hash)
+
 [Generator](https://report-uri.com/home/generate)
+
 ###### Red Team
 [JSONP Bypass](https://github.com/A1vinSmith/JSONBee/blob/master/jsonp.txt)
+
 [Exfiltrator](https://beeceptor.com/)
 
 ### Payload
