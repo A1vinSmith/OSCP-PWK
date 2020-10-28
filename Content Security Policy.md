@@ -129,3 +129,5 @@ script-src 'sha256-8gQ3l0jVGr5ZXaOeym+1jciekP8wsfNgpZImdHthDRo='
 ### Expand Knowledge
 https://content-security-policy.com/#directive
 
+
+Don't forget to give ⭐ on the github to motivate me to continue developing, cheers.
