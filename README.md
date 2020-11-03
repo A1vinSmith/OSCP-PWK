@@ -10,7 +10,7 @@ tips for Kali 2020.3: Restart the machine after installing oh-my-zsh. It's the m
 
 ### font
 1. Goto `~/.config/qterminal.org` folder
-2. Change fontFamily to Fira Code or something else and save exit.
+2. Change `fontFamily` to `Fira Code`, `Fira-Code` or something else and save exit.
 3. All set, remember don't use Qterminal to do the above steps, otherwise, changes won't take place. Use editor directly open file instead.
 4. Should all working now. Either use mate-terminal or do it with GUI editor. 
 
