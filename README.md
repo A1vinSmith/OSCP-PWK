@@ -15,8 +15,17 @@ tips for Kali 2020.3: Restart the machine after installing oh-my-zsh. It's the m
 4. Should all working now. Either use mate-terminal or do it with GUI editor. 
 
 ### .zshrc
-`unsetopt PROMPT_SP` remove the %(percent sign) when starting a terminal
+1. remove the %(percent sign) when starting a terminal
+`unsetopt PROMPT_SP` 
 
-`alias tmux='TERM=xterm-256color tmux -2'` make tmux support 256 color
+2. make tmux support 256 color
+```
+if [ "$TERM" != "xterm-256color" ]; then
+  export TERM=xterm-256color
+fi
 
-`alias apt-get='sudo apt-get'` you know the drill
+alias tmux='TERM=xterm-256color tmux -2'
+```
+
+3. you know the drill
+`alias apt-get='sudo apt-get'` 
