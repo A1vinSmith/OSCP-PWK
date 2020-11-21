@@ -1,4 +1,5 @@
 # OSCP
+### [GitBook](https://alvinsmith.gitbook.io/progressive-oscp/) for better reading experience
 ### Notes and cheatsheets are in Wiki pages. Repo is mostly filled with TryHackMe writeups and binaries.
 
 # Kali Config
