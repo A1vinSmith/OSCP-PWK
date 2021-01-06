@@ -16,7 +16,6 @@ else:
     print("Syntax: python3 extractAll.py <FilePath>")
     sys.exit()
 
-filename = sys.argv[1]
 initExtractPath = filename + "_extracted"
 os.makedirs(initExtractPath)
 with zipfile.ZipFile(filename, 'r') as main_zip:
@@ -50,13 +49,14 @@ def question2():
         filepath = (mainpath + '/' + files)
         cmd = 'exiftool ' + filepath + ' >> exiftool.txt'
         os.system(cmd)
-        with open(currentpath + '/exiftool.txt', 'r') as f:
-            metadata = f.readlines()
+
+    with open(currentpath + '/exiftool.txt', 'r') as f:
+        metadata = f.readlines()
         counter = 0
         for line in metadata:
             if "Version" in line and "1.1" in line:
                 counter += 1
-    return counter
+        return counter
 
 
 def question3():
