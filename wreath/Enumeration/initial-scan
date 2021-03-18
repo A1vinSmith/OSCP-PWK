@@ -1,0 +1,5 @@
+# Nmap 7.91 scan initiated Fri Mar 19 10:52:39 2021 as: nmap -p-15000 -vv -oG initial-scan 10.200.80.200
+# Ports scanned: TCP(15000;1-15000) UDP(0;) SCTP(0;) PROTOCOLS(0;)
+Host: 10.200.80.200 ()	Status: Up
+Host: 10.200.80.200 ()	Ports: 22/open/tcp//ssh///, 80/open/tcp//http///, 443/open/tcp//https///, 9090/closed/tcp//zeus-admin///, 10000/open/tcp//snet-sensor-mgmt///	Ignored State: filtered (14995)
+# Nmap done at Fri Mar 19 10:54:19 2021 -- 1 IP address (1 host up) scanned in 100.07 seconds

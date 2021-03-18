@@ -1,0 +1,5 @@
+# Nmap 7.91 scan initiated Fri Mar 19 11:16:29 2021 as: nmap -p 22,80,443,10000 -sV -vv -oG service-scan 10.200.80.200
+# Ports scanned: TCP(4;22,80,443,10000) UDP(0;) SCTP(0;) PROTOCOLS(0;)
+Host: 10.200.80.200 ()	Status: Up
+Host: 10.200.80.200 ()	Ports: 22/open/tcp//ssh//OpenSSH 8.0 (protocol 2.0)/, 80/open/tcp//http//Apache httpd 2.4.37 ((centos) OpenSSL|1.1.1c)/, 443/open/tcp//ssl|http//Apache httpd 2.4.37 ((centos) OpenSSL|1.1.1c)/, 10000/open/tcp//http//MiniServ 1.890 (Webmin httpd)/
+# Nmap done at Fri Mar 19 11:17:16 2021 -- 1 IP address (1 host up) scanned in 47.53 seconds
