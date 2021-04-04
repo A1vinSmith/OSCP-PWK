@@ -1,0 +1,22 @@
+[core]
+repositoryformatversion = 0
+filemode = false
+bare = true
+symlinks = false
+ignorecase = true
+sharedrepository = 1
+
+[receive]
+denynonfastforwards = true
+
+[http]
+receivepack = true
+
+[gitstack]
+readusers = twreath 
+writeusers = twreath 
+addedusers = twreath 
+readgroups = 
+writegroups = 
+addedgroups = 
+
