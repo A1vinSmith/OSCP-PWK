@@ -1,0 +1,30 @@
+html{
+	width: 100%;
+	height: 100%;
+}
+
+body{
+	background: url("../imgs/ruby.jpg") no-repeat center center fixed;
+	background-size: cover;
+}
+
+
+main, form, input{
+	font-family:"Andika";
+}
+
+main{
+	padding: 20px;
+	text-align: center;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -80%);
+	width: 80%;
+	background: rgba(200,200,200,0.8);
+}
+
+h1{
+	font-size: 3em;
+	line-height: 20px;
+}
