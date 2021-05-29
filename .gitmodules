@@ -1,3 +1,3 @@
-[submodule "wreath/Exploitation/CVE-2019-15107"]
-	path = wreath/Exploitation/CVE-2019-15107
+[submodule "TryHackMe/Network/Wreath/Exploitation/CVE-2019-15107"]
+	path = TryHackMe/Network/Wreath/Exploitation/CVE-2019-15107
 	url = https://github.com/MuirlandOracle/CVE-2019-15107
