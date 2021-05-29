@@ -1,6 +1,7 @@
 # OSCP
-### [GitBook](https://alvinsmith.gitbook.io/progressive-oscp/) for better reading experience as the repo is mostly like draft and backup.
-### Notes and cheatsheets are in Wiki pages. Repo is mostly filled with TryHackMe writeups and binaries.
+### [GitBook](https://alvinsmith.gitbook.io/progressive-oscp/) for better(but less content) reading experience
+### Notes and cheatsheets are in Wiki pages. 
+### Repo is mostly filled with writeups and scripts.
 
 # Kali Config
 ### ohmyzsh + powerlevel10K + tmux
