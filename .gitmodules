@@ -1,3 +1,6 @@
 [submodule "TryHackMe/Network/Wreath/Exploitation/CVE-2019-15107"]
 	path = TryHackMe/Network/Wreath/Exploitation/CVE-2019-15107
 	url = https://github.com/MuirlandOracle/CVE-2019-15107
+[submodule "TryHackMe/TomGhost/TryHackMe/TomGhost/AJPy"]
+	path = TryHackMe/TomGhost/TryHackMe/TomGhost/AJPy
+	url = https://github.com/hypn0s/AJPy
