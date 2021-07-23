@@ -3,7 +3,7 @@
 ### Notes and cheatsheets are in Wiki pages. 
 ### Repo is mostly filled with writeups and scripts.
 
-# Kali Config(host on Mac)
+# Kali Config via vmware/virtualbox(host on Mac)
 ### ohmyzsh + powerlevel10K + tmux
 tips for Kali 2020.3: Restart the machine after installing oh-my-zsh. It's the most simple way to do it.
 
@@ -32,9 +32,19 @@ alias tmux='TERM=xterm-256color tmux -2'
 3. you know the drill
 `alias apt-get='sudo apt-get'` 
 
-# Parrot Config via qemu(host on Mac)
+# Kali Config via qemu(host on Mac)
 1. convert .iso to .qcow2
-`qemu-img convert Parrot-kde-security-4.11.2_amd64.iso Parrot-kde-security-4.11.2_amd64.qcow2`
+`qemu-img convert kali.iso kali.qcow2`
 2. Resize the QCOW2 image
-`qemu-img create -f qcow2 Parrot-kde-security-4.11.2_amd64.qcow2 50G`
+`qemu-img create -f qcow2 kali.qcow2 50G`
+3. Magic (no warnings tested on Jul 2021)
+```
+qemu-system-x86_64 \
+-m 8192 \
+-cpu host \
+-vga std \
+-cdrom ./kali.iso \
+-accel hvf \
+-drive file=./kali.qcow2
+```
 
