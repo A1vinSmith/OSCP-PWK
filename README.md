@@ -31,3 +31,8 @@ alias tmux='TERM=xterm-256color tmux -2'
 
 3. you know the drill
 `alias apt-get='sudo apt-get'` 
+
+# Parrot Config
+### This time I tried qemu
+##### First convert to qcow2
+`qemu-img convert Parrot-kde-security-4.11.2_amd64.iso Parrot-kde-security-4.11.2_amd64.qcow2`
