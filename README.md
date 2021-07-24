@@ -46,5 +46,26 @@ qemu-system-x86_64 \
 -cdrom ./kali.iso \
 -accel hvf \
 -drive file=./kali.qcow2
+
+Install:
+
+qemu-system-x86_64 \
+-m 8192 \
+-cpu host \
+-vga std \
+-cdrom /Users/AlvinSmith/Images/Kali/kali-linux-2021.2-installer-amd64.iso \
+-accel hvf \
+-drive file=/Users/AlvinSmith/Images/Kali/kali-linux-2021.2-installer-amd64.qcow2
+
+
+Run:
+
+qemu-system-x86_64 \
+-m 8192 \
+-cpu host \
+-device bochs-display \
+-accel hvf \
+-drive file=/Users/AlvinSmith/Images/Kali/kali-linux-2021.2-installer-amd64.qcow2
+
 ```
 
