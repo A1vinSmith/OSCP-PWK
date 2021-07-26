@@ -33,6 +33,7 @@ alias tmux='TERM=xterm-256color tmux -2'
 `alias apt-get='sudo apt-get'` 
 
 # Kali Config via qemu(host on Mac)
+## Better alternative choice https://mac.getutm.app/
 1. convert .iso to .qcow2
 `qemu-img convert kali.iso kali.qcow2`
 2. Resize the QCOW2 image
