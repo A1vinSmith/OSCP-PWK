@@ -4,6 +4,7 @@
 ### Repo is mostly filled with writeups and scripts.
 
 # Kali Config via vmware/virtualbox(host on Mac)
+## *Kali 2021 version already using zsh by default. You probably won't setup that much
 ### ohmyzsh + powerlevel10K + tmux
 tips for Kali 2020.3: Restart the machine after installing oh-my-zsh. It's the most simple way to do it.
 
