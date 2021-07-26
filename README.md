@@ -70,3 +70,8 @@ qemu-system-x86_64 \
 
 ```
 
+# Common Q&A
+### Kali Mirror sync in progress. Can't do apt update/clean
+`apt install apt-transport-https` https://www.kali.org/blog/kali-linux-repository-https-support/
+### Copy&Paste support
+`https://gist.github.com/plembo/21d4a1579850f7fe84301a90f4fcdf9a`
