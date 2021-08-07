@@ -15,3 +15,10 @@ ssh hype@10.10.10.79 -i private.key # Use the passphrase
 ```
 
 ### Priv
+```
+history
+
+# Google "exploit tmux" or the "exploit dev_sass" file
+
+tmux -S dev_sass
+```
