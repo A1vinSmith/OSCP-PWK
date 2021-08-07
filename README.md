@@ -4,7 +4,7 @@
 ### Repo is mostly filled with writeups and scripts.
 
 # Kali Config via vmware/virtualbox(host on Mac)
-## *Kali 2021 version already using zsh by default. You probably won't setup that much
+## *Kali 2021 version already using zsh by default. You probably won't setup that much. Just do powerlevel10K with mate terminal
 ### ohmyzsh + powerlevel10K + tmux
 tips for Kali 2020.3: Restart the machine after installing oh-my-zsh. It's the most simple way to do it.
 
@@ -74,5 +74,5 @@ qemu-system-x86_64 \
 # Common Q&A
 ### Kali Mirror sync in progress. Can't do apt update/clean
 `apt install apt-transport-https` https://www.kali.org/blog/kali-linux-repository-https-support/
-### Copy&Paste support
+### Copy&Paste support(You don't need this if you're on VMware fusion or UTM app)
 `https://gist.github.com/plembo/21d4a1579850f7fe84301a90f4fcdf9a`
