@@ -4,3 +4,6 @@
 [submodule "TryHackMe/TomGhost/AJPy"]
 	path = TryHackMe/TomGhost/AJPy
 	url = https://github.com/hypn0s/AJPy
+[submodule "HackTheBox/Valentine/HackTheBox/Valentine/heartbleed-poc"]
+	path = HackTheBox/Valentine/HackTheBox/Valentine/heartbleed-poc
+	url = https://github.com/sensepost/heartbleed-poc
