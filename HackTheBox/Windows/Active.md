@@ -39,7 +39,7 @@ python3 /usr/share/doc/python3-impacket/examples/GetADUsers.py active.htb/SVC_TG
 ### psexec.py or evil-winrm
 won't work
 ```
-python3 /usr/share/doc/python3-impacket/examples/psexec.py active.htb\SVC_TGS:'GPPstillStandingStrong2k18'@active.htb
+python3 /usr/share/doc/python3-impacket/examples/psexec.py active.htb/SVC_TGS:'GPPstillStandingStrong2k18'@active.htb
 
 [-] SMB SessionError: STATUS_LOGON_FAILURE(The attempted logon is invalid. This is either due to a bad username or authentication information.)
 ```
