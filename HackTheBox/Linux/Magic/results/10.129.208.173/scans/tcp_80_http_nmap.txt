@@ -1,0 +1,252 @@
+# Nmap 7.91 scan initiated Sun Sep  5 15:45:37 2021 as: nmap -vv --reason -Pn --min-rate=1000 -T4 -sV -p 80 "--script=banner,(http* or ssl*) and not (brute or broadcast or dos or external or http-slowloris* or fuzzer)" -oN /home/alvin/Documents/OSCP-PWK/HackTheBox/Linux/results/10.129.208.173/scans/tcp_80_http_nmap.txt -oX /home/alvin/Documents/OSCP-PWK/HackTheBox/Linux/results/10.129.208.173/scans/xml/tcp_80_http_nmap.xml 10.129.208.173
+Nmap scan report for 10.129.208.173
+Host is up, received user-set (0.25s latency).
+Scanned at 2021-09-05 15:45:37 NZST for 149s
+
+PORT   STATE SERVICE REASON  VERSION
+80/tcp open  http    syn-ack Apache httpd 2.4.29 ((Ubuntu))
+| http-auth-finder: 
+| Spidering limited to: maxdepth=3; maxpagecount=20; withinhost=10.129.208.173
+|   url                                 method
+|_  http://10.129.208.173:80/login.php  FORM
+|_http-chrono: Request times for /; avg: 2477.98ms; min: 892.64ms; max: 4108.01ms
+| http-comments-displayer: 
+| Spidering limited to: maxdepth=3; maxpagecount=20; withinhost=10.129.208.173
+|     
+|     Path: http://10.129.208.173:80/assets/js/main.js
+|     Line number: 1
+|     Comment: 
+|         
+|         
+|         
+|         
+|         */
+|     
+|     Path: http://10.129.208.173:80/login.php
+|     Line number: 68
+|     Comment: 
+|         <!-- Main -->
+|     
+|     Path: http://10.129.208.173:80/assets/js/util.js
+|     Line number: 37
+|     Comment: 
+|         
+|         
+|         
+|         
+|         	 */
+|     
+|     Path: http://10.129.208.173:80/assets/js/breakpoints.min.js
+|     Line number: 1
+|     Comment: 
+|         /* breakpoints.js v1.0 | @ajlkn | MIT licensed */
+|     
+|     Path: http://10.129.208.173:80/assets/css/main.css
+|     Line number: 233
+|     Comment: 
+|         /* Icons */
+|     
+|     Path: http://10.129.208.173:80/assets/css/main.css
+|     Line number: 270
+|     Comment: 
+|         /* Wrapper */
+|     
+|     Path: http://10.129.208.173:80/assets/css/main.css
+|     Line number: 617
+|     Comment: 
+|         /* Header */
+|     
+|     Path: http://10.129.208.173:80/assets/css/main.css
+|     Line number: 716
+|     Comment: 
+|         /* Popup */
+|     
+|     Path: http://10.129.208.173:80/login.php
+|     Line number: 109
+|     Comment: 
+|         <!-- Scripts -->
+|     
+|     Path: http://10.129.208.173:80/assets/js/jquery.poptrox.min.js
+|     Line number: 1
+|     Comment: 
+|         /* jquery.poptrox.js v2.5.2-dev | (c) @ajlkn | github.com/ajlkn/jquery.poptrox | MIT licensed */
+|     
+|     Path: http://10.129.208.173:80/assets/js/jquery.min.js
+|     Line number: 1
+|     Comment: 
+|         /*! jQuery v3.4.1 | (c) JS Foundation and other contributors | jquery.org/license */
+|     
+|     Path: http://10.129.208.173:80/assets/css/main.css
+|     Line number: 4
+|     Comment: 
+|         /*
+|         	Parallelism by HTML5 UP
+|         	html5up.net | @ajlkn
+|         	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+|         */
+|     
+|     Path: http://10.129.208.173:80/login.php
+|     Line number: 88
+|     Comment: 
+|         <!-- Footer -->
+|     
+|     Path: http://10.129.208.173:80/assets/css/main.css
+|     Line number: 191
+|     Comment: 
+|         /* List */
+|     
+|     Path: http://10.129.208.173:80/assets/css/main.css
+|     Line number: 77
+|     Comment: 
+|         /* Basic */
+|     
+|     Path: http://10.129.208.173:80/assets/js/browser.min.js
+|     Line number: 1
+|     Comment: 
+|         /* browser.js v1.0 | @ajlkn | MIT licensed */
+|     
+|     Path: http://10.129.208.173:80/assets/css/main.css
+|     Line number: 345
+|     Comment: 
+|         /* Main */
+|     
+|     Path: http://10.129.208.173:80/login.php
+|     Line number: 65
+|     Comment: 
+|         <!-- Wrapper -->
+|     
+|     Path: http://10.129.208.173:80/assets/js/util.js
+|     Line number: 521
+|     Comment: 
+|         
+|         
+|         
+|         
+|         	 */
+|     
+|     Path: http://10.129.208.173:80/assets/css/main.css
+|     Line number: 316
+|     Comment: 
+|         /* Scroll Zone */
+|     
+|     Path: http://10.129.208.173:80/assets/js/util.js
+|     Line number: 299
+|     Comment: 
+|         
+|         
+|         
+|         	 */
+|     
+|     Path: http://10.129.208.173:80/assets/js/util.js
+|     Line number: 3
+|     Comment: 
+|         
+|         
+|         
+|         	 */
+|     
+|     Path: http://10.129.208.173:80/
+|     Line number: 19
+|     Comment: 
+|_        <!-- Items -->
+| http-cookie-flags: 
+|   /login.php: 
+|     PHPSESSID: 
+|_      httponly flag not set
+| http-csrf: 
+| Spidering limited to: maxdepth=3; maxpagecount=20; withinhost=10.129.208.173
+|   Found the following possible CSRF vulnerabilities: 
+|     
+|     Path: http://10.129.208.173:80/login.php
+|     Form id: login-form
+|_    Form action: 
+|_http-date: Sun, 05 Sep 2021 03:45:45 GMT; -1s from local time.
+|_http-devframework: Couldn't determine the underlying framework or CMS. Try increasing 'httpspider.maxpagecount' value to spider more pages.
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+|_http-drupal-enum: Nothing found amongst the top 100 resources,use --script-args number=<number|all> for deeper analysis)
+| http-enum: 
+|_  /login.php: Possible admin folder
+|_http-errors: Couldn't find any error pages.
+|_http-exif-spider: ERROR: Script execution failed (use -d to debug)
+|_http-feed: Couldn't find any feeds.
+|_http-fetch: Please enter the complete path of the directory to save data in.
+| http-fileupload-exploiter: 
+|   
+|     Couldn't find a file-type field.
+|   
+|_    Couldn't find a file-type field.
+| http-grep: 
+|   (1) http://10.129.208.173:80/assets/js/: 
+|     (1) ip: 
+|_      + 10.129.208.173
+| http-headers: 
+|   Date: Sun, 05 Sep 2021 03:46:03 GMT
+|   Server: Apache/2.4.29 (Ubuntu)
+|   Connection: close
+|   Content-Type: text/html; charset=UTF-8
+|   
+|_  (Request type: HEAD)
+| http-internal-ip-disclosure: 
+|_  Internal IP Leaked: 127.0.1.1
+|_http-jsonp-detection: Couldn't find any JSONP endpoints.
+|_http-litespeed-sourcecode-download: Request with null byte did not work. This web server might not be vulnerable
+|_http-malware-host: Host appears to be clean
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-mobileversion-checker: No mobile version detected.
+| http-php-version: Logo query returned unknown hash 09c681177b6ba23f18a1326047c8827f
+|_Credits query returned unknown hash 863a176580fe9899402e5630c8a8d9a8
+|_http-referer-checker: Couldn't find any cross-domain scripts.
+|_http-security-headers: 
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+| http-sitemap-generator: 
+|   Directory structure:
+|     /
+|       Other: 1; php: 1
+|     /assets/css/
+|       css: 2
+|     /assets/js/
+|       js: 6
+|     /images/fulls/
+|       jpeg: 1; jpg: 3
+|     /images/uploads/
+|       gif: 1; jpg: 4; png: 1
+|   Longest directory structure:
+|     Depth: 2
+|     Dir: /assets/js/
+|   Total files found (by extension):
+|_    Other: 1; css: 2; gif: 1; jpeg: 1; jpg: 7; js: 6; php: 1; png: 1
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+|_http-title: Magic Portfolio
+| http-traceroute: 
+|   content-length
+|     Hop #1: 4050
+|     Hop #2: 4053
+|_    Hop #3: 4053
+| http-useragent-tester: 
+|   Status for browser useragent: 200
+|   Allowed User Agents: 
+|     Mozilla/5.0 (compatible; Nmap Scripting Engine; https://nmap.org/book/nse.html)
+|     libwww
+|     lwp-trivial
+|     libcurl-agent/1.0
+|     PHP/
+|     Python-urllib/2.5
+|     GT::WWW
+|     MFC_Tear_Sample
+|     HTTP::Lite
+|     PHPCrawl
+|     URI::Fetch
+|     http client
+|     PECL::HTTP
+|     Wget/1.13.4 (linux-gnu)
+|_    WWW-Mechanize/1.34
+| http-vhosts: 
+|_128 names had status 200
+|_http-vuln-cve2017-1001000: ERROR: Script execution failed (use -d to debug)
+|_http-wordpress-enum: Nothing found amongst the top 100 resources,use --script-args search-limit=<number|all> for deeper analysis)
+|_http-wordpress-users: [Error] Wordpress installation was not found. We couldn't find wp-login.php
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Sep  5 15:48:06 2021 -- 1 IP address (1 host up) scanned in 149.72 seconds

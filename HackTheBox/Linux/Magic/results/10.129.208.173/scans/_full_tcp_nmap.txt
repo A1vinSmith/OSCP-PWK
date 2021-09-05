@@ -1,0 +1,28 @@
+# Nmap 7.91 scan initiated Sun Sep  5 15:45:08 2021 as: nmap -vv --reason -Pn --min-rate=1000 -T4 -A --osscan-guess --version-all -p- -oN /home/alvin/Documents/OSCP-PWK/HackTheBox/Linux/results/10.129.208.173/scans/_full_tcp_nmap.txt -oX /home/alvin/Documents/OSCP-PWK/HackTheBox/Linux/results/10.129.208.173/scans/xml/_full_tcp_nmap.xml 10.129.208.173
+Increasing send delay for 10.129.208.173 from 0 to 5 due to 43 out of 107 dropped probes since last increase.
+Increasing send delay for 10.129.208.173 from 5 to 10 due to 250 out of 624 dropped probes since last increase.
+Warning: 10.129.208.173 giving up on port because retransmission cap hit (6).
+Nmap scan report for 10.129.208.173
+Host is up, received user-set (0.22s latency).
+Scanned at 2021-09-05 15:45:09 NZST for 271s
+Not shown: 38859 closed ports, 26674 filtered ports
+Reason: 38859 conn-refused and 26674 no-responses
+PORT   STATE SERVICE REASON  VERSION
+22/tcp open  ssh     syn-ack OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 06:d4:89:bf:51:f7:fc:0c:f9:08:5e:97:63:64:8d:ca (RSA)
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQClcZO7AyXva0myXqRYz5xgxJ8ljSW1c6xX0vzHxP/Qy024qtSuDeQIRZGYsIR+kyje39aNw6HHxdz50XSBSEcauPLDWbIYLUMM+a0smh7/pRjfA+vqHxEp7e5l9H7Nbb1dzQesANxa1glKsEmKi1N8Yg0QHX0/FciFt1rdES9Y4b3I3gse2mSAfdNWn4ApnGnpy1tUbanZYdRtpvufqPWjzxUkFEnFIPrslKZoiQ+MLnp77DXfIm3PGjdhui0PBlkebTGbgo4+U44fniEweNJSkiaZW/CuKte0j/buSlBlnagzDl0meeT8EpBOPjk+F0v6Yr7heTuAZn75pO3l5RHX
+|   256 11:a6:92:98:ce:35:40:c7:29:09:4f:6c:2d:74:aa:66 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBOVyH7ButfnaTRJb0CdXzeCYFPEmm6nkSUd4d52dW6XybW9XjBanHE/FM4kZ7bJKFEOaLzF1lDizNQgiffGWWLQ=
+|   256 71:05:99:1f:a8:1b:14:d6:03:85:53:f8:78:8e:cb:88 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE0dM4nfekm9dJWdTux9TqCyCGtW5rbmHfh/4v3NtTU1
+80/tcp open  http    syn-ack Apache httpd 2.4.29 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Magic Portfolio
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Sep  5 15:49:40 2021 -- 1 IP address (1 host up) scanned in 271.81 seconds
