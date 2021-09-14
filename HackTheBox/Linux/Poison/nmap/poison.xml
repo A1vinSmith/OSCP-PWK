@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="nmap-bootstrap.xsl" type="text/xsl"?>
+<!-- Nmap 7.91 scan initiated Sun Sep 12 21:44:08 2021 as: nmap -sC -sV -p80 -oA poison -&#45;stylesheet nmap-bootstrap.xsl -vv 10.129.1.254 -->
+<nmaprun scanner="nmap" args="nmap -sC -sV -p80 -oA poison -&#45;stylesheet nmap-bootstrap.xsl -vv 10.129.1.254" start="1631439848" startstr="Sun Sep 12 21:44:08 2021" version="7.91" xmloutputversion="1.05">
+<scaninfo type="connect" protocol="tcp" numservices="1" services="80"/>
+<verbose level="2"/>
+<debugging level="0"/>
+<taskbegin task="NSE" time="1631439849"/>
+<taskend task="NSE" time="1631439849"/>
+<taskbegin task="NSE" time="1631439849"/>
+<taskend task="NSE" time="1631439849"/>
+<taskbegin task="NSE" time="1631439849"/>
+<taskend task="NSE" time="1631439849"/>
+<taskbegin task="Ping Scan" time="1631439849"/>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="10.129.1.254" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+</hosthint>
+<taskend task="Ping Scan" time="1631439849" extrainfo="1 total hosts"/>
+<taskbegin task="Parallel DNS resolution of 1 host." time="1631439849"/>
+<taskend task="Parallel DNS resolution of 1 host." time="1631439849"/>
+<taskbegin task="Connect Scan" time="1631439849"/>
+<taskend task="Connect Scan" time="1631439849" extrainfo="1 total ports"/>
+<taskbegin task="Service scan" time="1631439849"/>
+<taskend task="Service scan" time="1631439856" extrainfo="1 service on 1 host"/>
+<taskbegin task="NSE" time="1631439856"/>
+<taskend task="NSE" time="1631439867"/>
+<taskbegin task="NSE" time="1631439867"/>
+<taskend task="NSE" time="1631439869"/>
+<taskbegin task="NSE" time="1631439869"/>
+<taskend task="NSE" time="1631439869"/>
+<host starttime="1631439849" endtime="1631439869"><status state="up" reason="syn-ack" reason_ttl="0"/>
+<address addr="10.129.1.254" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+<ports><port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="0"/><service name="http" product="Apache httpd" version="2.4.29" extrainfo="(FreeBSD) PHP/5.6.32" method="probed" conf="10"><cpe>cpe:/a:apache:http_server:2.4.29</cpe></service><script id="http-methods" output="&#xa;  Supported Methods: GET HEAD POST OPTIONS"><table key="Supported Methods">
+<elem>GET</elem>
+<elem>HEAD</elem>
+<elem>POST</elem>
+<elem>OPTIONS</elem>
+</table>
+</script><script id="http-server-header" output="Apache/2.4.29 (FreeBSD) PHP/5.6.32"><elem>Apache/2.4.29 (FreeBSD) PHP/5.6.32</elem>
+</script><script id="http-title" output="Site doesn&apos;t have a title (text/html; charset=UTF-8)."></script></port>
+</ports>
+<times srtt="236305" rttvar="211102" to="1080713"/>
+</host>
+<taskbegin task="NSE" time="1631439869"/>
+<taskend task="NSE" time="1631439869"/>
+<taskbegin task="NSE" time="1631439869"/>
+<taskend task="NSE" time="1631439869"/>
+<taskbegin task="NSE" time="1631439869"/>
+<taskend task="NSE" time="1631439869"/>
+<runstats><finished time="1631439869" timestr="Sun Sep 12 21:44:29 2021" summary="Nmap done at Sun Sep 12 21:44:29 2021; 1 IP address (1 host up) scanned in 20.38 seconds" elapsed="20.38" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>
