@@ -1,0 +1,15 @@
+200 OK
+X-Ua-Compatible: IE=edge
+Expires: Sun, 19 Nov 1978 05:00:00 GMT
+Content-Type: text/html; charset=UTF-8
+Date: Mon, 25 Oct 2021 03:50:11 GMT
+Vary: Accept-Encoding
+X-Generator: Drupal 8 (https://www.drupal.org)
+Retry-Count: 0
+Server: Apache/2.4.41 (Ubuntu)
+Cache-Control: must-revalidate, no-cache, private
+X-Drupal-Dynamic-Cache: MISS
+Content-Language: en
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-Drupal-Cache: HIT

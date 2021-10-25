@@ -1,0 +1,18 @@
+# Nmap 7.91 scan initiated Mon Oct 25 16:40:34 2021 as: nmap -p 80,443,8000,8080,8180,8888,10000 --open -oA web_discovery -iL scope_list
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Status: Up
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Ports: 80/open/tcp//http///	Ignored State: closed (6)
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Status: Up
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Ports: 80/open/tcp//http///	Ignored State: closed (6)
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Status: Up
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Ports: 80/open/tcp//http///	Ignored State: closed (6)
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Status: Up
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Ports: 80/open/tcp//http///	Ignored State: closed (6)
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Status: Up
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Ports: 80/open/tcp//http///	Ignored State: closed (6)
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Status: Up
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Ports: 80/open/tcp//http///	Ignored State: closed (6)
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Status: Up
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Ports: 80/open/tcp//http///	Ignored State: closed (6)
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Status: Up
+Host: 10.129.49.208 (INLANEFREIGHT.LOCAL)	Ports: 80/open/tcp//http///	Ignored State: closed (6)
+# Nmap done at Mon Oct 25 16:40:41 2021 -- 8 IP addresses (8 hosts up) scanned in 6.66 seconds

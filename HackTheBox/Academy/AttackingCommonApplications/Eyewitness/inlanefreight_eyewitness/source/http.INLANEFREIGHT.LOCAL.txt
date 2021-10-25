@@ -1,0 +1,8 @@
+<html><head>
+        <title>Testing Default Vhosts</title>
+    </head>
+    <body>
+        <p>This is the inlanefreight.local default vhost</p>
+    
+
+</body></html>

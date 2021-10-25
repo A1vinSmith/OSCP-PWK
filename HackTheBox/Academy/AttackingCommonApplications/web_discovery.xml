@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.91 scan initiated Mon Oct 25 16:40:34 2021 as: nmap -p 80,443,8000,8080,8180,8888,10000 -&#45;open -oA web_discovery -iL scope_list -->
+<nmaprun scanner="nmap" args="nmap -p 80,443,8000,8080,8180,8888,10000 -&#45;open -oA web_discovery -iL scope_list" start="1635133234" startstr="Mon Oct 25 16:40:34 2021" version="7.91" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="7" services="80,443,8000,8080,8180,8888,10000"/>
+<verbose level="0"/>
+<debugging level="0"/>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="INLANEFREIGHT.LOCAL" type="user"/>
+</hostnames>
+</hosthint>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="app.inlanefreight.local" type="user"/>
+</hostnames>
+</hosthint>
+<host starttime="1635133234" endtime="1635133235"><status state="up" reason="echo-reply" reason_ttl="63"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="INLANEFREIGHT.LOCAL" type="user"/>
+<hostname name="INLANEFREIGHT.LOCAL" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="6">
+<extrareasons reason="resets" count="6"/>
+</extraports>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" method="table" conf="3"/></port>
+</ports>
+<times srtt="364589" rttvar="73876" to="660093"/>
+</host>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="dev.inlanefreight.local" type="user"/>
+</hostnames>
+</hosthint>
+<host starttime="1635133234" endtime="1635133236"><status state="up" reason="echo-reply" reason_ttl="63"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="app.inlanefreight.local" type="user"/>
+<hostname name="INLANEFREIGHT.LOCAL" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="6">
+<extrareasons reason="resets" count="6"/>
+</extraports>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" method="table" conf="3"/></port>
+</ports>
+<times srtt="366227" rttvar="63818" to="621499"/>
+</host>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="drupal-dev.inlanefreight.local" type="user"/>
+</hostnames>
+</hosthint>
+<host starttime="1635133235" endtime="1635133237"><status state="up" reason="reset" reason_ttl="63"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="dev.inlanefreight.local" type="user"/>
+<hostname name="INLANEFREIGHT.LOCAL" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="6">
+<extrareasons reason="resets" count="6"/>
+</extraports>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" method="table" conf="3"/></port>
+</ports>
+<times srtt="326543" rttvar="66554" to="592759"/>
+</host>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="drupal-qa.inlanefreight.local" type="user"/>
+</hostnames>
+</hosthint>
+<host starttime="1635133236" endtime="1635133238"><status state="up" reason="echo-reply" reason_ttl="63"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="drupal-dev.inlanefreight.local" type="user"/>
+<hostname name="INLANEFREIGHT.LOCAL" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="6">
+<extrareasons reason="resets" count="6"/>
+</extraports>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" method="table" conf="3"/></port>
+</ports>
+<times srtt="356332" rttvar="61951" to="604136"/>
+</host>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="drupal-acc.inlanefreight.local" type="user"/>
+</hostnames>
+</hosthint>
+<host starttime="1635133237" endtime="1635133238"><status state="up" reason="echo-reply" reason_ttl="63"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="drupal-qa.inlanefreight.local" type="user"/>
+<hostname name="INLANEFREIGHT.LOCAL" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="6">
+<extrareasons reason="resets" count="6"/>
+</extraports>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" method="table" conf="3"/></port>
+</ports>
+<times srtt="324782" rttvar="65037" to="584930"/>
+</host>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="drupal.inlanefreight.local" type="user"/>
+</hostnames>
+</hosthint>
+<host starttime="1635133238" endtime="1635133239"><status state="up" reason="reset" reason_ttl="63"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="drupal-acc.inlanefreight.local" type="user"/>
+<hostname name="INLANEFREIGHT.LOCAL" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="6">
+<extrareasons reason="resets" count="6"/>
+</extraports>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" method="table" conf="3"/></port>
+</ports>
+<times srtt="337702" rttvar="50503" to="539714"/>
+</host>
+<hosthint><status state="up" reason="unknown-response" reason_ttl="0"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="blog.inlanefreight.local" type="user"/>
+</hostnames>
+</hosthint>
+<host starttime="1635133239" endtime="1635133240"><status state="up" reason="echo-reply" reason_ttl="63"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="drupal.inlanefreight.local" type="user"/>
+<hostname name="INLANEFREIGHT.LOCAL" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="6">
+<extrareasons reason="resets" count="6"/>
+</extraports>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" method="table" conf="3"/></port>
+</ports>
+<times srtt="365074" rttvar="65409" to="626710"/>
+</host>
+<host starttime="1635133239" endtime="1635133241"><status state="up" reason="echo-reply" reason_ttl="63"/>
+<address addr="10.129.49.208" addrtype="ipv4"/>
+<hostnames>
+<hostname name="blog.inlanefreight.local" type="user"/>
+<hostname name="INLANEFREIGHT.LOCAL" type="PTR"/>
+</hostnames>
+<ports><extraports state="closed" count="6">
+<extrareasons reason="resets" count="6"/>
+</extraports>
+<port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" method="table" conf="3"/></port>
+</ports>
+<times srtt="319521" rttvar="63365" to="572981"/>
+</host>
+<runstats><finished time="1635133241" timestr="Mon Oct 25 16:40:41 2021" summary="Nmap done at Mon Oct 25 16:40:41 2021; 8 IP addresses (8 hosts up) scanned in 6.66 seconds" elapsed="6.66" exit="success"/><hosts up="8" down="0" total="8"/>
+</runstats>
+</nmaprun>

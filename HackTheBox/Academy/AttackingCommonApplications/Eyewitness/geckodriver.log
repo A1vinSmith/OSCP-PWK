@@ -1,0 +1,63 @@
+1635133300121	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile3U9Zc2"
+*** You are running in headless mode.
+1635133301662	Marionette	INFO	Listening on port 44523
+1635133301728	Marionette	WARN	TLS certificate errors will be ignored for this session
+1635133301810	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofileq32Pwo"
+*** You are running in headless mode.
+1635133303411	Marionette	INFO	Listening on port 39883
+1635133303417	Marionette	WARN	TLS certificate errors will be ignored for this session
+1635133303511	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofileXELsLh"
+*** You are running in headless mode.
+1635133305086	Marionette	INFO	Listening on port 42431
+1635133305116	Marionette	WARN	TLS certificate errors will be ignored for this session
+1635133305202	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofileNBs8oU"
+*** You are running in headless mode.
+1635133306849	Marionette	INFO	Listening on port 38073
+1635133306948	Marionette	WARN	TLS certificate errors will be ignored for this session
+1635133307047	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofileYc7XQg"
+*** You are running in headless mode.
+1635133308706	Marionette	INFO	Listening on port 33427
+1635133308777	Marionette	WARN	TLS certificate errors will be ignored for this session
+1635133308893	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofileXG5d58"
+*** You are running in headless mode.
+1635133310139	Marionette	INFO	Stopped listening on port 44523
+1635133310482	Marionette	INFO	Stopped listening on port 39883
+
+###!!! [Child][MessageChannel] Error: (msgtype=0x5B0007,name=PHttpChannel::Msg_DocumentChannelCleanup) Channel closing: too late to send/recv, messages will be lost
+
+
+###!!! [Child][MessageChannel] Error: (msgtype=0x39012B,name=PContent::Msg_ScriptError) Channel closing: too late to send/recv, messages will be lost
+
+1635133310839	Marionette	INFO	Listening on port 43559
+1635133310904	Marionette	WARN	TLS certificate errors will be ignored for this session
+1635133310966	Marionette	INFO	Stopped listening on port 43559
+1635133311037	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofileh7w0jR"
+console.warn: services.settings: main/whats-new-panel sync interrupted by shutdown
+console.error: Region.jsm: "Failed to fetch region" (new TypeError("NetworkError when attempting to fetch resource.", ""))
+*** You are running in headless mode.
+1635133311651	Marionette	INFO	Stopped listening on port 42431
+1635133312024	Marionette	INFO	Stopped listening on port 33427
+
+###!!! [Parent][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+1635133312958	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofileL4dTOb"
+*** You are running in headless mode.
+1635133313453	Marionette	INFO	Listening on port 43043
+1635133313547	Marionette	WARN	TLS certificate errors will be ignored for this session
+1635133313599	Marionette	INFO	Stopped listening on port 43043
+1635133313684	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofileQASPuS"
+console.warn: services.settings: main/whats-new-panel sync interrupted by shutdown
+*** You are running in headless mode.
+1635133315758	Marionette	INFO	Listening on port 33579
+1635133315763	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "--headless" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofileLb87Kz"
+1635133315776	Marionette	WARN	TLS certificate errors will be ignored for this session
+*** You are running in headless mode.
+1635133316346	Marionette	INFO	Listening on port 43257
+1635133316400	Marionette	WARN	TLS certificate errors will be ignored for this session
+1635133316440	Marionette	INFO	Stopped listening on port 43257
+console.error: Region.jsm: "Failed to fetch region" (new TypeError("NetworkError when attempting to fetch resource.", ""))
+1635133317433	Marionette	INFO	Stopped listening on port 38073
+1635133317650	Marionette	INFO	Listening on port 37861
+1635133317677	Marionette	WARN	TLS certificate errors will be ignored for this session
+1635133318992	Marionette	INFO	Stopped listening on port 33579
+1635133320907	Marionette	INFO	Stopped listening on port 37861

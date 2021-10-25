@@ -1,0 +1,12 @@
+200 OK
+Vary: Accept-Encoding
+Content-Type: text/html; charset=utf-8
+Date: Mon, 25 Oct 2021 03:50:10 GMT
+Expires: Wed, 17 Aug 2005 00:00:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Pragma: no-cache
+Retry-Count: 0
+Server: Apache/2.4.41 (Ubuntu)
+Set-Cookie: 72af8f2b24261272e581a49f5c56de40=8jp6plhao48c7jf1lbu4m1v0n5; path=/; HttpOnly
+Permissions-Policy: interest-cohort=()
+Last-Modified: Mon, 25 Oct 2021 03:50:10 GMT
