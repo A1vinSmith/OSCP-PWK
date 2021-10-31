@@ -1,8 +1,17 @@
+### Tip
+Keep adding all findings to the host
+
 ### Find name server
 ```bash
 nslookup -query=ANY
 
 inlanefreight.htb       nameserver = ns.inlanefreight.htb.
+```
+
+or 
+
+```bash
+nslookup -type=NS inlanefreight.htb inlanefreight.htb
 ```
 
 ### Identify zones exist on the target nameserver
