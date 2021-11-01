@@ -11,7 +11,7 @@ inlanefreight.htb       nameserver = ns.inlanefreight.htb.
 or 
 
 ```bash
-nslookup -type=NS inlanefreight.htb inlanefreight.htb
+nslookup -type=NS inlanefreight.htb <IP>
 ```
 
 ### Identify zones exist on the target nameserver
