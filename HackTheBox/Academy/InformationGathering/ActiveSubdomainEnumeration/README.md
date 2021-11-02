@@ -53,3 +53,6 @@ internal.inlanefreight.htb    text = "ZONE_TRANSFER{87o2z3cno7zsoiedznxoi82z3o47
 nslookup -type=any -query=AXFR inlanefreight.htb ns.inlanefreight.htb
 nslookup -type=any -query=AXFR internal.inlanefreight.htb ns.inlanefreight.htb
 ```
+
+### Find subdomain without nameserver
+`subscraper example.com`
