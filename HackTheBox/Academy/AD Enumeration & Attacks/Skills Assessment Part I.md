@@ -6,15 +6,19 @@ PS> 1..254 | % {echo "172.16.6.$_"; ping -n 1 -w 100 172.16.6.$_} | Select-Strin
 
 ```
 
-
-
 Reply from 172.16.6.3: bytes=32 time<1ms TTL=128
 Reply from 172.16.6.50: bytes=32 time<1ms TTL=128
 Reply from 172.16.6.100: bytes=32 time<1ms TTL=128
 
 Chisel from HTB academy - SOCKS5 Tunneling with Chisel
 ```
-C:\chisel_1.exe server -v -p 1234 --socks5
+socks4        127.0.0.1 9050
+OR
+socks5 127.0.0.1 1080
+```
+
+```
+C:\chisel.exe server -v -p 1234 --socks5
 
 ./chisel client -v 10.129.49.186:1234 socks
 
