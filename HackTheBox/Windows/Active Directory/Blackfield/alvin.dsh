@@ -1,0 +1,4 @@
+set context persistent nowriters
+add volume c: alias alvin
+create
+expose %alvin% z:
