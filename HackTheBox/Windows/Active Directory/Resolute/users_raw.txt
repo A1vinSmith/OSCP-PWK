@@ -1,0 +1,47 @@
+
+|   MEGABANK\abigail (RID: 6602)
+|     Flags:       Normal user account
+|   MEGABANK\Administrator (RID: 500)
+|     Description: Built-in account for administering the computer/domain
+|     Flags:       Normal user account, Password does not expire
+|   MEGABANK\angela (RID: 6606)
+|     Flags:       Normal user account
+|   MEGABANK\annette (RID: 6614)
+|     Flags:       Normal user account
+|   MEGABANK\annika (RID: 6615)
+|     Flags:       Normal user account
+|   MEGABANK\claire (RID: 6611)
+|     Flags:       Normal user account
+|   MEGABANK\claude (RID: 6617)
+|     Flags:       Normal user account
+|   MEGABANK\DefaultAccount (RID: 503)
+|     Description: A user account managed by the system.
+|     Flags:       Normal user account, Password does not expire, Account disabled, Password not required
+|   MEGABANK\felicia (RID: 6607)
+|     Flags:       Normal user account
+|   MEGABANK\fred (RID: 6605)
+|     Flags:       Normal user account
+|   MEGABANK\Guest (RID: 501)
+|     Description: Built-in account for guest access to the computer/domain
+|     Flags:       Normal user account, Password does not expire, Account disabled, Password not required
+|   MEGABANK\gustavo (RID: 6608)
+|     Flags:       Normal user account
+|   MEGABANK\krbtgt (RID: 502)
+|     Description: Key Distribution Center Service Account
+|     Flags:       Normal user account, Account disabled
+|   MEGABANK\marcus (RID: 6603)
+|     Flags:       Normal user account
+|   MEGABANK\marko (RID: 1111)
+|     Full name:   Marko Novak
+|     Description: Account created. Password set to Welcome123!
+|     Flags:       Normal user account, Password does not expire
+|   MEGABANK\melanie (RID: 10101)
+|     Flags:       Normal user account
+|   MEGABANK\naoki (RID: 10104)
+|     Flags:       Normal user account
+|   MEGABANK\paulo (RID: 6612)
+|     Flags:       Normal user account
+|   MEGABANK\per (RID: 6616)
+|     Flags:       Normal user account
+|   MEGABANK\ryan (RID: 1105)
+|     Full name:   Ryan Bertrand

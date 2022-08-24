@@ -1,0 +1,112 @@
+# extended LDIF
+#
+# LDAPv3
+# base <dc=megabank,dc=local> with scope baseObject
+# filter: (objectclass=*)
+# requesting: ALL
+#
+
+# megabank.local
+dn: dc=megabank,dc=local
+objectClass: top
+objectClass: domain
+objectClass: domainDNS
+distinguishedName: DC=megabank,DC=local
+instanceType: 5
+whenCreated: 20190925132822.0Z
+whenChanged: 20220823043011.0Z
+subRefs: DC=ForestDnsZones,DC=megabank,DC=local
+subRefs: DC=DomainDnsZones,DC=megabank,DC=local
+subRefs: CN=Configuration,DC=megabank,DC=local
+uSNCreated: 4099
+dSASignature:: AQAAACgAAAAAAAAAAAAAAAAAAAAAAAAAI0kCuedEgkuD1X4NGZryvA==
+uSNChanged: 159791
+name: megabank
+objectGUID:: RungtOfLt0KPoFxM7C/lqg==
+replUpToDateVector:: AgAAAAAAAAAWAAAAAAAAADv+xw5NT59AgbZ+xJHTUowawAEAAAAAAAxz9
+ xMDAAAAwh0pHcgb2UeivFJL4Q8QZAigAAAAAAAAETWfEwMAAABwEWNEnJ/JTqZrXDzeu6t8HOABAA
+ AAAABGe/cTAwAAAKo4iGFkQ2tNttYznkdNa8gHkAAAAAAAAFownxMDAAAABaKyYvsphkGwNf2+l/T
+ OcQmwAAAAAAAA0DefEwMAAABgnQ5ls1S9RbRniAcF/EnhBXAAAAAAAAA8IJ8TAwAAANkKY2p5o8JJ
+ iWThb22GsFkfEAIAAAAAAPEu+BMDAAAANjjJgh690k6SHEyv8j3GbwzgAAAAAAAAQB/mEwMAAAARO
+ oWDI5jaSqqD5vcle3fBGKABAAAAAAAKafcTAwAAANC7S4v1tdVEvvnXks56Pzsb0AEAAAAAAHZ39x
+ MDAAAAClc6jW+1nEe6iH9KjbQfHxVwAQAAAAAALiT3EwMAAADYJfudVPvpSK11CCwhkf7sBoAAAAA
+ AAADpLJ8TAwAAACXlzaE+3D1MqNP2Y3JBf0UiQAIAAAAAAFSG0hcDAAAAJUHBtbdSj0G3p/mpteQC
+ MiVwAgAAAAAA0ugUGQMAAAAjSQK550SCS4PVfg0ZmvK8A1AAAAAAAAARCJ8TAwAAAGihnMtrf2pMi
+ EYNFOaQ8tsN8AAAAAAAADrv9hMDAAAAZCIS0nOJO02thQFI7blYVh3wAQAAAAAACX33EwMAAACkTz
+ 7Zm6uWQ6l9IIrElbWGITACAAAAAAAqU/gTAwAAACKgoeQ+rWhIgY1lWoEJguYEYAAAAAAAAF0UnxM
+ DAAAAu4zE5p0Bg0mBNo4LXGAgtRmwAQAAAAAADW73EwMAAAAlfTr34PbvTbLi3YAu8CqzF5ABAAAA
+ AAC7YPcTAwAAAPkwwP+dZrZLkzlXUoHFUKYeAAIAAAAAAAcd+BMDAAAA
+creationTime: 133057026111384149
+forceLogoff: -9223372036854775808
+lockoutDuration: -18000000000
+lockOutObservationWindow: -18000000000
+lockoutThreshold: 0
+maxPwdAge: -9223372036854775808
+minPwdAge: -864000000000
+minPwdLength: 7
+modifiedCountAtLastProm: 0
+nextRid: 1000
+pwdProperties: 0
+pwdHistoryLength: 24
+objectSid:: AQQAAAAAAAUVAAAAaeAGU04VmrOsCGHW
+serverState: 1
+uASCompat: 1
+modifiedCount: 1
+auditingPolicy:: AAE=
+nTMixedDomain: 0
+rIDManagerReference: CN=RID Manager$,CN=System,DC=megabank,DC=local
+fSMORoleOwner: CN=NTDS Settings,CN=RESOLUTE,CN=Servers,CN=Default-First-Site-N
+ ame,CN=Sites,CN=Configuration,DC=megabank,DC=local
+systemFlags: -1946157056
+wellKnownObjects: B:32:6227F0AF1FC2410D8E3BB10615BB5B0F:CN=NTDS Quotas,DC=mega
+ bank,DC=local
+wellKnownObjects: B:32:F4BE92A4C777485E878E9421D53087DB:CN=Microsoft,CN=Progra
+ m Data,DC=megabank,DC=local
+wellKnownObjects: B:32:09460C08AE1E4A4EA0F64AEE7DAA1E5A:CN=Program Data,DC=meg
+ abank,DC=local
+wellKnownObjects: B:32:22B70C67D56E4EFB91E9300FCA3DC1AA:CN=ForeignSecurityPrin
+ cipals,DC=megabank,DC=local
+wellKnownObjects: B:32:18E2EA80684F11D2B9AA00C04F79F805:CN=Deleted Objects,DC=
+ megabank,DC=local
+wellKnownObjects: B:32:2FBAC1870ADE11D297C400C04FD8D5CD:CN=Infrastructure,DC=m
+ egabank,DC=local
+wellKnownObjects: B:32:AB8153B7768811D1ADED00C04FD8D5CD:CN=LostAndFound,DC=meg
+ abank,DC=local
+wellKnownObjects: B:32:AB1D30F3768811D1ADED00C04FD8D5CD:CN=System,DC=megabank,
+ DC=local
+wellKnownObjects: B:32:A361B2FFFFD211D1AA4B00C04FD7D83A:OU=Domain Controllers,
+ DC=megabank,DC=local
+wellKnownObjects: B:32:AA312825768811D1ADED00C04FD8D5CD:CN=Computers,DC=megaba
+ nk,DC=local
+wellKnownObjects: B:32:A9D1CA15768811D1ADED00C04FD8D5CD:CN=Users,DC=megabank,D
+ C=local
+objectCategory: CN=Domain-DNS,CN=Schema,CN=Configuration,DC=megabank,DC=local
+isCriticalSystemObject: TRUE
+gPLink: [LDAP://CN={31B2F340-016D-11D2-945F-00C04FB984F9},CN=Policies,CN=Syste
+ m,DC=megabank,DC=local;0]
+dSCorePropagationData: 16010101000000.0Z
+otherWellKnownObjects: B:32:683A24E2E8164BD3AF86AC3C2CF3F981:CN=Keys,DC=megaba
+ nk,DC=local
+otherWellKnownObjects: B:32:1EB93889E40C45DF9F0C64D23BBB6237:CN=Managed Servic
+ e Accounts,DC=megabank,DC=local
+masteredBy: CN=NTDS Settings,CN=RESOLUTE,CN=Servers,CN=Default-First-Site-Name
+ ,CN=Sites,CN=Configuration,DC=megabank,DC=local
+ms-DS-MachineAccountQuota: 10
+msDS-Behavior-Version: 7
+msDS-PerUserTrustQuota: 1
+msDS-AllUsersTrustQuota: 1000
+msDS-PerUserTrustTombstonesQuota: 10
+msDs-masteredBy: CN=NTDS Settings,CN=RESOLUTE,CN=Servers,CN=Default-First-Site
+ -Name,CN=Sites,CN=Configuration,DC=megabank,DC=local
+msDS-IsDomainFor: CN=NTDS Settings,CN=RESOLUTE,CN=Servers,CN=Default-First-Sit
+ e-Name,CN=Sites,CN=Configuration,DC=megabank,DC=local
+msDS-NcType: 0
+msDS-ExpirePasswordsOnSmartCardOnlyAccounts: TRUE
+dc: megabank
+
+# search result
+search: 2
+result: 0 Success
+
+# numResponses: 2
+# numEntries: 1
