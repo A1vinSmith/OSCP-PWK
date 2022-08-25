@@ -1,0 +1,6 @@
+
+AppLocker procedure to be documented - hash rules for exe, msi and scripts (ps1,vbs,cmd,bat,js) are in effect.
+
+
+
+
