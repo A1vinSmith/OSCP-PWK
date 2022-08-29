@@ -1,0 +1,95 @@
+# extended LDIF
+#
+# LDAPv3
+# base <DC=cascade,DC=local> with scope baseObject
+# filter: (objectclass=*)
+# requesting: ALL
+#
+
+# cascade.local
+dn: DC=cascade,DC=local
+objectClass: top
+objectClass: domain
+objectClass: domainDNS
+distinguishedName: DC=cascade,DC=local
+instanceType: 5
+whenCreated: 20200109153132.0Z
+whenChanged: 20220825221301.0Z
+subRefs: DC=ForestDnsZones,DC=cascade,DC=local
+subRefs: DC=DomainDnsZones,DC=cascade,DC=local
+subRefs: CN=Configuration,DC=cascade,DC=local
+uSNCreated: 4099
+uSNChanged: 344149
+name: cascade
+objectGUID:: BEPTb7rgSEuSvojkxZJmOA==
+creationTime: 133059391819364183
+forceLogoff: -9223372036854775808
+lockoutDuration: -18000000000
+lockOutObservationWindow: -18000000000
+lockoutThreshold: 0
+maxPwdAge: -9223372036854775808
+minPwdAge: 0
+minPwdLength: 5
+modifiedCountAtLastProm: 0
+nextRid: 1001
+pwdProperties: 0
+pwdHistoryLength: 0
+objectSid:: AQQAAAAAAAUVAAAAMvuhxgsd8Uf1yHJF
+serverState: 1
+uASCompat: 1
+modifiedCount: 1
+auditingPolicy:: AAE=
+nTMixedDomain: 0
+rIDManagerReference: CN=RID Manager$,CN=System,DC=cascade,DC=local
+fSMORoleOwner: CN=NTDS Settings,CN=CASC-DC1,CN=Servers,CN=Default-First-Site-N
+ ame,CN=Sites,CN=Configuration,DC=cascade,DC=local
+systemFlags: -1946157056
+wellKnownObjects: B:32:6227F0AF1FC2410D8E3BB10615BB5B0F:CN=NTDS Quotas,DC=casc
+ ade,DC=local
+wellKnownObjects: B:32:F4BE92A4C777485E878E9421D53087DB:CN=Microsoft,CN=Progra
+ m Data,DC=cascade,DC=local
+wellKnownObjects: B:32:09460C08AE1E4A4EA0F64AEE7DAA1E5A:CN=Program Data,DC=cas
+ cade,DC=local
+wellKnownObjects: B:32:22B70C67D56E4EFB91E9300FCA3DC1AA:CN=ForeignSecurityPrin
+ cipals,DC=cascade,DC=local
+wellKnownObjects: B:32:18E2EA80684F11D2B9AA00C04F79F805:CN=Deleted Objects,DC=
+ cascade,DC=local
+wellKnownObjects: B:32:2FBAC1870ADE11D297C400C04FD8D5CD:CN=Infrastructure,DC=c
+ ascade,DC=local
+wellKnownObjects: B:32:AB8153B7768811D1ADED00C04FD8D5CD:CN=LostAndFound,DC=cas
+ cade,DC=local
+wellKnownObjects: B:32:AB1D30F3768811D1ADED00C04FD8D5CD:CN=System,DC=cascade,D
+ C=local
+wellKnownObjects: B:32:A361B2FFFFD211D1AA4B00C04FD7D83A:OU=Domain Controllers,
+ DC=cascade,DC=local
+wellKnownObjects: B:32:AA312825768811D1ADED00C04FD8D5CD:CN=Computers,DC=cascad
+ e,DC=local
+wellKnownObjects: B:32:A9D1CA15768811D1ADED00C04FD8D5CD:CN=Users,DC=cascade,DC
+ =local
+objectCategory: CN=Domain-DNS,CN=Schema,CN=Configuration,DC=cascade,DC=local
+isCriticalSystemObject: TRUE
+gPLink: [LDAP://CN={31B2F340-016D-11D2-945F-00C04FB984F9},CN=Policies,CN=Syste
+ m,DC=cascade,DC=local;0]
+dSCorePropagationData: 16010101000000.0Z
+otherWellKnownObjects: B:32:1EB93889E40C45DF9F0C64D23BBB6237:CN=Managed Servic
+ e Accounts,DC=cascade,DC=local
+masteredBy: CN=NTDS Settings,CN=CASC-DC1,CN=Servers,CN=Default-First-Site-Name
+ ,CN=Sites,CN=Configuration,DC=cascade,DC=local
+ms-DS-MachineAccountQuota: 10
+msDS-Behavior-Version: 4
+msDS-PerUserTrustQuota: 1
+msDS-AllUsersTrustQuota: 1000
+msDS-PerUserTrustTombstonesQuota: 10
+msDs-masteredBy: CN=NTDS Settings,CN=CASC-DC1,CN=Servers,CN=Default-First-Site
+ -Name,CN=Sites,CN=Configuration,DC=cascade,DC=local
+msDS-IsDomainFor: CN=NTDS Settings,CN=CASC-DC1,CN=Servers,CN=Default-First-Sit
+ e-Name,CN=Sites,CN=Configuration,DC=cascade,DC=local
+msDS-NcType: 0
+dc: cascade
+
+# search result
+search: 2
+result: 0 Success
+
+# numResponses: 2
+# numEntries: 1

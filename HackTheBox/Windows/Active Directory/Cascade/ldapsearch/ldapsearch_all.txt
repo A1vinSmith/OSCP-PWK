@@ -1,0 +1,96 @@
+# extended LDIF
+#
+# LDAPv3
+# base <> (default) with scope baseObject
+# filter: (objectclass=*)
+# requesting: ALL
+#
+
+#
+dn:
+currentTime: 20220825225745.0Z
+subschemaSubentry: CN=Aggregate,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dsServiceName: CN=NTDS Settings,CN=CASC-DC1,CN=Servers,CN=Default-First-Site-N
+ ame,CN=Sites,CN=Configuration,DC=cascade,DC=local
+namingContexts: DC=cascade,DC=local
+namingContexts: CN=Configuration,DC=cascade,DC=local
+namingContexts: CN=Schema,CN=Configuration,DC=cascade,DC=local
+namingContexts: DC=DomainDnsZones,DC=cascade,DC=local
+namingContexts: DC=ForestDnsZones,DC=cascade,DC=local
+defaultNamingContext: DC=cascade,DC=local
+schemaNamingContext: CN=Schema,CN=Configuration,DC=cascade,DC=local
+configurationNamingContext: CN=Configuration,DC=cascade,DC=local
+rootDomainNamingContext: DC=cascade,DC=local
+supportedControl: 1.2.840.113556.1.4.319
+supportedControl: 1.2.840.113556.1.4.801
+supportedControl: 1.2.840.113556.1.4.473
+supportedControl: 1.2.840.113556.1.4.528
+supportedControl: 1.2.840.113556.1.4.417
+supportedControl: 1.2.840.113556.1.4.619
+supportedControl: 1.2.840.113556.1.4.841
+supportedControl: 1.2.840.113556.1.4.529
+supportedControl: 1.2.840.113556.1.4.805
+supportedControl: 1.2.840.113556.1.4.521
+supportedControl: 1.2.840.113556.1.4.970
+supportedControl: 1.2.840.113556.1.4.1338
+supportedControl: 1.2.840.113556.1.4.474
+supportedControl: 1.2.840.113556.1.4.1339
+supportedControl: 1.2.840.113556.1.4.1340
+supportedControl: 1.2.840.113556.1.4.1413
+supportedControl: 2.16.840.1.113730.3.4.9
+supportedControl: 2.16.840.1.113730.3.4.10
+supportedControl: 1.2.840.113556.1.4.1504
+supportedControl: 1.2.840.113556.1.4.1852
+supportedControl: 1.2.840.113556.1.4.802
+supportedControl: 1.2.840.113556.1.4.1907
+supportedControl: 1.2.840.113556.1.4.1948
+supportedControl: 1.2.840.113556.1.4.1974
+supportedControl: 1.2.840.113556.1.4.1341
+supportedControl: 1.2.840.113556.1.4.2026
+supportedControl: 1.2.840.113556.1.4.2064
+supportedControl: 1.2.840.113556.1.4.2065
+supportedControl: 1.2.840.113556.1.4.2066
+supportedLDAPVersion: 3
+supportedLDAPVersion: 2
+supportedLDAPPolicies: MaxPoolThreads
+supportedLDAPPolicies: MaxDatagramRecv
+supportedLDAPPolicies: MaxReceiveBuffer
+supportedLDAPPolicies: InitRecvTimeout
+supportedLDAPPolicies: MaxConnections
+supportedLDAPPolicies: MaxConnIdleTime
+supportedLDAPPolicies: MaxPageSize
+supportedLDAPPolicies: MaxQueryDuration
+supportedLDAPPolicies: MaxTempTableSize
+supportedLDAPPolicies: MaxResultSetSize
+supportedLDAPPolicies: MinResultSets
+supportedLDAPPolicies: MaxResultSetsPerConn
+supportedLDAPPolicies: MaxNotificationPerConn
+supportedLDAPPolicies: MaxValRange
+supportedLDAPPolicies: ThreadMemoryLimit
+supportedLDAPPolicies: SystemMemoryLimitPercent
+highestCommittedUSN: 344205
+supportedSASLMechanisms: GSSAPI
+supportedSASLMechanisms: GSS-SPNEGO
+supportedSASLMechanisms: EXTERNAL
+supportedSASLMechanisms: DIGEST-MD5
+dnsHostName: CASC-DC1.cascade.local
+ldapServiceName: cascade.local:casc-dc1$@CASCADE.LOCAL
+serverName: CN=CASC-DC1,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Conf
+ iguration,DC=cascade,DC=local
+supportedCapabilities: 1.2.840.113556.1.4.800
+supportedCapabilities: 1.2.840.113556.1.4.1670
+supportedCapabilities: 1.2.840.113556.1.4.1791
+supportedCapabilities: 1.2.840.113556.1.4.1935
+supportedCapabilities: 1.2.840.113556.1.4.2080
+isSynchronized: TRUE
+isGlobalCatalogReady: TRUE
+domainFunctionality: 4
+forestFunctionality: 4
+domainControllerFunctionality: 4
+
+# search result
+search: 2
+result: 0 Success
+
+# numResponses: 2
+# numEntries: 1

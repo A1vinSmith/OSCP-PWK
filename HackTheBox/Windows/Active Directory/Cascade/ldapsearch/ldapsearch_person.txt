@@ -1,0 +1,13 @@
+# extended LDIF
+#
+# LDAPv3
+# base <DC=cascade,DC=local> with scope baseObject
+# filter: (objectClass=person)
+# requesting: ALL
+#
+
+# search result
+search: 2
+result: 0 Success
+
+# numResponses: 1

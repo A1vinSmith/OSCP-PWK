@@ -1,0 +1,600 @@
+dn: CN=Util,OU=Services,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Util
+distinguishedName: CN=Util,OU=Services,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200109194521.0Z
+whenChanged: 20200128180947.0Z
+displayName: Util
+uSNCreated: 24650
+uSNChanged: 245850
+name: Util
+objectGUID: GdAgZzaP8E6S7CzuIP8sag==
+userAccountControl: 66048
+badPwdCount: 1
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533032763615
+lastLogoff: 0
+lastLogon: 132247085871071226
+pwdLastSet: 132233548311955855
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFVwQAAA==
+accountExpires: 9223372036854775807
+logonCount: 1
+sAMAccountName: util
+sAMAccountType: 805306368
+userPrincipalName: util@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163635.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 16010101000417.0Z
+lastLogonTimestamp: 132247085871071226
+
+dn: CN=James Wakefield,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: James Wakefield
+sn: Wakefield
+givenName: James
+distinguishedName: CN=James Wakefield,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200109203444.0Z
+whenChanged: 20200115215201.0Z
+displayName: James Wakefield
+uSNCreated: 28741
+uSNChanged: 118849
+name: James Wakefield
+objectGUID: 6SX/H/Sf5UOkC8IjbIii7A==
+userAccountControl: 66048
+badPwdCount: 1
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533033231616
+lastLogoff: 0
+lastLogon: 0
+scriptPath: MapDataDrive.vbs
+pwdLastSet: 132230756844150124
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFXAQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: j.wakefield
+sAMAccountType: 805306368
+userPrincipalName: j.wakefield@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 20200109203444.0Z
+dSCorePropagationData: 16010101000417.0Z
+
+dn: CN=CascGuest,CN=Users,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: CascGuest
+description: Built-in account for guest access to the computer/domain
+distinguishedName: CN=CascGuest,CN=Users,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200109153140.0Z
+whenChanged: 20200110160637.0Z
+uSNCreated: 8197
+memberOf: CN=Guests,CN=Builtin,DC=cascade,DC=local
+uSNChanged: 45094
+name: CascGuest
+objectGUID: LrFX+qgBukGjmV+ZFABrZw==
+userAccountControl: 66082
+badPwdCount: 1
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059526737840559
+lastLogoff: 0
+lastLogon: 0
+pwdLastSet: 0
+primaryGroupID: 514
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJF9QEAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: CascGuest
+sAMAccountType: 805306368
+userPrincipalName: CascGuest@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+isCriticalSystemObject: TRUE
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200109175934.0Z
+dSCorePropagationData: 20200109154857.0Z
+dSCorePropagationData: 16010714223649.0Z
+lastLogonTimestamp: 132230700642958462
+
+dn: CN=Ryan Thompson,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Ryan Thompson
+sn: Thompson
+givenName: Ryan
+distinguishedName: CN=Ryan Thompson,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200109193126.0Z
+whenChanged: 20220826015802.0Z
+displayName: Ryan Thompson
+uSNCreated: 24610
+memberOf: CN=IT,OU=Groups,OU=UK,DC=cascade,DC=local
+uSNChanged: 344387
+name: Ryan Thompson
+objectGUID: LfpD6qngUkupEy9bFXBBjA==
+userAccountControl: 66048
+badPwdCount: 0
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059474550444897
+lastLogoff: 0
+lastLogon: 133059533033231616
+pwdLastSet: 132230718862636251
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFVQQAAA==
+accountExpires: 9223372036854775807
+logonCount: 3
+sAMAccountName: r.thompson
+sAMAccountType: 805306368
+userPrincipalName: r.thompson@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200126183918.0Z
+dSCorePropagationData: 20200119174753.0Z
+dSCorePropagationData: 20200119174719.0Z
+dSCorePropagationData: 20200119174508.0Z
+dSCorePropagationData: 16010101000000.0Z
+lastLogonTimestamp: 133059526828788719
+msDS-SupportedEncryptionTypes: 0
+cascadeLegacyPwd: clk0bjVldmE=
+
+dn: CN=Steve Smith,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Steve Smith
+sn: Smith
+givenName: Steve
+distinguishedName: CN=Steve Smith,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200109180813.0Z
+whenChanged: 20220826034424.0Z
+displayName: Steve Smith
+uSNCreated: 16404
+memberOf: CN=Audit Share,OU=Groups,OU=UK,DC=cascade,DC=local
+memberOf: CN=Remote Management Users,OU=Groups,OU=UK,DC=cascade,DC=local
+memberOf: CN=IT,OU=Groups,OU=UK,DC=cascade,DC=local
+uSNChanged: 344449
+name: Steve Smith
+objectGUID: 39nrOPfEAE2an/UDQy/6fQ==
+userAccountControl: 66048
+badPwdCount: 2
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533031203613
+lastLogoff: 0
+lastLogon: 132247275990842339
+scriptPath: MapAuditDrive.vbs
+pwdLastSet: 132247150854857364
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFUwQAAA==
+accountExpires: 9223372036854775807
+logonCount: 16
+sAMAccountName: s.smith
+sAMAccountType: 805306368
+userPrincipalName: s.smith@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 20200109180813.0Z
+dSCorePropagationData: 16010101000417.0Z
+lastLogonTimestamp: 133059590648032811
+
+dn: CN=ArkSvc,OU=Services,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: ArkSvc
+distinguishedName: CN=ArkSvc,OU=Services,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200109161820.0Z
+whenChanged: 20200323113833.0Z
+displayName: ArkSvc
+uSNCreated: 12799
+memberOf: CN=Remote Management Users,OU=Groups,OU=UK,DC=cascade,DC=local
+memberOf: CN=AD Recycle Bin,OU=Groups,OU=UK,DC=cascade,DC=local
+memberOf: CN=IT,OU=Groups,OU=UK,DC=cascade,DC=local
+uSNChanged: 295021
+name: ArkSvc
+objectGUID: ELXj5FhFXUmr2tAqpnaTNA==
+userAccountControl: 66048
+badPwdCount: 2
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533031203613
+lastLogoff: 0
+lastLogon: 132248055409887841
+pwdLastSet: 132230603002172876
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFUgQAAA==
+accountExpires: 9223372036854775807
+logonCount: 13
+sAMAccountName: arksvc
+sAMAccountType: 805306368
+userPrincipalName: arksvc@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163635.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 16010101000417.0Z
+lastLogonTimestamp: 132294371134322815
+
+dn: CN=Stephanie Hickson,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Stephanie Hickson
+sn: Hickson
+givenName: Stephanie
+distinguishedName: CN=Stephanie Hickson,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200113012427.0Z
+whenChanged: 20200115215221.0Z
+displayName: Stephanie Hickson
+uSNCreated: 65594
+memberOf: CN=HR,OU=Groups,OU=UK,DC=cascade,DC=local
+uSNChanged: 118853
+name: Stephanie Hickson
+objectGUID: rCGbAiT7r0CiOzKwLPa8NQ==
+userAccountControl: 66048
+badPwdCount: 1
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533033387616
+lastLogoff: 0
+lastLogon: 0
+scriptPath: MapDataDrive.vbs
+pwdLastSet: 132233522678003963
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFYQQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: s.hickson
+sAMAccountType: 805306368
+userPrincipalName: s.hickson@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 20200113012427.0Z
+dSCorePropagationData: 16010101000417.0Z
+
+dn: CN=John Goodhand,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: John Goodhand
+sn: Goodhand
+givenName: John
+distinguishedName: CN=John Goodhand,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200113014026.0Z
+whenChanged: 20200115215154.0Z
+displayName: John Goodhand
+uSNCreated: 65614
+uSNChanged: 118848
+name: John Goodhand
+objectGUID: 7TACWgpE/kqlMHRot3JgpQ==
+userAccountControl: 66048
+badPwdCount: 1
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533032763615
+lastLogoff: 0
+lastLogon: 0
+scriptPath: MapDataDrive.vbs
+pwdLastSet: 132233532260320793
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFYgQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: j.goodhand
+sAMAccountType: 805306368
+userPrincipalName: j.goodhand@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 20200113014026.0Z
+dSCorePropagationData: 16010101000417.0Z
+
+dn: CN=BackupSvc,OU=Services,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: BackupSvc
+givenName: BackupSvc
+distinguishedName: CN=BackupSvc,OU=Services,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200113163703.0Z
+whenChanged: 20200113163732.0Z
+displayName: BackupSvc
+uSNCreated: 114757
+uSNChanged: 114765
+name: BackupSvc
+objectGUID: /AeVxvZYJ0S4xu2RXKx+KA==
+userAccountControl: 66048
+badPwdCount: 1
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533146487815
+lastLogoff: 0
+lastLogon: 0
+pwdLastSet: 132234070231912131
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFagQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: BackupSvc
+sAMAccountType: 805306368
+userPrincipalName: BackupSvc@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163703.0Z
+dSCorePropagationData: 16010101000417.0Z
+
+dn: CN=David Burman,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: David Burman
+sn: Burman
+givenName: David
+distinguishedName: CN=David Burman,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200113163612.0Z
+whenChanged: 20200115215216.0Z
+displayName: David Burman
+uSNCreated: 114742
+uSNChanged: 118852
+name: David Burman
+objectGUID: UqmXwgkl/0iy14P121+N7A==
+userAccountControl: 66048
+badPwdCount: 1
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533144303811
+lastLogoff: 0
+lastLogon: 0
+scriptPath: MapDataDrive.vbs
+pwdLastSet: 132234069729591249
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFaQQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: d.burman
+sAMAccountType: 805306368
+userPrincipalName: d.burman@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 20200113163613.0Z
+dSCorePropagationData: 16010101000417.0Z
+
+dn: CN=Ben Hanson,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Ben Hanson
+sn: Hanson
+givenName: Ben
+distinguishedName: CN=Ben Hanson,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200113163539.0Z
+whenChanged: 20200128180729.0Z
+displayName: Ben Hanson
+uSNCreated: 114734
+uSNChanged: 245841
+name: Ben Hanson
+objectGUID: aiS9+OrNYE6UJnr8wuBpHg==
+userAccountControl: 66050
+badPwdCount: 4
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059474750437248
+lastLogoff: 0
+lastLogon: 0
+pwdLastSet: 132234069391538655
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFaAQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: b.hanson
+sAMAccountType: 805306368
+userPrincipalName: b.hanson@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 20200113163539.0Z
+dSCorePropagationData: 16010101000417.0Z
+
+dn: CN=Adrian Turnbull,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Adrian Turnbull
+sn: Turnbull
+givenName: Adrian
+distinguishedName: CN=Adrian Turnbull,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200113014313.0Z
+whenChanged: 20200113034534.0Z
+displayName: Adrian Turnbull
+uSNCreated: 65635
+uSNChanged: 94281
+name: Adrian Turnbull
+objectGUID: PkhsX7HK0UKVFdwqFTWrnQ==
+userAccountControl: 66080
+badPwdCount: 1
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533033231616
+lastLogoff: 0
+lastLogon: 0
+pwdLastSet: 132233533933579732
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFZAQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: a.turnbull
+sAMAccountType: 805306368
+userPrincipalName: a.turnbull@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 20200113015223.0Z
+dSCorePropagationData: 16030216172521.0Z
+msDS-SupportedEncryptionTypes: 0
+
+dn: CN=Edward Crowe,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Edward Crowe
+sn: Crowe
+givenName: Edward
+distinguishedName: CN=Edward Crowe,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200113034502.0Z
+whenChanged: 20200128180707.0Z
+displayName: Edward Crowe
+uSNCreated: 94274
+uSNChanged: 245840
+name: Edward Crowe
+objectGUID: spB7cioaike11C+BNt/oVg==
+userAccountControl: 66050
+badPwdCount: 4
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059474721577197
+lastLogoff: 0
+lastLogon: 0
+scriptPath: MapDataDrive.vbs
+pwdLastSet: 132233607021669462
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFZwQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: e.crowe
+sAMAccountType: 805306368
+userPrincipalName: e.crowe@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113163628.0Z
+dSCorePropagationData: 20200113034502.0Z
+dSCorePropagationData: 16010101000417.0Z
+
+dn: CN=Joseph Allen,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Joseph Allen
+sn: Allen
+givenName: Joseph
+distinguishedName: CN=Joseph Allen,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200113172359.0Z
+whenChanged: 20200115215149.0Z
+displayName: Joseph Allen
+uSNCreated: 114807
+uSNChanged: 118847
+name: Joseph Allen
+objectGUID: HEPoVWJubkGd3J25ACGaRA==
+userAccountControl: 66048
+badPwdCount: 1
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059533146331815
+lastLogoff: 0
+lastLogon: 0
+scriptPath: MapDataDrive.vbs
+pwdLastSet: 132234098399165604
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFbgQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: j.allen
+sAMAccountType: 805306368
+userPrincipalName: j.allen@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200113172359.0Z
+dSCorePropagationData: 16010101000417.0Z
+
+dn: CN=Ian Croft,OU=Users,OU=UK,DC=cascade,DC=local
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Ian Croft
+sn: Croft
+givenName: Ian
+distinguishedName: CN=Ian Croft,OU=Users,OU=UK,DC=cascade,DC=local
+instanceType: 4
+whenCreated: 20200115214621.0Z
+whenChanged: 20200128180700.0Z
+displayName: Ian Croft
+uSNCreated: 118835
+uSNChanged: 245839
+name: Ian Croft
+objectGUID: nRdObhMYfkOzzZt2y5gHxw==
+userAccountControl: 66050
+badPwdCount: 4
+codePage: 0
+countryCode: 0
+badPasswordTime: 133059474857921437
+lastLogoff: 0
+lastLogon: 0
+scriptPath: MapDataDrive.vbs
+pwdLastSet: 132235983818652005
+primaryGroupID: 513
+objectSid: AQUAAAAAAAUVAAAAMvuhxgsd8Uf1yHJFbwQAAA==
+accountExpires: 9223372036854775807
+logonCount: 0
+sAMAccountName: i.croft
+sAMAccountType: 805306368
+userPrincipalName: i.croft@cascade.local
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=cascade,DC=local
+dSCorePropagationData: 20200117033736.0Z
+dSCorePropagationData: 20200117001404.0Z
+dSCorePropagationData: 20200115214621.0Z
+dSCorePropagationData: 16010101000417.0Z
