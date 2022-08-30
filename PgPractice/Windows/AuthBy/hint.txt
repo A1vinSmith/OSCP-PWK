@@ -1,0 +1,9 @@
+ Enumeration
+
+Be sure to scan all TCP ports. FTP service allows anonymous login. Enumerate FTP contents and see what you can find.
+Remote Code Execution
+
+Find another FTP user and brute-force their password. Check what is in their directory. You can upload a shell and trigger it in a web app.
+Privilege Escalation
+
+Enumerate the operating system version. There is a local privilege escalation exploit for it. 
