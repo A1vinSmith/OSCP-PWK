@@ -1,0 +1,45 @@
+Host Name:                 BILLYBOSS
+OS Name:                   Microsoft Windows 10 Pro
+OS Version:                10.0.18362 N/A Build 18362
+OS Manufacturer:           Microsoft Corporation
+OS Configuration:          Standalone Workstation
+OS Build Type:             Multiprocessor Free
+Registered Owner:          nathan
+Registered Organization:   
+Product ID:                00331-20472-14483-AA170
+Original Install Date:     5/25/2020, 8:59:14 AM
+System Boot Time:          9/5/2022, 9:43:26 PM
+System Manufacturer:       VMware, Inc.
+System Model:              VMware7,1
+System Type:               x64-based PC
+Processor(s):              1 Processor(s) Installed.
+                           [01]: AMD64 Family 23 Model 1 Stepping 2 AuthenticAMD ~3094 Mhz
+BIOS Version:              VMware, Inc. VMW71.00V.18227214.B64.2106252220, 6/25/2021
+Windows Directory:         C:\Windows
+System Directory:          C:\Windows\system32
+Boot Device:               \Device\HarddiskVolume2
+System Locale:             en-us;English (United States)
+Input Locale:              en-us;English (United States)
+Time Zone:                 (UTC-08:00) Pacific Time (US & Canada)
+Total Physical Memory:     2,047 MB
+Available Physical Memory: 783 MB
+Virtual Memory: Max Size:  4,897 MB
+Virtual Memory: Available: 936 MB
+Virtual Memory: In Use:    3,961 MB
+Page File Location(s):     C:\pagefile.sys
+Domain:                    WORKGROUP
+Logon Server:              N/A
+Hotfix(s):                 6 Hotfix(s) Installed.
+                           [01]: KB4552931
+                           [02]: KB4497165
+                           [03]: KB4497727
+                           [04]: KB4537759
+                           [05]: KB4552152
+                           [06]: KB4540673
+Network Card(s):           1 NIC(s) Installed.
+                           [01]: vmxnet3 Ethernet Adapter
+                                 Connection Name: Ethernet0
+                                 DHCP Enabled:    No
+                                 IP address(es)
+                                 [01]: 192.168.243.61
+Hyper-V Requirements:      A hypervisor has been detected. Features required for Hyper-V will not be displayed.
