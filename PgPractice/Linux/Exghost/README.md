@@ -63,7 +63,7 @@ Content-Type: image/jpeg
 ```
 opening it with Wireshark to enumerate further. Filtering the HTTP packets, we see that someone uploaded an image to ip/exiftest.php and the upload was successful. We also can see the version of ExifTool running on the box.
 
-Under `line-based text data` of the 200 response. File uploaded successfully :)<pre>ExifTool Version Number         : 12.23\n
+Under `line-based text data` of the 200 response. File uploaded successfully :) ExifTool Version Number         : 12.23\n
 
 ### Let's try to upload a file
 ```
