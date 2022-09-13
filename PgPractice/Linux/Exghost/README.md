@@ -4,6 +4,8 @@ https://medium.com/@vivek-kumar/offensive-security-proving-grounds-walk-through-
 `export IP=192.168.70.183`
 
 ### All failed so go with Bruteforce
+`https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/best1050.txt`
+
 ```
 hydra -t 20 -L /usr/share/wordlists/seclists/Usernames/top-usernames-shortlist.txt -P password.txt -vV $IP ftp
 ```
