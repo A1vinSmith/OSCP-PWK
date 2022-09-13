@@ -1,5 +1,6 @@
 # PG Practice: Exghost
 https://medium.com/@vivek-kumar/offensive-security-proving-grounds-walk-through-exghost-2e9a969ef711
+
 `export IP=192.168.70.183`
 
 ### All failed so go with Bruteforce
