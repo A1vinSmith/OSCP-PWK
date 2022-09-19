@@ -1,0 +1,16 @@
+[Unit]
+Description=Python App
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cmeeks/restjson_hetemit
+ExecStart=flask run -h 0.0.0.0 -p 50000
+TimeoutSec=30
+RestartSec=15s
+User=root
+ExecReload=/bin/kill -USR1 $MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
