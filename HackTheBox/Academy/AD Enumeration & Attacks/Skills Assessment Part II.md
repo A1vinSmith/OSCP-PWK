@@ -22,10 +22,10 @@ hashcat -m 5600 AB920.txt /usr/share/wordlists/rockyou.txt # weasal
 ```
 fping -asgq 172.16.7.0/23
 ```
-172.16.7.3                  # DC
-172.16.7.50                 # MS01
-172.16.7.60                 # SQL01
-172.16.7.240                # SSH HOST
+* 172.16.7.3                  # DC
+* 172.16.7.50                 # MS01
+* 172.16.7.60                 # SQL01
+* 172.16.7.240                # SSH HOST
 
 
 ### List all shares and enum like nmap
