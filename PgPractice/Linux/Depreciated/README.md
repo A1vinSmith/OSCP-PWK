@@ -1,0 +1,1 @@
+https://bing0o.github.io/posts/pg-depreciated/
