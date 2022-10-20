@@ -317,6 +317,9 @@ reg save hklm\system C:\temp\system
 nope reg.exe : ERROR: The system was unable to find the specified registry key or value.
 
 ### Extracting a copy of the Local SAM using diskshadow.exe and robocopy
+* https://0xdf.gitlab.io/2020/10/03/htb-blackfield.html#copy-filesebackupprivilege
+* https://pentestlab.blog/tag/diskshadow/
+
 ```bash
 cat alvin.dsh
 
