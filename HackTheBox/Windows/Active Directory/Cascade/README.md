@@ -109,6 +109,10 @@ crackmapexec smb $IP -u r.thompson -p rY4n5eva -M spider_plus
 sudo mount -t cifs //$IP/Data /mnt -o username=r.thompson,password=rY4n5eva,domain=cascade.local
 ```
 
+##### VNC Decrypt
+* https://github.com/billchaison/VNCDecrypt
+* https://miloserdov.org/?p=4854#65
+* https://github.com/frizb/PasswordDecrypts
 ```bash
 echo -n 6bcf2a4b6e5aca0f | xxd -r -p | openssl enc -des-cbc --nopad --nosalt -K e84ad660c4721ae0 -iv 0000000000000000 -d -provider legacy -provider default | hexdump -Cv
 ```
