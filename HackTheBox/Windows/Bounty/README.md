@@ -5,9 +5,9 @@ sed -i 's/.//' raft-small-extensions.txt
 ```
 
 ### Google "iis config rce"
-https://poc-server.com/blog/2018/05/22/rce-by-uploading-a-web-config/
-https://soroush.secproject.com/blog/tag/unrestricted-file-upload/
-https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Upload%20Insecure%20Files/Configuration%20IIS%20web.config
+* https://soroush.secproject.com/blog/tag/unrestricted-file-upload/
+* https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Upload%20Insecure%20Files/Configuration%20IIS%20web.config
+* https://0xdf.gitlab.io/2018/10/27/htb-bounty.html#transferaspx--uploadedfiles
 
 ### windows file transfter
 https://www.hackingarticles.in/file-transfer-cheatsheet-windows-and-linux/
