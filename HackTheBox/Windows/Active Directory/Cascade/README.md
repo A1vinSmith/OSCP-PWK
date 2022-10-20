@@ -125,8 +125,10 @@ bloodhound-python -c DcOnly -u s.smith -p 'sT333ve2' -d cascade.local -dc CASC-D
 ```
 
 ### Hint here
+```
 net user s.smith
 net localgroup "Audit Share"
+```
 That's unusual
 
 ### Rush SMB, SMB RUSH
