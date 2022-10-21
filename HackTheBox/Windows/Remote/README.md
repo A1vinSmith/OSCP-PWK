@@ -1,6 +1,8 @@
+```bash
 mount -t nfs -o vers=2 10.129.95.194:/site_backups /mnt/remote -o nolock
 
 sudo mount -t nfs -o vers=2 10.129.95.194:/site_backups /mnt/remote -o nolock
+```
 
 ### Get the directory tree of the mount 
 ```
