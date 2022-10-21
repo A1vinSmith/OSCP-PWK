@@ -12,9 +12,11 @@ find . -ls > ~/home/user/web.dir
 Don't use sublime or vscode. They miss files
 
 ### Go through config files, grep passwords
+```bash
 strings Umbraco.sdf | grep -i passwd
 strings Umbraco.sdf | grep -i admin
 strings Umbraco.sdf | grep -i admin@htb.local
+```
 
 adminadmin@htb.localb8be16afba8c314ad33d812f22a04991b90e2aaa{"hashAlgorithm":"SHA1"}admin@htb.localen-USfeb1a998-d3bf-406a-b30b-e269d7abdf50
 
