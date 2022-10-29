@@ -149,7 +149,7 @@ HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control
 
 
 ### 3389 to Jane
-Verify the version of Plantronics and exploit it with [47845](!https://www.exploit-db.com/exploits/47845)
+Verify the version of Plantronics and exploit it with [47845](https://www.exploit-db.com/exploits/47845)
 
 View -> Details -> check the box 'Hidden items'
 
