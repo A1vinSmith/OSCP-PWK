@@ -9,3 +9,5 @@ total 8.0K
 -rw------- 1 www-data walter    33 Oct 18 22:36 local.txt
 -rw-r--r-- 1 www-data www-data 208 Oct 18 23:06 wifi_reset.py
 ```
+
+https://viperone.gitbook.io/pentest-everything/writeups/pg-practice/linux/walla
