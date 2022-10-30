@@ -183,3 +183,5 @@ docker run -it -v /:/host/ --cap-add=ALL --security-opt apparmor=unconfined --se
 
 ### Summary
 The initial shell got with exposed creds. Then `Docker escape` to get root.
+
+https://viperone.gitbook.io/pentest-everything/writeups/pg-practice/linux/peppo
