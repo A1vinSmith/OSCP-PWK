@@ -35,3 +35,6 @@ It's a easy box. Just don't get stuck on getting reverse shell with specific por
 Simply use it will just work.
 
 Besides, use a webshell when the RCE exploit is not stable enough.
+
+* https://imtodess.gitbook.io/writeups/pg/get-to-work/linux/zino
+* https://github.com/Ministrex/Pentest-Everything/blob/Main/writeups/pg-practice/linux/zino.md
