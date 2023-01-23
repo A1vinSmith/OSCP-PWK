@@ -4,6 +4,7 @@
 ### [GitBook](https://alvinsmith.gitbook.io/progressive-oscp/) for better(but less content) reading experience
 ### Notes and cheatsheets are in Wiki pages. 
 ### Repo is mostly filled with writeups and scripts.
+### And HTB active writeups are in GPG. https://devconnected.com/how-to-encrypt-file-on-linux/
 
 # Kali Config via vmware/virtualbox(host on Mac)
 ## *Kali 2021 version already using zsh by default. You probably won't setup that much. Just do powerlevel10K with mate/Konsole terminal
