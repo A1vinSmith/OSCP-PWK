@@ -6,6 +6,12 @@
 ### Repo is mostly filled with writeups and scripts.
 ### And HTB active writeups are in GPG. https://devconnected.com/how-to-encrypt-file-on-linux/
 
+# OSWE
+* https://github.com/A1vinSmith/OSWE-EXP
+
+# Cloud Hacking
+* https://github.com/A1vinSmith/Cloud-Hacking
+
 # Kali Config via vmware/virtualbox(host on Mac)
 ## *Kali 2021 version already using zsh by default. You probably won't setup that much. Just do powerlevel10K with mate/Konsole terminal
 ### ohmyzsh + powerlevel10K + tmux
