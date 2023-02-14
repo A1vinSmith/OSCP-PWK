@@ -1,7 +1,7 @@
 ### wp-scan
-`wpscan --url http://$IP/ --enumerate` <- Enum mode won't find any plugins.
-
-`wpscan --url http://$IP/ --api-token <SNIP>`
+* `wpscan --url http://$IP/ --enumerate` <- Enum mode won't find any plugins by default. 
+* `-e ap,t,tt,u` to enumerate all plugins, popular themes, timthumbs, and users
+* `wpscan --url http://$IP/ --api-token <SNIP>`
 
 ```bash
 [i] Plugin(s) Identified:
