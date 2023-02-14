@@ -1,5 +1,5 @@
 ### wp-scan
-`wpscan --url http://$IP/ --enumerate` <- nope
+`wpscan --url http://$IP/ --enumerate` <- Enum mode won't find any plugins.
 
 `wpscan --url http://$IP/ --api-token <SNIP>`
 
