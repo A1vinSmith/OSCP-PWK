@@ -1,5 +1,5 @@
 # Two is better than one
-* https://vato.cc/hackthebox-writeup-shibboleth/
+* https://github.com/A1vinSmith/OSWE-EXP/tree/main/HackTheBox/Linux/Zipper
 * https://infosecwriteups.com/shibboleth-hackthebox-walkthrough-f5c52d8949cf
 
 ### ffuf Vhosts Fuzzing
