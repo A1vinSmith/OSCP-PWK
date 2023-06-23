@@ -9,6 +9,10 @@
 # OSWE
 * https://github.com/A1vinSmith/OSWE-EXP
 
+# OSWP
+* https://www.watchguard.com/help/docs/help-center/en-US/Content/en-US/Fireware/wireless/ap_about_wireless_modes_c.html
+* https://www.intel.com/content/www/us/en/support/articles/000005544/wireless.html
+
 # Cloud Hacking
 * https://github.com/A1vinSmith/Cloud-Hacking
 
