@@ -68,6 +68,10 @@ ldapdomaindump egotistical-bank.local
 dig @$IP egotistical-bank.local
 ```
 
+### AS-REP roasting
+* https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/as-rep-roasting-using-rubeus-and-hashcat
+* https://medium.com/r3d-buck3t/kerberos-attacks-as-rep-roasting-2549fd757b5
+
 ### Try to make a User List
 ```bash
 crackmapexec smb $IP --users    # no auth
