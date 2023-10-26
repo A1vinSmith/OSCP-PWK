@@ -6,6 +6,9 @@
 ### Repo is mostly filled with writeups and scripts.
 ### And HTB active writeups are in GPG. https://devconnected.com/how-to-encrypt-file-on-linux/
 
+# OSEP
+* https://github.com/A1vinSmith/OSEP
+  
 # OSWE
 * https://github.com/A1vinSmith/OSWE-EXP
 
