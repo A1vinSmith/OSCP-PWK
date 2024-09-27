@@ -1,8 +1,9 @@
 # OSCP
 <img width="1348" alt="image" src="https://user-images.githubusercontent.com/24937594/199577713-5eaaced3-7354-4db0-aeb9-c867cc638b5b.png">
 
+## Notes and cheatsheets are in Wiki pages. 
+
 ### [GitBook](https://alvinsmith.gitbook.io/progressive-oscp/) for better(but less content) reading experience
-### Notes and cheatsheets are in Wiki pages. 
 ### Repo is mostly filled with writeups and scripts.
 ### And HTB active writeups are in GPG. https://devconnected.com/how-to-encrypt-file-on-linux/
 
