@@ -20,24 +20,24 @@ while True:
             print("Stop!")
             break
         s = socket.socket()
-        s.connect((host,  port))
+        s.connect((host, port))
         req = "GET / HTTP/1.1\r\nHost: %s\r\n\r\n" % host
         s.send(req.encode())
-        res = str(s.recv(4096), 'utf-8')
+        res = str(s.recv(4096), "utf-8")
         if len(res) > 147:
             res_lines = res.splitlines()
             last_line = res_lines[-1]
-            #item[0] - operation / item[1] - value / item[2] - port
+            # item[0] - operation / item[1] - value / item[2] - port
             item = last_line.split()
             port = int(item[2])
             if old_port != port:
-                if item[0] == 'add':
+                if item[0] == "add":
                     value += float(item[1])
-                elif item[0] == 'minus':
+                elif item[0] == "minus":
                     value -= float(item[1])
-                elif item[0] == 'multiply':
+                elif item[0] == "multiply":
                     value *= float(item[1])
-                elif item[0] == 'divide':
+                elif item[0] == "divide":
                     value /= float(item[1])
                 else:
                     print("Unknow operation!")

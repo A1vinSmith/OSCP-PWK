@@ -1,0 +1,16 @@
+[project]
+name = "OSCP-PWK-Script"
+version = "0.1.0"
+description = "Python scripts for OSCP PWK"
+authors = [
+    { name = "Alvin", email = "alvin@example.com" }
+]
+dependencies = []
+
+[tool.ruff]
+line-length = 100
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.2",
+]

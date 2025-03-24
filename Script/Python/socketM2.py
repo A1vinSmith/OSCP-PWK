@@ -3,36 +3,39 @@ import time
 import re
 import sys
 
+
 def Main():
-    serverIP = sys.argv[1] #Get ip from user input
+    serverIP = sys.argv[1]  # Get ip from user input
     serverPort = 1337
-    oldNum = 0 #Start at 0 as per instruction
+    oldNum = 0  # Start at 0 as per instruction
 
     while serverPort != 9765:
-        try: #try until port 1337 available
+        try:  # try until port 1337 available
             if serverPort == 1337:
-                print(f"Connecting to {serverIP} waiting for port {serverPort} to become available...")
+                print(
+                    f"Connecting to {serverIP} waiting for port {serverPort} to become available..."
+                )
 
-            #Create socket and connect to server
+            # Create socket and connect to server
             s = socket.socket()
-            s.connect((serverIP,serverPort))
+            s.connect((serverIP, serverPort))
 
-            #Send get request to server
+            # Send get request to server
             gRequest = f"GET / HTTP/1.0\r\nHost: {serverIP}:{serverPort}\r\n\r\n"
-            s.send(gRequest.encode('utf8'))
+            s.send(gRequest.encode("utf8"))
 
-            #Retrieve data from get request
+            # Retrieve data from get request
             while True:
                 response = s.recv(1024)
-                if (len(response) < 1):
+                if len(response) < 1:
                     break
                 data = response.decode("utf8")
 
-            #Format and assign the data into usable variables
+            # Format and assign the data into usable variables
             op, newNum, nextPort = assignData(data)
-            #Perform given calculations
+            # Perform given calculations
             oldNum = doMath(op, oldNum, newNum)
-            #Display output and move on
+            # Display output and move on
             print(f"Current number is {oldNum}, moving onto port {nextPort}")
             serverPort = nextPort
 
@@ -40,37 +43,40 @@ def Main():
 
         except:
             s.close()
-            time.sleep(3) #Ports update every 4 sec
+            time.sleep(3)  # Ports update every 4 sec
             pass
 
-    print(f"The final answer is {round(oldNum,2)}")
+    print(f"The final answer is {round(oldNum, 2)}")
+
 
 def doMath(op, oldNum, newNum):
-    if op == 'add':
+    if op == "add":
         return oldNum + newNum
-    elif op == 'minus':
+    elif op == "minus":
         return oldNum - newNum
-    elif op == 'divide':
+    elif op == "divide":
         return oldNum / newNum
-    elif op == 'multiply':
+    elif op == "multiply":
         return oldNum * newNum
     else:
         return None
 
+
 def assignData(data):
-    dataArr = re.split(' |\*|\n', data) #Split data with multi delim
-    dataArr = list(filter(None, dataArr)) #Filter null strings
-    #Assign the last 3 values of the data
+    dataArr = re.split(" |\*|\n", data)  # Split data with multi delim
+    dataArr = list(filter(None, dataArr))  # Filter null strings
+    # Assign the last 3 values of the data
     op = dataArr[-3]
     newNum = float(dataArr[-2])
     nextPort = int(dataArr[-1])
 
     return op, newNum, nextPort
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     Main()
 
-'''
+"""
 import socket
 
 host = input("Host: ")
@@ -102,4 +108,4 @@ while True:
 	except:
 		s.close();
 		pass
-		'''
+		"""
